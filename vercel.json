@@ -1,0 +1,12 @@
+{
+  "functions": {
+    "api/acg-map.ts":    { "maxDuration": 30 },
+    "api/acg-search.ts": { "maxDuration": 15 }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
