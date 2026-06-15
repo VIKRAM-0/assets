@@ -2619,10 +2619,10 @@ function toggleRoomView() {
     // Camera will be set inside buildRoom() once room GLB loads
     // and we know the actual floor Y. Pass a callback.
     buildRoom(() => {
-      // theta is rotated 180° from the open-corner value so we look INTO the
-      // room interior from behind the open sides. r=7.5, phi=1.0 (57° from top).
-      sph = {theta: 0.7 + Math.PI, phi: 1.0, r: 7.5};
-      tgt.set(0, -0.5, 0);
+      // Look INTO the room interior from the open front-right corner.
+      // phi=1.15 (66° from zenith) gives a near-eye-level interior angle.
+      sph = {theta: 0.7 + Math.PI, phi: 1.15, r: 7.0};
+      tgt.set(0, -0.3, 0);
       camUpdate();
     });
     buildPieceList();
@@ -3095,10 +3095,9 @@ async function renderScene() {
   const savedClearAlpha = renderer.getClearAlpha();
 
   if (roomMode) {
-    // Force a fixed, well-framed interior-photo camera regardless of where the user orbited.
-    // This angle looks INTO the room (not at its outside corner), from near the open side.
-    sph = { theta: -2.32, phi: 1.28, r: 8.5 };
-    tgt.set(0, -0.72, 0);
+    // Match the default room-view camera so the render matches what the user sees.
+    sph = { theta: 0.7 + Math.PI, phi: 1.15, r: 7.0 };
+    tgt.set(0, -0.3, 0);
     camUpdate();
     // Give the scene a neutral off-white backdrop so the render doesn't have a black void
     scene.background = new THREE.Color(0xf5f2ee);
