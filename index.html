@@ -223,9 +223,28 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;b
 .fab-tab:hover:not(.active){color:var(--text);background:var(--bg)}
 .fab-tab-add{margin-left:auto;padding:3px 10px;font-size:10px;font-weight:600;color:var(--accent);background:var(--accent-pale);border:1px solid transparent;border-radius:4px;cursor:pointer;font-family:var(--font-b);flex-shrink:0;height:24px;align-self:center;transition:border-color .15s}
 .fab-tab-add:hover{border-color:var(--accent)}
-.fabric-swatches-row{display:flex;align-items:flex-start;gap:8px;padding:7px 12px;overflow-x:auto;flex:1}
-.fabric-swatches-row::-webkit-scrollbar{height:3px}
-.fabric-swatches-row::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.fabric-swatches-wrap{position:relative;flex:1;overflow:hidden;display:flex;align-items:stretch}
+.fabric-swatches-row{display:flex;align-items:flex-start;gap:8px;padding:7px 12px;overflow-x:auto;flex:1;scroll-behavior:smooth}
+.fabric-swatches-row::-webkit-scrollbar{display:none}
+.fab-scroll-btn{position:absolute;top:50%;transform:translateY(-50%);width:28px;height:44px;border:1px solid var(--border);border-radius:6px;background:rgba(255,255,255,.95);color:var(--text-mid);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;transition:all .15s;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.fab-scroll-btn:hover{background:var(--accent-pale);border-color:var(--accent);color:var(--accent)}
+.fab-scroll-btn.left{left:4px}
+.fab-scroll-btn.right{right:4px}
+/* ── Move HUD ──────────────────────────────────────────────────────────── */
+.move-hud{position:absolute;bottom:62px;left:50%;transform:translateX(-50%);display:none;align-items:center;gap:12px;background:rgba(255,255,255,.96);border:1px solid var(--border);border-radius:16px;padding:12px 16px;box-shadow:0 4px 24px rgba(0,0,0,.14);backdrop-filter:blur(10px);z-index:30;white-space:nowrap}
+.move-hud.active{display:flex}
+.mhud-section{display:flex;flex-direction:column;align-items:center;gap:6px}
+.mhud-label{font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--text-muted);text-transform:uppercase}
+.mhud-grid{display:grid;grid-template-columns:repeat(3,34px);grid-template-rows:repeat(3,34px);gap:3px}
+.mhud-btn{width:34px;height:34px;border:1.5px solid var(--border);border-radius:9px;background:var(--surface);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;padding:0}
+.mhud-btn:hover{background:var(--accent-pale);border-color:var(--accent);color:var(--accent)}
+.mhud-btn:active{background:var(--accent);color:#fff;border-color:var(--accent);transform:scale(.92)}
+.mhud-divider{width:1px;height:76px;background:var(--border);align-self:center}
+.mhud-rot-row{display:flex;gap:6px}
+.mhud-rot-btn{width:44px;height:44px;border:1.5px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;line-height:1}
+.mhud-rot-btn:hover{background:var(--accent-pale);border-color:var(--accent);color:var(--accent)}
+.mhud-rot-btn:active{background:var(--accent);color:#fff;border-color:var(--accent);transform:scale(.92)}
+.mhud-hint{font-size:9px;color:var(--text-muted);margin-top:2px}
 .bar-sw{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;flex-shrink:0;width:52px}
 .bar-sw-img{width:52px;height:52px;border-radius:6px;overflow:hidden;border:2px solid transparent;background:var(--bg);transition:all .15s;display:flex;align-items:center;justify-content:center}
 .bar-sw-img img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
@@ -523,6 +542,44 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;b
           <span><span class="h-key">drag fabric</span> Apply</span>
         </div>
         <div id="drop-hint">Drop fabric on a part to apply</div>
+
+        <!-- Move HUD — shown when furniture move mode is active -->
+        <div id="move-hud" class="move-hud">
+          <div class="mhud-section">
+            <div class="mhud-label">Move</div>
+            <div class="mhud-grid">
+              <div></div>
+              <button class="mhud-btn" onclick="nudgeFurniture(0,-0.2)" title="Move back">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="18 15 12 9 6 15"/></svg>
+              </button>
+              <div></div>
+              <button class="mhud-btn" onclick="nudgeFurniture(-0.2,0)" title="Move left">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <div style="border:1.5px solid var(--border);border-radius:9px;background:var(--bg);display:flex;align-items:center;justify-content:center">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>
+              </div>
+              <button class="mhud-btn" onclick="nudgeFurniture(0.2,0)" title="Move right">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+              <div></div>
+              <button class="mhud-btn" onclick="nudgeFurniture(0,0.2)" title="Move forward">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div></div>
+            </div>
+            <div class="mhud-hint">or drag furniture</div>
+          </div>
+          <div class="mhud-divider"></div>
+          <div class="mhud-section">
+            <div class="mhud-label">Rotate</div>
+            <div class="mhud-rot-row">
+              <button class="mhud-rot-btn" onclick="rotateFurnitureY(15)" title="Rotate left">↺</button>
+              <button class="mhud-rot-btn" onclick="rotateFurnitureY(-15)" title="Rotate right">↻</button>
+            </div>
+            <div class="mhud-hint">double-click to exit</div>
+          </div>
+        </div>
         <div class="vp-controls">
           <button class="vp-ctrl-btn" onclick="sph.theta+=0.4;camUpdate()">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.84"/></svg>
@@ -765,7 +822,15 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;b
           <input type="text" id="fab-search-input" class="fab-search-input" placeholder="Search fabrics…" oninput="filterFabricSearch(this.value)">
         </div>
       </div>
-      <div class="fabric-swatches-row" id="fabric-swatches-row"></div>
+      <div class="fabric-swatches-wrap">
+        <button class="fab-scroll-btn left" id="fab-scroll-left" onclick="scrollSwatches(-180)" title="Scroll left">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="fabric-swatches-row" id="fabric-swatches-row"></div>
+        <button class="fab-scroll-btn right" id="fab-scroll-right" onclick="scrollSwatches(180)" title="Scroll right">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
     </div>
 
   </div><!-- /workspace -->
@@ -1572,9 +1637,18 @@ async function applySwatchToEntries(item, targetEntries) {
   }
 }
 
-// Click apply (product mode — uses checked entries)
+// Click apply — in room mode uses the piece-list-selected entry; in product mode uses checked entries
 async function applySwatch(gi, ii, btnEl) {
   const item = LIBRARY[currentModelKey][gi].items[ii];
+  if (roomMode) {
+    const selected = meshEntries.find(e => e.pieceSelected);
+    if (!selected) { showToast('Select a part in the list first'); return; }
+    if (activeBtnEl) activeBtnEl.classList.remove('active');
+    activeBtnEl = btnEl; btnEl.classList.add('active');
+    lastAppliedItem = item;
+    await applySwatchToEntries(item, [selected]);
+    return;
+  }
   const checked = meshEntries.filter(e=>e.checked);
   if(!checked.length) { showToast('Select a part →'); return; }
   if(activeBtnEl) activeBtnEl.classList.remove('active');
@@ -2545,10 +2619,9 @@ function toggleRoomView() {
     // Camera will be set inside buildRoom() once room GLB loads
     // and we know the actual floor Y. Pass a callback.
     buildRoom(() => {
-      // Room open on the right (X+) and front (Z+) sides.
-      // theta=0.7 (in 0..π/2) places camera in that open corner so we look INTO
-      // the room toward the back-left walls. phi=1.0 ≈ 57° from vertical.
-      sph = {theta: 0.7, phi: 1.0, r: 7.5};
+      // theta is rotated 180° from the open-corner value so we look INTO the
+      // room interior from behind the open sides. r=7.5, phi=1.0 (57° from top).
+      sph = {theta: 0.7 + Math.PI, phi: 1.0, r: 7.5};
       tgt.set(0, -0.5, 0);
       camUpdate();
     });
@@ -2804,6 +2877,8 @@ function removeRoom() {
     if (transformControls) { transformControls.detach(); transformControls.visible = false; }
     const bar = document.getElementById('move-mode-bar');
     if (bar) bar.classList.remove('active');
+    const hud = document.getElementById('move-hud');
+    if (hud) hud.classList.remove('active');
   }
 
   // Clean up curtain entries
@@ -2848,17 +2923,11 @@ function toggleMoveMode() {
   furnitureMoveMode = !furnitureMoveMode;
   const bar = document.getElementById('move-mode-bar');
   if (bar) bar.classList.toggle('active', furnitureMoveMode);
-
-  if (transformControls) {
-    if (furnitureMoveMode) {
-      const model = roomFurnitureModels[currentModelKey];
-      if (model) { transformControls.attach(model); transformControls.visible = true; transformControls.setMode(tcMode); }
-    } else {
-      transformControls.detach();
-      transformControls.visible = false;
-    }
-    markDirty();
-  }
+  const hud = document.getElementById('move-hud');
+  if (hud) hud.classList.toggle('active', furnitureMoveMode);
+  // Keep TC detached/hidden — we use the custom HUD instead
+  if (transformControls) { transformControls.detach(); transformControls.visible = false; }
+  markDirty();
 }
 
 function setMoveMode(mode) {
@@ -2867,7 +2936,30 @@ function setMoveMode(mode) {
     const el = document.getElementById('mm-'+m);
     if (el) el.classList.toggle('active', m===mode);
   });
-  if (transformControls) { transformControls.setMode(mode); markDirty(); }
+  markDirty();
+}
+
+// ── Furniture nudge / rotate helpers (used by Move HUD buttons) ───────────
+function nudgeFurniture(dx, dz) {
+  const model = roomFurnitureModels[currentModelKey];
+  if (!model) return;
+  model.position.x += dx;
+  model.position.z += dz;
+  model.updateMatrixWorld(true);
+  markDirty();
+}
+function rotateFurnitureY(deg) {
+  const model = roomFurnitureModels[currentModelKey];
+  if (!model) return;
+  model.rotation.y += deg * Math.PI / 180;
+  model.updateMatrixWorld(true);
+  markDirty();
+}
+
+// ── Fabric bar scroll ─────────────────────────────────────────────────────
+function scrollSwatches(amount) {
+  const row = document.getElementById('fabric-swatches-row');
+  if (row) row.scrollLeft += amount;
 }
 
 // ── Curtain mesh helpers ─────────────────────────────────────────────────
@@ -3267,12 +3359,58 @@ function initThree() {
   camUpdate();
 
   let isDrag=false,isRight=false,prev={x:0,y:0};
+  // ── Floor-plane drag for move mode ──────────────────────────────────────
+  let floorDragging=false;
+  const _floorPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0); // updated at drag-start
+  const _floorHit=new THREE.Vector3();
+  const _floorOffset=new THREE.Vector3(); // offset from model centre to hit point
+
   canvas.addEventListener('mousedown',e=>{
-    if(dragActive) return; // don't orbit while dragging fabric
-    if(furnitureMoveMode) return; // TransformControls owns the canvas in move mode
+    if(dragActive) return;
+    if(furnitureMoveMode && e.button===0) {
+      // Custom floor-drag: check if we hit the active furniture model
+      const rect=canvas.getBoundingClientRect();
+      const ndc=screenToNDC(e,rect);
+      mouse.set(ndc.x,ndc.y);
+      raycaster.setFromCamera(mouse,camera);
+      const model=roomFurnitureModels[currentModelKey];
+      if(model){
+        const hits=raycaster.intersectObject(model,true);
+        if(hits.length){
+          // Pin floor plane at detected floor Y
+          _floorPlane.constant=-roomFloorY;
+          raycaster.ray.intersectPlane(_floorPlane,_floorHit);
+          _floorOffset.set(model.position.x-_floorHit.x,0,model.position.z-_floorHit.z);
+          floorDragging=true;
+          e.stopPropagation();
+          return;
+        }
+      }
+      return; // click in move mode on non-furniture — don't orbit
+    }
     isDrag=true; isRight=e.button===2; prev={x:e.clientX,y:e.clientY};
   });
+
   window.addEventListener('mousemove',e=>{
+    if(floorDragging){
+      const rect=canvas.getBoundingClientRect();
+      const ndc=screenToNDC(e,rect);
+      mouse.set(ndc.x,ndc.y);
+      raycaster.setFromCamera(mouse,camera);
+      if(raycaster.ray.intersectPlane(_floorPlane,_floorHit)){
+        const model=roomFurnitureModels[currentModelKey];
+        if(model){
+          model.position.x=_floorHit.x+_floorOffset.x;
+          model.position.z=_floorHit.z+_floorOffset.z;
+          // Keep Y pinned
+          const box=new THREE.Box3().setFromObject(model);
+          model.position.y+=roomFloorY-box.min.y;
+          model.updateMatrixWorld(true);
+          markDirty();
+        }
+      }
+      return;
+    }
     if(!isDrag) return;
     const dx=e.clientX-prev.x,dy=e.clientY-prev.y;
     prev={x:e.clientX,y:e.clientY};
@@ -3286,7 +3424,7 @@ function initThree() {
     }
     camUpdate();
   });
-  window.addEventListener('mouseup',()=>isDrag=false);
+  window.addEventListener('mouseup',()=>{ isDrag=false; floorDragging=false; });
 
   // Double-click on furniture to enter/exit move mode
   canvas.addEventListener('dblclick', e => {
@@ -3302,6 +3440,9 @@ function initThree() {
       if (transformControls) { transformControls.detach(); transformControls.visible = false; }
       const bar = document.getElementById('move-mode-bar');
       if (bar) bar.classList.remove('active');
+      const hud = document.getElementById('move-hud');
+      if (hud) hud.classList.remove('active');
+      floorDragging = false;
       markDirty();
       return;
     }
@@ -3326,16 +3467,14 @@ function initThree() {
     // Switch to the hit furniture if it's not already active
     if (hitKey !== currentModelKey) switchModel(hitKey);
 
-    // Enter move mode
+    // Enter move mode — use custom HUD, no TC gizmo
     furnitureMoveMode = true;
     const bar = document.getElementById('move-mode-bar');
     if (bar) bar.classList.add('active');
-    if (transformControls) {
-      transformControls.attach(roomFurnitureModels[hitKey] || currentModel);
-      transformControls.visible = true;
-      transformControls.setMode(tcMode);
-      markDirty();
-    }
+    const hud = document.getElementById('move-hud');
+    if (hud) hud.classList.add('active');
+    if (transformControls) { transformControls.detach(); transformControls.visible = false; }
+    markDirty();
   });
 
   canvas.addEventListener('contextmenu',e=>e.preventDefault());
