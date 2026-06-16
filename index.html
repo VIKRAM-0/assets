@@ -96,9 +96,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:
 
 /* ── Viewport controls bar ─────────────────────────────────────────────── */
 .vp-controls{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:2px;background:rgba(255,255,255,.9);border:1px solid var(--border);border-radius:24px;padding:3px;backdrop-filter:blur(8px);box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.vp-fullscreen-btn{position:absolute;top:12px;left:12px;width:32px;height:32px;background:rgba(255,255,255,.9);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(8px);box-shadow:0 2px 8px rgba(0,0,0,.08);color:var(--text-mid);transition:all .15s;z-index:20}
+.vp-fullscreen-btn:hover{background:#fff;color:var(--text);box-shadow:0 2px 12px rgba(0,0,0,.12)}
 .vp-ctrl-btn{display:flex;align-items:center;gap:4px;padding:5px 10px;border:none;background:transparent;color:var(--text-mid);font-size:10px;font-weight:500;cursor:pointer;border-radius:18px;font-family:var(--font-b);transition:all .15s}
 .vp-ctrl-btn:hover{background:var(--bg);color:var(--text)}
-.v-hint{position:absolute;bottom:56px;left:50%;transform:translateX(-50%);display:flex;gap:14px;background:rgba(255,255,255,.88);backdrop-filter:blur(8px);border:1px solid var(--border);border-radius:40px;padding:7px 18px;font-size:11px;color:var(--text-muted);pointer-events:none}
+.v-hint{display:none!important}
 .v-hint span{display:flex;align-items:center;gap:5px}
 .h-key{background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:0 5px;font-size:9px;color:var(--text-mid)}
 #drop-hint{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,.88);color:#fff;font-size:11px;letter-spacing:.04em;padding:6px 16px;border-radius:40px;pointer-events:none;opacity:0;transition:opacity .25s;white-space:nowrap;backdrop-filter:blur(4px)}
@@ -580,22 +582,14 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;b
             <div class="mhud-hint">double-click to exit</div>
           </div>
         </div>
+        <!-- Full View button — top-left corner -->
+        <button class="vp-fullscreen-btn" onclick="document.getElementById('viewport-wrap').requestFullscreen?.()" title="Full Screen">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+        </button>
         <div class="vp-controls">
-          <button class="vp-ctrl-btn" onclick="sph.theta+=0.4;camUpdate()">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.84"/></svg>
-            Rotate
-          </button>
           <button class="vp-ctrl-btn" onclick="sph.r=Math.max(.5,sph.r*.82);camUpdate()">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
             Zoom
-          </button>
-          <button class="vp-ctrl-btn" onclick="sph={theta:0.4,phi:1.15,r:2.2};tgt.set(0,0,0);camUpdate()">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-            Re-center
-          </button>
-          <button class="vp-ctrl-btn" onclick="document.getElementById('viewport-wrap').requestFullscreen?.()">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-            Full View
           </button>
         </div>
       </div>
@@ -709,10 +703,8 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;b
             </button>
           </div>
 
-          <!-- Living Room content -->
+          <!-- Living Room content — section-specific chips only -->
           <div id="rsec-living-content" class="room-sec-content active">
-
-            <!-- Room Elements block -->
             <div class="room-section-block">
               <div class="room-section-label">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
@@ -727,86 +719,90 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;b
                 <button class="room-chip" id="chip-ceiling" onclick="toggleRoomEl('ceiling')"><span class="room-chip-ico">▫</span>Ceiling</button>
               </div>
             </div>
+          </div><!-- /living room content -->
 
-            <!-- Furniture Parts block -->
+          <!-- Bedroom content — section-specific chips only -->
+          <div id="rsec-bedroom-content" class="room-sec-content">
             <div class="room-section-block">
               <div class="room-section-label">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/><path d="M2 11a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v9H2z"/><path d="M7 20v-5h10v5"/></svg>
-                Furniture Parts
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 9V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3"/><path d="M3 9h18v5H3z"/><path d="M3 14v4"/><path d="M21 14v4"/></svg>
+                Bed Style
               </div>
-              <div id="move-mode-bar" class="move-mode-bar">
-                <span class="move-mode-label">Move Mode Active</span>
-                <div class="move-mode-mode-btns">
-                  <button class="move-mode-mode-btn active" id="mm-translate" onclick="setMoveMode('translate')">Move</button>
-                  <button class="move-mode-mode-btn" id="mm-rotate" onclick="setMoveMode('rotate')">Rotate</button>
-                </div>
-                <button class="move-mode-done" onclick="toggleMoveMode()">Done</button>
-              </div>
-              <div class="piece-hint">
-                <div class="piece-hint-row">
-                  <div class="piece-hint-ico">✦</div>Double-click furniture to enter move mode
-                </div>
-                <div class="piece-hint-row">
-                  <div class="piece-hint-ico">◎</div>Click a part below, then drag a swatch onto it
-                </div>
-              </div>
-              <div id="piece-list"></div>
-            </div>
-
-            <!-- Applied Material block -->
-            <div class="room-section-block">
-              <div class="room-section-label">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
-                Applied Material
-              </div>
-              <div class="app-prev">
-                <div class="app-sw" id="app-sw-room" style="width:40px;height:40px;border-radius:6px"></div>
-                <div style="flex:1;min-width:0">
-                  <div class="app-name" id="app-name-room">— none selected —</div>
-                  <div class="app-vend" id="app-vend-room"></div>
-                </div>
-                <button class="app-replace-btn" id="app-replace-btn-room" title="Replace with your own image" onclick="openDiffuseUpload()" style="display:none">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+              <div class="room-chips-grid" style="grid-template-columns:1fr 1fr">
+                <button class="room-chip on" id="chip-bed-wooden" onclick="switchModel('bed_wooden')">
+                  <span class="room-chip-ico">🪵</span>Wooden Frame
+                </button>
+                <button class="room-chip" id="chip-bed-fabric" onclick="switchModel('bed_fabric')">
+                  <span class="room-chip-ico">🛏</span>Fabric Frame
                 </button>
               </div>
             </div>
-
-            <!-- Material Adjustments block -->
-            <div class="room-section-block">
-              <div class="room-section-label">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-                Material Adjustments
-              </div>
-              <div class="sl-row">
-                <div class="sl-lbl">Brightness <span class="sl-val" id="v-brightness-r">1.00</span></div>
-                <input type="range" id="s-brightness-r" min="0.01" max="2" step="0.05" value="1" oninput="updateBrightness(+this.value)">
-              </div>
-              <div class="sl-row">
-                <div class="sl-lbl">Roughness <span class="sl-val" id="v-roughness-r">0.72</span></div>
-                <input type="range" id="s-roughness-r" min="0" max="1" step="0.01" value="0.72" oninput="applyProp('roughness',+this.value)">
-              </div>
-              <div class="sl-row" style="margin-bottom:0">
-                <div class="sl-lbl">Pattern Scale <span class="sl-val" id="v-scale-r">10.0</span></div>
-                <input type="range" id="s-scale-r" min="0.5" max="20" step="0.1" value="10" oninput="updateTexScale(+this.value)">
-              </div>
-            </div><!-- /room-section-block material adjustments -->
-
-            <div style="padding:14px 16px 18px">
-              <button class="btn-get-quote" onclick="" style="width:100%">Get A Quote →</button>
-            </div>
-          </div><!-- /living room content -->
-
-          <!-- Bedroom content -->
-          <div id="rsec-bedroom-content" class="room-sec-content">
-            <div style="padding:28px 20px;text-align:center">
-              <div style="width:52px;height:52px;border-radius:12px;background:var(--accent-pale);margin:0 auto 14px;display:flex;align-items:center;justify-content:center">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8"><path d="M3 9V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3"/><path d="M3 9h18v5H3z"/><path d="M3 14v4"/><path d="M21 14v4"/><rect x="7" y="9" width="4" height="5" rx="1"/></svg>
-              </div>
-              <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px">Bedroom</div>
-              <div style="font-size:11px;color:var(--text-muted);line-height:1.6">Complete the Living Room first, then unlock Bedroom configuration with bed frames, dressers, and accent chairs.</div>
-              <button onclick="setRoomSection('living')" style="margin-top:16px;padding:7px 18px;font-family:var(--font-b);font-size:11px;font-weight:600;background:var(--accent);color:#fff;border:none;border-radius:var(--r);cursor:pointer">← Back to Living Room</button>
-            </div>
           </div><!-- /bedroom content -->
+
+          <!-- ── Shared room blocks (always visible in room mode) ── -->
+          <div class="room-section-block">
+            <div class="room-section-label">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/><path d="M2 11a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v9H2z"/><path d="M7 20v-5h10v5"/></svg>
+              <span id="piece-list-label">Furniture Parts</span>
+            </div>
+            <div id="move-mode-bar" class="move-mode-bar">
+              <span class="move-mode-label">Move Mode Active</span>
+              <div class="move-mode-mode-btns">
+                <button class="move-mode-mode-btn active" id="mm-translate" onclick="setMoveMode('translate')">Move</button>
+                <button class="move-mode-mode-btn" id="mm-rotate" onclick="setMoveMode('rotate')">Rotate</button>
+              </div>
+              <button class="move-mode-done" onclick="toggleMoveMode()">Done</button>
+            </div>
+            <div class="piece-hint">
+              <div class="piece-hint-row">
+                <div class="piece-hint-ico">✦</div>Double-click to enter move mode
+              </div>
+              <div class="piece-hint-row">
+                <div class="piece-hint-ico">◎</div>Click a part below, then pick a swatch
+              </div>
+            </div>
+            <div id="piece-list"></div>
+          </div>
+
+          <div class="room-section-block">
+            <div class="room-section-label">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+              Applied Material
+            </div>
+            <div class="app-prev">
+              <div class="app-sw" id="app-sw-room" style="width:40px;height:40px;border-radius:6px"></div>
+              <div style="flex:1;min-width:0">
+                <div class="app-name" id="app-name-room">— none selected —</div>
+                <div class="app-vend" id="app-vend-room"></div>
+              </div>
+              <button class="app-replace-btn" id="app-replace-btn-room" title="Replace with your own image" onclick="openDiffuseUpload()" style="display:none">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="room-section-block">
+            <div class="room-section-label">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+              Material Adjustments
+            </div>
+            <div class="sl-row">
+              <div class="sl-lbl">Brightness <span class="sl-val" id="v-brightness-r">1.00</span></div>
+              <input type="range" id="s-brightness-r" min="0.01" max="2" step="0.05" value="1" oninput="updateBrightness(+this.value)">
+            </div>
+            <div class="sl-row">
+              <div class="sl-lbl">Roughness <span class="sl-val" id="v-roughness-r">0.72</span></div>
+              <input type="range" id="s-roughness-r" min="0" max="1" step="0.01" value="0.72" oninput="applyProp('roughness',+this.value)">
+            </div>
+            <div class="sl-row" style="margin-bottom:0">
+              <div class="sl-lbl">Pattern Scale <span class="sl-val" id="v-scale-r">10.0</span></div>
+              <input type="range" id="s-scale-r" min="0.5" max="20" step="0.1" value="10" oninput="updateTexScale(+this.value)">
+            </div>
+          </div>
+
+          <div style="padding:14px 16px 18px">
+            <button class="btn-get-quote" onclick="" style="width:100%">Get A Quote →</button>
+          </div>
 
         </div><!-- /panel-room -->
 
@@ -1080,9 +1076,12 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;b
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 // ── Constants ─────────────────────────────────────────────────────────────
-const CHAIR_GLB = '/api/s3proxy?key=custom_assets/chair_split.glb';
-const SOFA_GLB  = '/api/s3proxy?key=custom_assets/sofa.glb';
-const ROOM_GLB  = '/api/s3proxy?key=glbs/room_new.glb';
+const CHAIR_GLB      = '/api/s3proxy?key=custom_assets/chair_split.glb';
+const SOFA_GLB       = '/api/s3proxy?key=custom_assets/sofa.glb';
+const BED_WOODEN_GLB = '/api/s3proxy?key=custom_assets/bed_wooden_frame.glb';
+const BED_FABRIC_GLB = '/api/s3proxy?key=custom_assets/bed_fabric_frame.glb';
+const ROOM_GLB       = '/api/s3proxy?key=glbs/room_new.glb';
+function getGLBUrl(key){return{chair:CHAIR_GLB,sofa:SOFA_GLB,bed_wooden:BED_WOODEN_GLB,bed_fabric:BED_FABRIC_GLB}[key]||null;}
 const MITY_IMG  = 'https://fabrics.mityinc.com/server/public/fabrics/';
 const POLY_API  = 'https://api.polyhaven.com/files/';
 
@@ -1360,7 +1359,18 @@ const LIBRARY = {
     { group:'Twist',            vendor:'Douglass #5881', vclass:'doug', items: SOFA_TWIST  },
     { group:'Linum',            vendor:'Ennis Fabrics',  vclass:'ennis',items: SOFA_LINUM  },
     { group:'Challenger',       vendor:'Ennis Fabrics',  vclass:'ennis',items: SOFA_CHALLENGER },
-  ]
+  ],
+  bed_wooden: [
+    { group:'My Fabrics', vendor:'Uploaded', vclass:'custom', items: CUSTOM_FABRIC_ITEMS },
+    { group:'Faux Wood Finishes', vendor:'MityLite Sierra', vclass:'mity', items: CHAIR_WOOD },
+  ],
+  bed_fabric: [
+    { group:'My Fabrics', vendor:'Uploaded', vclass:'custom', items: CUSTOM_FABRIC_ITEMS },
+    { group:'Kaleidoscope Neo', vendor:'Douglass #5308', vclass:'doug', items: SOFA_KALEID },
+    { group:'Twist',            vendor:'Douglass #5881', vclass:'doug', items: SOFA_TWIST  },
+    { group:'Linum',            vendor:'Ennis Fabrics',  vclass:'ennis',items: SOFA_LINUM  },
+    { group:'Challenger',       vendor:'Ennis Fabrics',  vclass:'ennis',items: SOFA_CHALLENGER },
+  ],
 };
 
 // ── App State ─────────────────────────────────────────────────────────────
@@ -1368,10 +1378,10 @@ let currentModelKey = 'chair';
 let meshEntries = [];
 let currentModel = null;
 // Room mode holds both chair + sofa simultaneously
-let roomFurnitureModels = { chair: null, sofa: null };
+let roomFurnitureModels = { chair: null, sofa: null, bed_wooden: null, bed_fabric: null };
 let roomFurnitureMeshEntries = { chair: [], sofa: [] };
 // Snapshot of mesh materials per model key — survives model switching
-let modelMaterialSnapshots = { chair: null, sofa: null };
+let modelMaterialSnapshots = { chair: null, sofa: null, bed_wooden: null, bed_fabric: null };
 let activeBtnEl = null;
 let lastAppliedItem = null;
 let roomMode = false;
@@ -2040,7 +2050,12 @@ function buildPieceList() {
   const list = document.getElementById('piece-list');
   list.innerHTML = '';
   if(!meshEntries.length) { list.innerHTML='<div style="font-size:11px;color:var(--text-muted)">No parts loaded</div>'; return; }
-  meshEntries.forEach((entry,i) => {
+
+  // Separate curtain entry from furniture entries
+  const curtainEntry = meshEntries.find(e => e._isCurtain);
+  const furnitureEntries = meshEntries.filter(e => !e._isCurtain);
+
+  furnitureEntries.forEach((entry,i) => {
     const dot = dotColors[i%dotColors.length];
     const row = document.createElement('div');
     row.className='piece-item'+(entry.pieceSelected?' sel-piece':'');
@@ -2053,7 +2068,6 @@ function buildPieceList() {
       meshEntries.forEach(e=>{ e.pieceSelected=false; });
       entry.pieceSelected = true;
       buildPieceList();
-      // Flash
       entry.greyMat.emissive=new THREE.Color(0x2d4a3e);entry.greyMat.emissiveIntensity=0.4;entry.greyMat.needsUpdate=true;markDirty();
       setTimeout(()=>{ entry.greyMat.emissive=new THREE.Color(0);entry.greyMat.emissiveIntensity=0;entry.greyMat.needsUpdate=true;markDirty(); },700);
     });
@@ -2061,6 +2075,29 @@ function buildPieceList() {
     row.addEventListener('mouseleave',()=>{ if(!entry.pieceSelected){entry.greyMat.emissive=new THREE.Color(0);entry.greyMat.emissiveIntensity=0;entry.greyMat.needsUpdate=true;markDirty();} });
     list.appendChild(row);
   });
+
+  // Curtain section — prominent dedicated row
+  if (curtainEntry) {
+    const sep = document.createElement('div');
+    sep.style.cssText='margin:8px 0 4px;font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--text-muted);text-transform:uppercase;padding:0 2px';
+    sep.textContent='Curtains';
+    list.appendChild(sep);
+
+    const row = document.createElement('div');
+    row.className='piece-item curtain-piece'+(curtainEntry.pieceSelected?' sel-piece':'');
+    row.style.cssText='border:1.5px dashed var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s';
+    const ico = document.createElement('span'); ico.textContent='🪟'; ico.style.fontSize='14px';
+    const lbl = document.createElement('span'); lbl.style.cssText='font-size:11px;font-weight:600;color:var(--text);flex:1'; lbl.textContent='Change Curtain Fabric';
+    const hint = document.createElement('span'); hint.style.cssText='font-size:9px;color:var(--text-muted)'; hint.textContent='select → pick swatch';
+    row.appendChild(ico); row.appendChild(lbl); row.appendChild(hint);
+    row.addEventListener('click', () => {
+      meshEntries.forEach(e => { e.pieceSelected = false; });
+      curtainEntry.pieceSelected = true;
+      buildPieceList();
+      showToast('Curtains selected — now pick a fabric below');
+    });
+    list.appendChild(row);
+  }
 }
 
 function toggleCheck(id, checked) {
@@ -2267,7 +2304,13 @@ function switchModel(key) {
   currentModelKey = key;
   document.getElementById('tab-chair').classList.toggle('active', key === 'chair');
   document.getElementById('tab-sofa').classList.toggle('active',  key === 'sofa');
-  document.getElementById('lib-title').textContent = key === 'chair' ? 'Chair Fabrics' : 'Sofa Fabrics';
+  const _titleMap = {chair:'Chair Fabrics',sofa:'Sofa Fabrics',bed_wooden:'Bed — Wooden Frame',bed_fabric:'Bed — Fabric Frame'};
+  document.getElementById('lib-title').textContent = _titleMap[key] || 'Fabrics';
+  // Sync bedroom bed-style chips if in bedroom section
+  ['bed_wooden','bed_fabric'].forEach(bk => {
+    const c = document.getElementById('chip-bed-'+bk.replace('bed_',''));
+    if (c) c.classList.toggle('on', bk === key);
+  });
   buildLibrary();
   updateProductInfo();
 
@@ -2284,10 +2327,12 @@ function switchModel(key) {
         const s = FURNITURE_SLOTS[key];
         _seatOnFloor(currentModel, s.x, s.z, s.rotY, s.scale || 1.0);
       }
-      // Ensure the previous model (now companion) is also still in scene
+      // Companion behaviour: living room keeps both pieces visible; bedroom shows only the active bed
       if (prevKey && roomFurnitureModels[prevKey]) {
         const prevModel = roomFurnitureModels[prevKey];
-        if (!scene.getObjectById(prevModel.id)) {
+        if (activeRoomSection === 'bedroom') {
+          scene.remove(prevModel);
+        } else if (!scene.getObjectById(prevModel.id)) {
           scene.add(prevModel);
           const ps = FURNITURE_SLOTS[prevKey];
           _seatOnFloor(prevModel, ps.x, ps.z, ps.rotY, ps.scale || 1.0);
@@ -2302,7 +2347,7 @@ function switchModel(key) {
     } else {
       // Not cached yet — load fresh (avoid calling processGLTF in room mode;
       // it would re-centre the model and clobber meshEntries/curtain entries)
-      const url = key === 'chair' ? CHAIR_GLB : SOFA_GLB;
+      const url = getGLBUrl(key);
       document.getElementById('loading').classList.add('on');
       document.getElementById('load-txt').textContent = 'Loading…';
       gltfLoader.load(url, gltf => {
@@ -2337,7 +2382,7 @@ function switchModel(key) {
     }
   } else {
     // ── Product mode: load fresh (applies snapshot via processGLTF) ───────
-    loadModel(key === 'chair' ? CHAIR_GLB : SOFA_GLB);
+    loadModel(getGLBUrl(key));
   }
 }
 
@@ -2416,15 +2461,14 @@ function resetAll() {
   document.getElementById('app-sw').innerHTML='';
   document.getElementById('app-sw').style.background='var(--border)';
   const _rbr=document.getElementById('app-replace-btn');if(_rbr)_rbr.style.display='none';
-  // If in room mode, reload both models fresh
-  if(roomMode && roomFurnitureModels) {
+  // If in room mode, reload companion model fresh (living room only)
+  if(roomMode && roomFurnitureModels && activeRoomSection === 'living') {
     const otherKey = currentModelKey === 'chair' ? 'sofa' : 'chair';
     if(roomFurnitureModels[otherKey]) {
       scene.remove(roomFurnitureModels[otherKey]);
       roomFurnitureModels[otherKey] = null;
     }
-    // Reload the OTHER model fresh (no snapshot to apply)
-    const otherUrl = otherKey === 'chair' ? CHAIR_GLB : SOFA_GLB;
+    const otherUrl = getGLBUrl(otherKey);
     gltfLoader.load(otherUrl, gltf => {
       const m = gltf.scene;
       const box = new THREE.Box3().setFromObject(m);
@@ -2441,7 +2485,8 @@ function resetAll() {
 // ── Build fabric library UI ───────────────────────────────────────────────
 function buildLibrary() {
   const lt = document.getElementById('lib-title');
-  if(lt) lt.textContent = currentModelKey === 'chair' ? 'Chair Fabrics' : 'Sofa Fabrics';
+  const _ltMap={chair:'Chair Fabrics',sofa:'Sofa Fabrics',bed_wooden:'Bed — Wooden Frame',bed_fabric:'Bed — Fabric Frame'};
+  if(lt) lt.textContent = _ltMap[currentModelKey] || 'Fabrics';
 
   const tabsEl = document.getElementById('fabric-tabs');
   const swatchesEl = document.getElementById('fabric-swatches-row');
@@ -2766,8 +2811,10 @@ function _buildProceduralRoom() {
 // Sofa natural size at rot=0: 2.48 × 1.21 (long along X, faces ±Z)
 // Chair: 0.8 × 0.82 (roughly square)
 const FURNITURE_SLOTS = {
-  chair: { x:  2.2, z:  0.89, rotY:  3.93,     scale: 0.7  },
-  sofa:  { x:  0.2, z:  1.0,  rotY:  Math.PI,  scale: 1.2  },
+  chair:      { x:  2.2, z:  0.89, rotY:  3.93,      scale: 0.7  },
+  sofa:       { x:  0.2, z:  1.0,  rotY:  Math.PI,   scale: 1.2  },
+  bed_wooden: { x:  0.0, z: -0.3,  rotY:  0,          scale: 1.0  },
+  bed_fabric: { x:  0.0, z: -0.3,  rotY:  0,          scale: 1.0  },
 };
 
 let roomFloorY = -1.6; // updated dynamically after room.glb loads
@@ -2814,9 +2861,12 @@ function _placeFurnitureInRoom() {
     if (!scene.getObjectById(currentModel.id)) scene.add(currentModel);
   }
 
-  // ── Companion model ─────────────────────────────────────────────────────
+  // No companion in bedroom mode — only one bed shown at a time
+  if (activeRoomSection === 'bedroom') return;
+
+  // ── Companion model (living room only) ─────────────────────────────────
   const otherKey = currentModelKey === 'chair' ? 'sofa' : 'chair';
-  const otherUrl = otherKey === 'chair' ? CHAIR_GLB : SOFA_GLB;
+  const otherUrl = getGLBUrl(otherKey);
   const os = FURNITURE_SLOTS[otherKey];
 
   if (roomFurnitureModels[otherKey]) {
@@ -2887,13 +2937,11 @@ function removeRoom() {
   if (roomGroup) { scene.remove(roomGroup); roomGroup = null; }
   Object.keys(roomElements).forEach(k => roomElements[k] = null);
 
-  // Remove companion from scene but KEEP in roomFurnitureModels cache
-  // so next room entry repositions it instantly (no async reload)
-  const otherKey = currentModelKey === 'chair' ? 'sofa' : 'chair';
-  if (roomFurnitureModels[otherKey]) {
-    scene.remove(roomFurnitureModels[otherKey]);
-    // Do NOT null it — keep cached for fast re-entry
-  }
+  // Remove all furniture from scene but KEEP in roomFurnitureModels cache
+  // so next room entry repositions them instantly (no async reload)
+  Object.keys(roomFurnitureModels).forEach(k => {
+    if (roomFurnitureModels[k]) scene.remove(roomFurnitureModels[k]);
+  });
 
   // Reset roomFloorY back to default
   roomFloorY = -1.6;
@@ -2914,8 +2962,25 @@ function setRoomSection(section) {
     document.getElementById('rsec-'+s).classList.toggle('active', s===section);
     document.getElementById('rsec-'+s+'-content').classList.toggle('active', s===section);
   });
-  // Exit move mode when switching sections
   if (furnitureMoveMode) toggleMoveMode();
+  const lbl = document.getElementById('piece-list-label');
+  if (lbl) lbl.textContent = section === 'bedroom' ? 'Bed Parts' : 'Furniture Parts';
+
+  if (!roomMode) return;
+
+  if (section === 'bedroom') {
+    // Hide living room furniture
+    ['chair','sofa'].forEach(k => { if(roomFurnitureModels[k]) scene.remove(roomFurnitureModels[k]); });
+    // Load default bed (or restore whichever was last active in bedroom)
+    const bedKey = (currentModelKey==='bed_wooden'||currentModelKey==='bed_fabric') ? currentModelKey : 'bed_wooden';
+    switchModel(bedKey);
+  } else {
+    // Hide bedroom furniture
+    ['bed_wooden','bed_fabric'].forEach(k => { if(roomFurnitureModels[k]) scene.remove(roomFurnitureModels[k]); });
+    // Restore living room furniture
+    const livingKey = (currentModelKey==='chair'||currentModelKey==='sofa') ? currentModelKey : 'chair';
+    switchModel(livingKey);
+  }
 }
 
 // ── Furniture Move Mode ──────────────────────────────────────────────────
