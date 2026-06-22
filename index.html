@@ -1651,10 +1651,10 @@ function pickPolyUrl(files, keys) {
   const fk = Object.keys(files);
   for(const key of keys) {
     const d = files[key];
-    if(d) { const url = d?.['1k']?.jpg?.url || d?.['2k']?.jpg?.url; if(url) return url; }
+    if(d) { const url = d?.['2k']?.jpg?.url || d?.['1k']?.jpg?.url; if(url) return url; }
     const nk = norm(key);
     const m = fk.find(k=>norm(k)===nk);
-    if(m && files[m]) { const url = files[m]?.['1k']?.jpg?.url || files[m]?.['2k']?.jpg?.url; if(url) return url; }
+    if(m && files[m]) { const url = files[m]?.['2k']?.jpg?.url || files[m]?.['1k']?.jpg?.url; if(url) return url; }
   }
   return null;
 }
@@ -1675,18 +1675,32 @@ async function getPolyMaps(polyId) {
 }
 
 // ── Apply swatch logic (shared between click and drop) ────────────────────
+function texToDataUrl(tex) {
+  const img = tex.image;
+  if(!img) return null;
+  const w = img.naturalWidth||img.width||(img instanceof ImageBitmap?img.width:0)||512;
+  const h = img.naturalHeight||img.height||(img instanceof ImageBitmap?img.height:0)||512;
+  if(w===0||h===0) return null;
+  const c = document.createElement('canvas');
+  c.width=w; c.height=h;
+  const ctx=c.getContext('2d');
+  if(!ctx) return null;
+  ctx.drawImage(img,0,0,w,h);
+  return c.toDataURL('image/jpeg',0.93);
+}
+
 async function applySwatchToEntries(item, targetEntries) {
   if(!targetEntries || !targetEntries.length) { showToast('Select a part →'); return; }
   document.getElementById('loading').classList.add('on');
   document.getElementById('load-txt').textContent = 'Loading Texture…';
 
   const defaults = {
-    wood:    { roughness:0.55, sheen:0.00, metalness:0.0, scale:5.0,  norm:0.8 },
-    vinyl:   { roughness:0.45, sheen:0.05, metalness:0.0, scale:12.0, norm:0.6 },
-    pu:      { roughness:0.50, sheen:0.08, metalness:0.0, scale:10.0, norm:0.7 },
-    leather: { roughness:0.60, sheen:0.15, metalness:0.0, scale:8.0,  norm:1.0 },
-    linen:   { roughness:0.80, sheen:0.20, metalness:0.0, scale:14.0, norm:0.9 },
-    fabric:  { roughness:0.72, sheen:0.10, metalness:0.0, scale:10.0, norm:1.0 },
+    wood:    { roughness:0.55, sheen:0.00, metalness:0.0, scale:1.5,  norm:0.8 },
+    vinyl:   { roughness:0.45, sheen:0.05, metalness:0.0, scale:4.0,  norm:0.6 },
+    pu:      { roughness:0.50, sheen:0.08, metalness:0.0, scale:3.5,  norm:0.7 },
+    leather: { roughness:0.60, sheen:0.15, metalness:0.0, scale:2.5,  norm:1.0 },
+    linen:   { roughness:0.80, sheen:0.20, metalness:0.0, scale:5.0,  norm:0.9 },
+    fabric:  { roughness:0.72, sheen:0.10, metalness:0.0, scale:3.5,  norm:1.0 },
   };
   const defs = item._defaults || defaults[item.type] || defaults.fabric;
   _currentAppliedDiffUrl = (item._defaults && item._defaults.diffUrl) || item.img || null;
@@ -1756,11 +1770,28 @@ async function applySwatchToEntries(item, targetEntries) {
     const diffSrc = item._defaults?.diffUrl || item.img || null;
     if(diffSrc) diffTex = await tryLoadTex(diffSrc, true).catch(()=>null);
 
-    let normTex = null, roughTex = null;
+    // Apply seamless processing to AmbientCG diffuse textures (photo-based, may have lighting gradients)
+    if(diffTex && diffSrc && diffSrc.includes('/api/acg-map')) {
+      try {
+        const rawDataUrl = texToDataUrl(diffTex);
+        if(rawDataUrl) {
+          const seamlessUrl = await makeSeamlessTexture(rawDataUrl);
+          const seamlessTex = await tryLoadTex(seamlessUrl, true).catch(()=>null);
+          if(seamlessTex) diffTex = seamlessTex;
+        }
+      } catch(_) {}
+    }
+
+    let normTex = null, roughTex = null, aoTex = null;
     if (item._defaults?.normUrl || item._defaults?.roughUrl) {
       // Pre-resolved URLs from search (PolyHaven direct or AmbientCG proxy)
       if(item._defaults.normUrl)  normTex  = await tryLoadTex(item._defaults.normUrl,  false).catch(()=>null);
       if(item._defaults.roughUrl) roughTex = await tryLoadTex(item._defaults.roughUrl, false).catch(()=>null);
+      // Fetch AO map from AmbientCG when available
+      if(item._defaults.normUrl?.includes('/api/acg-map')) {
+        const aoUrl = item._defaults.normUrl.replace('map=NormalGL','map=AmbientOcclusion');
+        aoTex = await tryLoadTex(aoUrl, false).catch(()=>null);
+      }
     } else {
       const polyId = (item.patKey && POLY_IDS[item.patKey]) ? POLY_IDS[item.patKey] : (POLY_IDS[item.type]||POLY_IDS.fabric);
       const {normUrl,roughUrl} = await getPolyMaps(polyId);
@@ -1783,6 +1814,7 @@ async function applySwatchToEntries(item, targetEntries) {
       else{mat.map=null;mat.color.setRGB(0.83*sBrightness,0.82*sBrightness,0.80*sBrightness);}
       if(normTex){const nt=normTex.clone();nt.wrapS=nt.wrapT=THREE.RepeatWrapping;nt.repeat.set(physRepeat,physRepeat);nt.needsUpdate=true;mat.normalMap=nt;mat.normalScale.set(sNorm,sNorm);}else{mat.normalMap=null;}
       if(roughTex){const rt=roughTex.clone();rt.wrapS=rt.wrapT=THREE.RepeatWrapping;rt.repeat.set(physRepeat,physRepeat);rt.needsUpdate=true;mat.roughnessMap=rt;}else{mat.roughnessMap=null;}
+      if(aoTex){const at=aoTex.clone();at.wrapS=at.wrapT=THREE.RepeatWrapping;at.repeat.set(physRepeat,physRepeat);at.needsUpdate=true;mat.aoMap=at;mat.aoMapIntensity=1.0;}else{mat.aoMap=null;}
       mat.roughness=sRoughness;mat.metalness=sMetalness;mat.sheen=sSheen;mat.needsUpdate=true;
       if(Array.isArray(entry.mesh.material)){const arr=[...entry.mesh.material];arr[entry.matIndex]=mat;entry.mesh.material=arr;}else{entry.mesh.material=mat;}
 
@@ -2167,6 +2199,7 @@ function updateTexScale(val) {
     if(mat.map)         { mat.map.repeat.set(physRepeat,physRepeat); mat.map.needsUpdate=true; }
     if(mat.normalMap)   { mat.normalMap.repeat.set(physRepeat,physRepeat); mat.normalMap.needsUpdate=true; }
     if(mat.roughnessMap){ mat.roughnessMap.repeat.set(physRepeat,physRepeat); mat.roughnessMap.needsUpdate=true; }
+    if(mat.aoMap)       { mat.aoMap.repeat.set(physRepeat,physRepeat); mat.aoMap.needsUpdate=true; }
     mat.needsUpdate=true;
   });
   markDirty();
@@ -2376,6 +2409,11 @@ function processGLTF(gltf) {
             else if(relY>-0.1&&relY<0.55&&absX<0.55) cleanName='Body Panel';
             else cleanName='Frame';
           }
+        }
+
+        // Copy UV1 → UV2 for aoMap support (Three.js requires uv2 channel for aoMap)
+        if(mesh.geometry.attributes.uv && !mesh.geometry.attributes.uv2) {
+          mesh.geometry.setAttribute('uv2', mesh.geometry.attributes.uv);
         }
 
         const maxDim=Math.max(ms.x,ms.y,ms.z);
@@ -2945,7 +2983,7 @@ function toggleRoomView() {
     camUpdate();
     // Re-apply environment to restore correct lighting after room session
     if (pmremGen) {
-      scene.environment = pmremGen.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+      scene.environment = pmremGen.fromScene(new THREE.RoomEnvironment(), 1.0).texture;
     }
     markDirty();
   }
@@ -3845,7 +3883,7 @@ function initThree() {
   renderer.outputEncoding=THREE.sRGBEncoding;
   renderer.physicallyCorrectLights=true;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure=1.2;
+  renderer.toneMappingExposure=1.0;
   renderer.shadowMap.enabled=true;
 
   scene=new THREE.Scene();
@@ -3853,12 +3891,15 @@ function initThree() {
 
   pmremGen=new THREE.PMREMGenerator(renderer);
   pmremGen.compileEquirectangularShader();
-  scene.environment=pmremGen.fromScene(new THREE.RoomEnvironment(),0.04).texture;
+  scene.environment=pmremGen.fromScene(new THREE.RoomEnvironment(),1.0).texture;
 
-  const amb=new THREE.AmbientLight(0xffffff,0.5);
-  const dir=new THREE.DirectionalLight(0xfff8f0,2.5);
+  const amb=new THREE.AmbientLight(0xffffff,0.3);
+  const dir=new THREE.DirectionalLight(0xfff8f0,1.8);
   dir.position.set(3,5,4);
-  scene.add(amb,dir);
+  const hemi=new THREE.HemisphereLight(0xfff8f0,0x8090a0,0.6);
+  const fill=new THREE.DirectionalLight(0xd0e8ff,0.8);
+  fill.position.set(-3,3,-4);
+  scene.add(amb,dir,hemi,fill);
 
   camUpdate();
 
@@ -4564,8 +4605,8 @@ async function trySelectedOnModel() {
     } else {
       const id = encodeURIComponent(result.id);
       diffUrl = `/api/acg-map?id=${id}&map=Color&res=1K`;
-      normUrl = `/api/acg-map?id=${id}&map=NormalGL&res=1K`;
-      roughUrl= `/api/acg-map?id=${id}&map=Roughness&res=1K`;
+      normUrl = `/api/acg-map?id=${id}&map=NormalGL&res=2K`;
+      roughUrl= `/api/acg-map?id=${id}&map=Roughness&res=2K`;
     }
   } catch(_) {}
 
