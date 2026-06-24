@@ -1900,14 +1900,23 @@ async function applySwatchToEntries(item, targetEntries) {
     baseColorHex = item.hex||'#ffffff';
     const baseColor = new THREE.Color(item.hex||'#ffffff');
 
+    // For bed models with smooth fabrics (leather/pu/vinyl):
+    // 1. Clamp uvScaleFactor tightly so pillows/headboard/mattress all tile at similar density
+    // 2. Lower normal map intensity — grain direction varies per UV island on the bed, causing
+    //    visible patchiness at high norm values. At 0.2 the grain reads as texture not direction.
+    const _isBedSmooth = currentModelKey && currentModelKey.startsWith('bed') &&
+      (item.type === 'leather' || item.type === 'pu' || item.type === 'vinyl');
+    const _bedNorm = _isBedSmooth ? 0.2 : sNorm;
+
     targetEntries.forEach(entry => {
       const mat = entry.greyMat;
-      const physRepeat = sScale*(entry.uvScaleFactor/BASE_TILE);
+      const uvSF = _isBedSmooth ? Math.min(Math.max(entry.uvScaleFactor, 0.65), 0.85) : entry.uvScaleFactor;
+      const physRepeat = sScale*(uvSF/BASE_TILE);
       mat.color.setRGB(1,1,1); mat.map=null;
       if(diffTex){const dt=diffTex.clone();dt.wrapS=dt.wrapT=THREE.RepeatWrapping;dt.repeat.set(physRepeat,physRepeat);dt.needsUpdate=true;mat.map=dt;mat.color.setRGB(sBrightness,sBrightness,sBrightness);}
       else if(item.hex){mat.map=null;mat.color.copy(baseColor).multiplyScalar(Math.max(0.01,sBrightness));}
       else{mat.map=null;mat.color.setRGB(0.83*sBrightness,0.82*sBrightness,0.80*sBrightness);}
-      if(normTex){const nt=normTex.clone();nt.wrapS=nt.wrapT=THREE.RepeatWrapping;nt.repeat.set(physRepeat,physRepeat);nt.needsUpdate=true;mat.normalMap=nt;mat.normalScale.set(sNorm,sNorm);}else{mat.normalMap=null;}
+      if(normTex){const nt=normTex.clone();nt.wrapS=nt.wrapT=THREE.RepeatWrapping;nt.repeat.set(physRepeat,physRepeat);nt.needsUpdate=true;mat.normalMap=nt;mat.normalScale.set(_bedNorm,_bedNorm);}else{mat.normalMap=null;}
       if(roughTex){const rt=roughTex.clone();rt.wrapS=rt.wrapT=THREE.RepeatWrapping;rt.repeat.set(physRepeat,physRepeat);rt.needsUpdate=true;mat.roughnessMap=rt;}else{mat.roughnessMap=null;}
       if(aoTex){const at=aoTex.clone();at.wrapS=at.wrapT=THREE.RepeatWrapping;at.repeat.set(physRepeat,physRepeat);at.needsUpdate=true;mat.aoMap=at;mat.aoMapIntensity=1.0;}else{mat.aoMap=null;}
       mat.roughness=sRoughness;mat.metalness=sMetalness;mat.sheen=sSheen;mat.needsUpdate=true;
@@ -2231,8 +2240,6 @@ async function dropFabricOnCanvas(e, rect) {
     const hitEntry = getHitEntry(e, rect);
     const target = selectedEntry || hitEntry;
     if(!target) { showToast('Select a part in the list, then drop'); return; }
-    // Curtain appearance is controlled by the curtain configurator panel, not by fabric drops
-    if(target._isCurtain) { showToast('Use the Curtain Style panel to style curtains'); return; }
     await applySwatchToEntries(dragItem.item, [target]);
     return;
   }
@@ -2977,7 +2984,6 @@ function buildLibrary() {
       if (roomMode) {
         const selected = meshEntries.filter(e => e.pieceSelected);
         if (!selected.length) { showToast('Click a piece in the list →'); return; }
-        if (selected.some(e => e._isCurtain)) { showToast('Use the Curtain Style panel for curtains'); return; }
         if (activeBtnEl) activeBtnEl.classList.remove('active');
         activeBtnEl = sw; sw.classList.add('active');
         applySwatchToEntries(item, selected);
