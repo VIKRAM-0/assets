@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LIVINIT · Product Configurator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
 <style>
 /* ── Design Tokens ─────────────────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -18,8 +19,16 @@
   --green:#10B981; --yellow:#F59E0B;
   /* legacy compat */
   --warm:#4361EE; --warm-light:#BAC8FF;
-  --font-b:'Inter',system-ui,sans-serif;
-  --font-d:'DM Serif Display',Georgia,serif;
+  /* extended accent palette */
+  --accent-deep:#5B21B6; --accent-bright:#A855F7;
+  --purple-300:#C4B5FD; --purple-100:#F0EEFF; --purple-50:#FAF9FF;
+  /* ink tonal scale */
+  --ink-900:#0B0A18; --ink-600:#52516A; --ink-400:#6B6888;
+  --surface-tint:#F5F4F8; --border-soft:#F3F2F8; --border-dot:#E4E2F0;
+  /* info blue for tags/badges */
+  --info:#1D4ED8; --info-bg:#EFF6FF; --info-border:#93C5FD;
+  --font-b:'DM Sans','Enrique',system-ui,sans-serif;
+  --font-d:'Plus Jakarta Sans','Agrandir Grand',system-ui,sans-serif;
   --r:6px; --r-lg:10px;
   --sidebar-w:72px; --topbar-h:56px; --strip-h:60px;
   --fabric-h:126px; --config-w:292px;
@@ -32,7 +41,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:
 /* ── Sidebar ───────────────────────────────────────────────────────────── */
 .sidebar{width:var(--sidebar-w);height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;z-index:10}
 .sb-logo{height:var(--topbar-h);display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border);flex-shrink:0}
-.sb-logo-text{font-family:var(--font-d);font-size:16px;color:var(--text);letter-spacing:.02em}
+.sb-logo-text{font-family:var(--font-d);font-size:18px;font-weight:800;color:var(--text);letter-spacing:.02em}
 .sb-nav{flex:1;display:flex;flex-direction:column;padding:8px 6px;gap:2px;overflow-y:auto}
 .sb-nav::-webkit-scrollbar{display:none}
 .sb-bottom{padding:8px 6px 12px;display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--border)}
@@ -88,12 +97,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:
 
 /* ── Zone Overlay ──────────────────────────────────────────────────────── */
 #zone-overlay{position:absolute;inset:0;pointer-events:none}
-.zone-label{position:absolute;display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.92);border:1.5px solid var(--border);border-radius:20px;padding:4px 10px;font-size:10px;font-weight:600;color:var(--text-mid);cursor:pointer;pointer-events:auto;box-shadow:0 2px 8px rgba(0,0,0,.1);backdrop-filter:blur(6px);transition:border-color .15s,background .15s,color .15s;white-space:nowrap;user-select:none;opacity:0}
-.zone-label::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--border-strong);flex-shrink:0;transition:background .15s}
-.zone-label:hover{border-color:var(--accent);color:var(--accent)}
-.zone-label:hover::before{background:var(--accent)}
-.zone-label.active{background:var(--accent);border-color:var(--accent);color:#fff}
-.zone-label.active::before{background:rgba(255,255,255,.75)}
+#zone-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.zone-label{position:absolute;display:inline-flex;align-items:center;background:rgba(255,255,255,.96);border:1.5px solid var(--border);border-radius:20px;padding:5px 12px;font-size:10.5px;font-weight:600;color:var(--text);cursor:pointer;pointer-events:auto;box-shadow:0 4px 16px rgba(0,0,0,.12),0 1px 4px rgba(0,0,0,.06);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:border-color .18s,background .18s,color .18s,box-shadow .18s,transform .15s;white-space:nowrap;user-select:none;opacity:0}
+.zone-label:hover{border-color:var(--accent);color:var(--accent);box-shadow:0 4px 20px rgba(124,58,237,.2);transform:scale(1.05) translateY(-1px)}
+.zone-label.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 4px 20px rgba(124,58,237,.35)}
+@keyframes zone-pulse{0%{r:4px;opacity:.55}100%{r:14px;opacity:0}}
+.zone-anchor-ring{animation:zone-pulse 2.2s ease-out infinite}
 
 /* ── Viewport controls bar ─────────────────────────────────────────────── */
 .vp-controls{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:0;background:rgba(255,255,255,.62);border:1px solid rgba(255,255,255,.75);border-radius:32px;padding:7px 14px;backdrop-filter:blur(24px) saturate(200%);-webkit-backdrop-filter:blur(24px) saturate(200%);box-shadow:0 4px 20px rgba(0,0,0,.12),inset 0 1px 0 rgba(255,255,255,.9)}
@@ -374,7 +383,7 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;b
 .finder-prop-row-lbl{font-size:10px;color:var(--text-muted);display:flex;align-items:center;gap:7px}
 .finder-prop-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .finder-prop-row-val{font-size:11px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
-.finder-prop-row-tag{font-size:9px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#1D4ED8;background:#EFF6FF;border:1px solid #93C5FD;border-radius:3px;padding:2px 7px}
+.finder-prop-row-tag{font-size:9px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--info);background:var(--info-bg);border:1px solid var(--info-border);border-radius:3px;padding:2px 7px}
 .finder-prop-row-muted{font-size:10px;color:var(--text-muted);font-style:italic}
 .finder-prop-row-action{font-size:10px;color:var(--warm);cursor:pointer;font-weight:500}
 .finder-filter-section{display:flex;flex-direction:column;gap:7px}
@@ -496,27 +505,27 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;b
 #tour-bubble.on{opacity:1;transform:scale(1) translateY(0)}
 .tb-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .tb-left{display:flex;align-items:center;gap:10px}
-.tb-pill{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#7c3aed;background:#ede9fe;padding:3px 10px;border-radius:20px;white-space:nowrap}
+.tb-pill{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);background:var(--accent-pale);padding:3px 10px;border-radius:20px;white-space:nowrap}
 .tb-dots{display:flex;gap:5px;align-items:center}
-.tb-dot{width:5px;height:5px;border-radius:50%;background:#e4e2f0;border:none;padding:0;cursor:pointer;transition:all .25s}
-.tb-dot.on{width:16px;border-radius:3px;background:#7c3aed}
-.tb-dot:hover:not(.on){background:#c4b5fd}
-.tb-close{width:26px;height:26px;border:none;background:#f5f4f8;border-radius:50%;cursor:pointer;color:#aaa;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
-.tb-close:hover{background:#ede9fe;color:#7c3aed}
-#tb-title{font-family:var(--font-d);font-size:16px;font-weight:700;color:#0f0e1a;margin:0 0 8px;line-height:1.3}
-#tb-desc{font-size:12.5px;color:#54536b;line-height:1.7;margin:0 0 6px}
+.tb-dot{width:5px;height:5px;border-radius:50%;background:var(--border-dot);border:none;padding:0;cursor:pointer;transition:all .25s}
+.tb-dot.on{width:16px;border-radius:3px;background:var(--accent)}
+.tb-dot:hover:not(.on){background:var(--purple-300)}
+.tb-close{width:26px;height:26px;border:none;background:var(--surface-tint);border-radius:50%;cursor:pointer;color:var(--text-muted);font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.tb-close:hover{background:var(--accent-pale);color:var(--accent)}
+#tb-title{font-family:var(--font-d);font-size:18px;font-weight:800;color:var(--ink-900);margin:0 0 8px;line-height:1.25}
+#tb-desc{font-size:13px;color:var(--ink-600);line-height:1.65;margin:0 0 6px}
 .tb-features{display:flex;flex-direction:column;gap:5px;margin:12px 0 0}
-.tb-feat{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#444;line-height:1.45}
-.tb-feat-icon{width:20px;height:20px;border-radius:6px;background:#f0eeff;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:1px}
-.tb-footer{display:flex;align-items:center;justify-content:space-between;margin-top:18px;padding-top:16px;border-top:1px solid #f3f2f8}
-.tb-skip{font-size:11px;color:#bbb;background:none;border:none;cursor:pointer;font-family:var(--font-b);padding:0;transition:color .15s}
-.tb-skip:hover{color:#888}
+.tb-feat{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--text-mid);line-height:1.45}
+.tb-feat-icon{width:20px;height:20px;border-radius:6px;background:var(--purple-100);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:1px}
+.tb-footer{display:flex;align-items:center;justify-content:space-between;margin-top:18px;padding-top:16px;border-top:1px solid var(--border)}
+.tb-skip{font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;font-family:var(--font-b);padding:0;transition:color .15s}
+.tb-skip:hover{color:var(--text-mid)}
 .tb-nav{display:flex;gap:8px;align-items:center}
-.tb-back{width:32px;height:32px;border:1.5px solid #eee;background:#fff;border-radius:50%;cursor:pointer;color:#bbb;display:flex;align-items:center;justify-content:center;transition:all .18s;flex-shrink:0}
-.tb-back:hover:not(:disabled){border-color:#c4b5fd;color:#7c3aed}
+.tb-back{width:32px;height:32px;border:1.5px solid var(--border);background:var(--surface);border-radius:50%;cursor:pointer;color:var(--text-muted);display:flex;align-items:center;justify-content:center;transition:all .18s;flex-shrink:0}
+.tb-back:hover:not(:disabled){border-color:var(--purple-300);color:var(--accent)}
 .tb-back:disabled{opacity:.28;cursor:default}
-.tb-next{font-size:11.5px;font-weight:600;color:#fff;background:#7c3aed;border:none;cursor:pointer;padding:9px 20px;border-radius:22px;font-family:var(--font-b);transition:all .22s;white-space:nowrap;letter-spacing:.02em}
-.tb-next:hover{background:#6d28d9;transform:translateY(-1px);box-shadow:0 5px 16px rgba(124,58,237,.35)}
+.tb-next{font-size:11.5px;font-weight:600;color:#fff;background:var(--accent);border:none;cursor:pointer;padding:9px 20px;border-radius:22px;font-family:var(--font-b);transition:all .22s;white-space:nowrap;letter-spacing:.02em}
+.tb-next:hover{background:var(--accent-hover);transform:translateY(-1px);box-shadow:0 5px 16px rgba(124,58,237,.35)}
 /* Bubble arrow */
 #tour-bubble::before{content:'';position:absolute;border:9px solid transparent;pointer-events:none}
 #tour-bubble.a-top::before{border-bottom-color:#fff;top:-18px;left:50%;transform:translateX(-50%)}
@@ -534,33 +543,33 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;b
   pointer-events:none;
 }
 #tour-welcome.on{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:all}
-.tw-hero{height:210px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:linear-gradient(140deg,#5b21b6 0%,#7c3aed 45%,#a855f7 100%)}
+.tw-hero{height:210px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:linear-gradient(140deg,var(--accent-deep) 0%,var(--accent) 45%,var(--accent-bright) 100%)}
 .tw-orb{position:absolute;border-radius:50%;background:rgba(255,255,255,.07)}
 .tw-orb.a{width:280px;height:280px;top:-90px;right:-70px}
 .tw-orb.b{width:160px;height:160px;bottom:-60px;left:-40px}
 .tw-orb.c{width:90px;height:90px;top:30px;left:50px}
 .tw-body{padding:28px 30px 24px}
-.tw-eyebrow{display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#7c3aed;background:#ede9fe;border-radius:20px;padding:3px 10px;margin-bottom:14px}
-.tw-body h2{font-family:var(--font-d);font-size:24px;font-weight:800;color:#0b0a18;margin:0 0 10px;line-height:1.18;letter-spacing:-.02em}
-.tw-body>p{font-size:13.5px;color:#52516a;line-height:1.65;margin:0 0 22px}
+.tw-eyebrow{display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);background:var(--accent-pale);border-radius:20px;padding:3px 10px;margin-bottom:14px}
+.tw-body h2{font-family:var(--font-d);font-size:26px;font-weight:800;color:var(--ink-900);margin:0 0 10px;line-height:1.15;letter-spacing:-.02em}
+.tw-body>p{font-size:13px;color:var(--ink-600);line-height:1.65;margin:0 0 22px}
 .tw-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px}
-.tw-step{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;background:#faf9ff;border:1.5px solid #ede9fe;border-radius:14px;text-align:center;transition:all .2s}
-.tw-step:hover{background:#f0eeff;border-color:#c4b5fd;transform:translateY(-2px)}
+.tw-step{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;background:var(--purple-50);border:1.5px solid var(--accent-pale);border-radius:14px;text-align:center;transition:all .2s}
+.tw-step:hover{background:var(--purple-100);border-color:var(--purple-300);transform:translateY(-2px)}
 .tw-step-icon{font-size:22px;line-height:1}
-.tw-step-label{font-size:9.5px;font-weight:600;color:#6b6888;letter-spacing:.04em}
+.tw-step-label{font-size:9.5px;font-weight:600;color:var(--ink-400);letter-spacing:.04em}
 .tw-actions{display:flex;gap:10px}
-.tw-btn-start{flex:1;padding:13px;background:#7c3aed;color:#fff;border:none;border-radius:14px;font-size:13px;font-weight:700;font-family:var(--font-b);cursor:pointer;transition:all .22s;display:flex;align-items:center;justify-content:center;gap:7px;letter-spacing:.01em}
-.tw-btn-start:hover{background:#6d28d9;transform:translateY(-1px);box-shadow:0 8px 24px rgba(124,58,237,.38)}
-.tw-btn-skip{padding:13px 18px;background:#f5f4f8;color:#888;border:none;border-radius:14px;font-size:12px;font-weight:600;font-family:var(--font-b);cursor:pointer;transition:all .2s;letter-spacing:.01em}
-.tw-btn-skip:hover{background:#ede9fe;color:#7c3aed}
+.tw-btn-start{flex:1;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:14px;font-size:13px;font-weight:600;font-family:var(--font-b);cursor:pointer;transition:all .22s;display:flex;align-items:center;justify-content:center;gap:7px;letter-spacing:.01em}
+.tw-btn-start:hover{background:var(--accent-hover);transform:translateY(-1px);box-shadow:0 8px 24px rgba(124,58,237,.38)}
+.tw-btn-skip{padding:13px 18px;background:var(--surface-tint);color:var(--text-mid);border:none;border-radius:14px;font-size:12px;font-weight:600;font-family:var(--font-b);cursor:pointer;transition:all .2s;letter-spacing:.01em}
+.tw-btn-skip:hover{background:var(--accent-pale);color:var(--accent)}
 .tw-load{padding:16px 30px 22px}
-.tw-load-track{height:2px;background:#f0eff8;border-radius:2px;overflow:hidden;margin-bottom:7px}
-.tw-load-bar{height:100%;width:6%;border-radius:2px;background:linear-gradient(90deg,#7c3aed,#a855f7);transition:width .9s ease;position:relative;overflow:hidden}
+.tw-load-track{height:2px;background:var(--border-soft);border-radius:2px;overflow:hidden;margin-bottom:7px}
+.tw-load-bar{height:100%;width:6%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--accent-bright));transition:width .9s ease;position:relative;overflow:hidden}
 .tw-load-bar::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.65),transparent);animation:tw-sheen 1.5s ease infinite}
-.tw-load-bar.done{width:100%!important;background:linear-gradient(90deg,#7c3aed,#10b981)}
+.tw-load-bar.done{width:100%!important;background:linear-gradient(90deg,var(--accent),var(--green))}
 .tw-load-bar.done::after{animation:none}
 @keyframes tw-sheen{from{transform:translateX(-100%)}to{transform:translateX(200%)}}
-.tw-load-label{font-size:9px;color:#ccc;text-align:center;font-family:var(--font-b);letter-spacing:.06em}
+.tw-load-label{font-size:9px;color:var(--text-muted);text-align:center;font-family:var(--font-b);letter-spacing:.06em}
 </style>
 </head>
 <body>
@@ -1817,13 +1826,19 @@ async function applySwatchToEntries(item, targetEntries) {
 
   try {
     if(item.type==='wood') {
-      const {normUrl,roughUrl} = await getPolyMaps(POLY_IDS.wood);
-      let normTex  = normUrl  ? await tryLoadTex(normUrl,false).catch(()=>null) : null;
-      let roughTex = roughUrl ? await tryLoadTex(roughUrl,false).catch(()=>null) : null;
+      // Fetch PolyHaven metadata and diffuse in parallel
       const woodMaps = MATERIAL_MAPS.wood;
+      const [{normUrl,roughUrl}, diffTex] = await Promise.all([
+        getPolyMaps(POLY_IDS.wood),
+        item.img ? tryLoadTex(item.img, true).catch(()=>null) : Promise.resolve(null),
+      ]);
+      // Load normal + roughness in parallel
+      let [normTex, roughTex] = await Promise.all([
+        normUrl  ? tryLoadTex(normUrl,  false).catch(()=>null) : Promise.resolve(null),
+        roughUrl ? tryLoadTex(roughUrl, false).catch(()=>null) : Promise.resolve(null),
+      ]);
       if(!normTex)  normTex  = await loadTexFirstSuccess(woodMaps.norm,  false);
       if(!roughTex) roughTex = await loadTexFirstSuccess(woodMaps.rough, false);
-      const diffTex = item.img ? await tryLoadTex(item.img, true).catch(()=>null) : null;
       baseColorHex = item.hex;
       targetEntries.forEach(entry => {
         const mat = entry.greyMat;
@@ -1845,11 +1860,34 @@ async function applySwatchToEntries(item, targetEntries) {
       return;
     }
 
-    let diffTex = null;
     const diffSrc = item._defaults?.diffUrl || item.img || null;
-    if(diffSrc) diffTex = await tryLoadTex(diffSrc, true).catch(()=>null);
 
-    // Apply seamless processing to AmbientCG diffuse textures (photo-based, may have lighting gradients)
+    // Resolve norm/rough/AO URLs immediately (before loading diffuse) so we
+    // can kick off those fetches in parallel with diffuse + AI enhancement.
+    let _normUrl = null, _roughUrl = null, _aoUrl = null;
+    if (item._defaults?.normUrl || item._defaults?.roughUrl) {
+      _normUrl  = item._defaults.normUrl  || null;
+      _roughUrl = item._defaults.roughUrl || null;
+      if (_normUrl?.includes('/api/acg-map'))
+        _aoUrl = _normUrl.replace('map=NormalGL', 'map=AmbientOcclusion');
+    } else {
+      // PolyHaven lookup — run in parallel with diffuse fetch below
+      const polyId = (item.patKey && POLY_IDS[item.patKey]) ? POLY_IDS[item.patKey] : (POLY_IDS[item.type]||POLY_IDS.fabric);
+      const ph = await getPolyMaps(polyId);
+      _normUrl = ph.normUrl || null; _roughUrl = ph.roughUrl || null;
+    }
+
+    // Start loading norm/rough/AO in the background — they don't depend on diffuse
+    const normRoughAoPromise = Promise.all([
+      _normUrl  ? tryLoadTex(_normUrl,  false).catch(()=>null) : Promise.resolve(null),
+      _roughUrl ? tryLoadTex(_roughUrl, false).catch(()=>null) : Promise.resolve(null),
+      _aoUrl    ? tryLoadTex(_aoUrl,    false).catch(()=>null) : Promise.resolve(null),
+    ]);
+
+    // Load diffuse, then run seamless + AI enhancement pipeline sequentially
+    let diffTex = diffSrc ? await tryLoadTex(diffSrc, true).catch(()=>null) : null;
+
+    // Apply seamless processing to AmbientCG diffuse textures
     if(diffTex && diffSrc && diffSrc.includes('/api/acg-map')) {
       try {
         const rawDataUrl = texToDataUrl(diffTex);
@@ -1861,7 +1899,7 @@ async function applySwatchToEntries(item, targetEntries) {
       } catch(_) {}
     }
 
-    // AI texture enhancement — upscale quality, remove baked lighting, sharpen weave detail
+    // AI texture enhancement — norm/rough are loading in parallel during this wait
     if(diffTex && diffSrc) {
       document.getElementById('load-txt').textContent = 'Enhancing Texture…';
       try {
@@ -1877,22 +1915,8 @@ async function applySwatchToEntries(item, targetEntries) {
       document.getElementById('load-txt').textContent = 'Applying…';
     }
 
-    let normTex = null, roughTex = null, aoTex = null;
-    if (item._defaults?.normUrl || item._defaults?.roughUrl) {
-      // Pre-resolved URLs from search (PolyHaven direct or AmbientCG proxy)
-      if(item._defaults.normUrl)  normTex  = await tryLoadTex(item._defaults.normUrl,  false).catch(()=>null);
-      if(item._defaults.roughUrl) roughTex = await tryLoadTex(item._defaults.roughUrl, false).catch(()=>null);
-      // Fetch AO map from AmbientCG when available
-      if(item._defaults.normUrl?.includes('/api/acg-map')) {
-        const aoUrl = item._defaults.normUrl.replace('map=NormalGL','map=AmbientOcclusion');
-        aoTex = await tryLoadTex(aoUrl, false).catch(()=>null);
-      }
-    } else {
-      const polyId = (item.patKey && POLY_IDS[item.patKey]) ? POLY_IDS[item.patKey] : (POLY_IDS[item.type]||POLY_IDS.fabric);
-      const {normUrl,roughUrl} = await getPolyMaps(polyId);
-      if(normUrl)  normTex  = await tryLoadTex(normUrl,  false).catch(()=>null);
-      if(roughUrl) roughTex = await tryLoadTex(roughUrl, false).catch(()=>null);
-    }
+    // Norm/rough/AO should be done by now (ran during AI enhancement)
+    let [normTex, roughTex, aoTex] = await normRoughAoPromise;
     const matMaps = MATERIAL_MAPS[item.type]||MATERIAL_MAPS.fabric;
     if(!normTex)  normTex  = await loadTexFirstSuccess(matMaps.norm,  false);
     if(!roughTex) roughTex = await loadTexFirstSuccess(matMaps.rough, false);
@@ -3956,7 +3980,7 @@ function showRenderedImage(imageUrl, isLocal) {
   hd.style.cssText='padding:14px 20px;border-bottom:1px solid #ebebeb;display:flex;justify-content:space-between;align-items:center;flex-shrink:0';
   const ti=document.createElement('h2');
   ti.textContent='Render';
-  ti.style.cssText='margin:0;font-size:15px;font-weight:600;color:#111;font-family:var(--font-d)';
+  ti.style.cssText='margin:0;font-size:15px;font-weight:800;color:#111;font-family:var(--font-d)';
   const cb=document.createElement('button');
   cb.textContent='×';cb.style.cssText='background:none;border:none;font-size:24px;cursor:pointer;color:#888;padding:0';cb.onclick=()=>document.body.removeChild(ov);
   const iw=document.createElement('div');
@@ -4023,7 +4047,38 @@ function rebuildZoneOverlay() {
   _zoneLabelsReady = false;
   if(!meshEntries.length) { _updateZoneCountBadge(); return; }
 
-  meshEntries.forEach(entry => {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.id = 'zone-svg';
+  overlay.appendChild(svg);
+
+  meshEntries.forEach((entry, i) => {
+    // Connector line
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('data-eid', entry.id);
+    line.setAttribute('stroke', 'rgba(124,58,237,0.28)');
+    line.setAttribute('stroke-width', '1.5');
+    line.setAttribute('stroke-dasharray', '5 3');
+    line.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(line);
+
+    // Anchor group: pulsing ring + solid dot
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('data-eid', entry.id);
+    const ring = document.createElementNS(NS, 'circle');
+    ring.setAttribute('cx', '0'); ring.setAttribute('cy', '0'); ring.setAttribute('r', '4');
+    ring.setAttribute('fill', 'rgba(124,58,237,0.22)'); ring.setAttribute('stroke', 'none');
+    ring.classList.add('zone-anchor-ring');
+    ring.style.animationDelay = (i * 0.35) + 's';
+    g.appendChild(ring);
+    const dot = document.createElementNS(NS, 'circle');
+    dot.setAttribute('cx', '0'); dot.setAttribute('cy', '0'); dot.setAttribute('r', '4');
+    dot.setAttribute('fill', '#7C3AED');
+    dot.setAttribute('stroke', '#fff'); dot.setAttribute('stroke-width', '2');
+    g.appendChild(dot);
+    svg.appendChild(g);
+
+    // Floating label
     const label = document.createElement('div');
     label.className = 'zone-label';
     label.dataset.eid = entry.id;
@@ -4063,9 +4118,25 @@ function _zoneClick(entryId) {
 }
 
 function _refreshZoneLabelStates() {
+  const overlay = document.getElementById('zone-overlay');
+  const svg = overlay && overlay.querySelector('#zone-svg');
   document.querySelectorAll('#zone-overlay .zone-label').forEach(l => {
-    const entry = meshEntries.find(e => e.id === l.dataset.eid);
-    l.classList.toggle('active', !!(entry && entry.checked));
+    const eid = l.dataset.eid;
+    const entry = meshEntries.find(e => e.id === eid);
+    const isActive = !!(entry && entry.checked);
+    l.classList.toggle('active', isActive);
+    if(svg) {
+      const line = svg.querySelector(`line[data-eid="${eid}"]`);
+      const g = svg.querySelector(`g[data-eid="${eid}"]`);
+      if(line) {
+        line.setAttribute('stroke', isActive ? 'rgba(124,58,237,0.6)' : 'rgba(124,58,237,0.28)');
+        line.setAttribute('stroke-dasharray', isActive ? '' : '5 3');
+      }
+      if(g) {
+        const dot = g.querySelectorAll('circle')[1];
+        if(dot) dot.setAttribute('fill', isActive ? '#5B21B6' : '#7C3AED');
+      }
+    }
   });
 }
 
@@ -4077,20 +4148,28 @@ function updateZoneLabelPositions() {
   if(!canvas) return;
   const W = canvas.clientWidth, H = canvas.clientHeight;
   if(W === 0 || H === 0) return;
+  const svg = overlay.querySelector('#zone-svg');
 
   meshEntries.forEach((entry) => {
     const label = overlay.querySelector(`.zone-label[data-eid="${entry.id}"]`);
+    const svgLine = svg && svg.querySelector(`line[data-eid="${entry.id}"]`);
+    const svgG    = svg && svg.querySelector(`g[data-eid="${entry.id}"]`);
     if(!label) return;
     try {
       const box = new THREE.Box3().setFromObject(entry.mesh);
       const center = box.getCenter(new THREE.Vector3());
       const projected = center.clone().project(camera);
-      if(projected.z >= 1) { label.style.opacity = '0'; return; }
+      if(projected.z >= 1) {
+        label.style.opacity = '0';
+        if(svgG) svgG.style.opacity = '0';
+        return;
+      }
 
+      // Anchor point (actual 3D projected position)
       const sx = (projected.x * 0.5 + 0.5) * W;
       const sy = (-projected.y * 0.5 + 0.5) * H;
 
-      // Push label outward from viewport center
+      // Push label outward from viewport centre
       const cx = W * 0.5, cy = H * 0.45;
       let dx = sx - cx, dy = sy - cy;
       const len = Math.sqrt(dx*dx + dy*dy) || 1;
@@ -4098,7 +4177,7 @@ function updateZoneLabelPositions() {
       let lx = sx + dx * 85;
       let ly = sy + dy * 70;
 
-      // Clamp within viewport with padding
+      // Clamp label within viewport
       const lw = 120, lh = 28;
       lx = Math.max(lw/2 + 8, Math.min(W - lw/2 - 8, lx));
       ly = Math.max(lh/2 + 8, Math.min(H - lh/2 - 44, ly));
@@ -4106,8 +4185,20 @@ function updateZoneLabelPositions() {
       label.style.left = (lx - lw/2) + 'px';
       label.style.top  = (ly - lh/2) + 'px';
       label.style.opacity = '1';
+
+      // Update SVG connector line anchor → label centre
+      if(svgLine) {
+        svgLine.setAttribute('x1', sx); svgLine.setAttribute('y1', sy);
+        svgLine.setAttribute('x2', lx); svgLine.setAttribute('y2', ly);
+      }
+      // Update anchor dot position
+      if(svgG) {
+        svgG.setAttribute('transform', `translate(${sx},${sy})`);
+        svgG.style.opacity = '1';
+      }
     } catch(e) {
       label.style.opacity = '0';
+      if(svgG) svgG.style.opacity = '0';
     }
   });
 }
@@ -4296,9 +4387,11 @@ function initThree() {
 }
 
 function loadScripts(urls){
-  return urls.reduce((p,url)=>p.then(()=>new Promise((res,rej)=>{
+  // All four extras (DRACOLoader, GLTFLoader, RoomEnvironment, TransformControls)
+  // only need THREE which is already synchronously loaded — fetch them in parallel.
+  return Promise.all(urls.map(url=>new Promise((res,rej)=>{
     const s=document.createElement('script');s.src=url;s.onload=res;s.onerror=rej;document.head.appendChild(s);
-  })),Promise.resolve());
+  })));
 }
 
 // ── GLB Upload ────────────────────────────────────────────────────────────
@@ -5080,16 +5173,14 @@ loadScripts([
   loadModel(CHAIR_GLB);
   updateProductInfo();
 
-  // Background preload — all models cached so every tab switch is instant
+  // Background preload — furniture models cached so every tab switch is instant
   [
     { url: SOFA_GLB,       roomKey: 'sofa' },
     { url: BED_WOODEN_GLB, roomKey: null   },
     { url: BED_FABRIC_GLB, roomKey: null   },
   ].forEach(({ url, roomKey }) => {
     gltfLoader.load(url, gltf => {
-      // Cache raw scene before any modification (product-mode fast switch)
       if (!_gltfSceneCache[url]) _gltfSceneCache[url] = gltf.scene;
-      // Also prep room-mode companion (sofa only for now)
       if (roomKey === 'sofa' && !roomFurnitureModels.sofa) {
         const m = gltf.scene.clone(true);
         const b = new THREE.Box3().setFromObject(m);
