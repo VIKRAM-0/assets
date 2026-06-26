@@ -2270,13 +2270,15 @@ async function dropFabricOnCanvas(e, rect) {
 
   const entry = getHitEntry(e, rect);
   if(!entry) { showToast('Drop on a furniture part'); return; }
-  // In product mode: auto-select the hit entry but KEEP other already-checked entries too.
-  const anyChecked = meshEntries.some(en=>en.checked);
-  if(!anyChecked) {
-    entry.checked = true;
-    if(Array.isArray(entry.mesh.material)){const matArr=[...entry.mesh.material];if(entry.matIndex>=0&&entry.matIndex<matArr.length){matArr[entry.matIndex]=entry.greyMat;entry.mesh.material=matArr;}}else{entry.mesh.material=entry.greyMat;}
-    buildMeshList();
-  }
+  // Select only the dropped-on entry so the right panel always reflects what was just targeted
+  meshEntries.forEach(en => {
+    en.checked = false;
+    if(Array.isArray(en.mesh.material)){const a=[...en.mesh.material];if(en.matIndex>=0&&en.matIndex<a.length){a[en.matIndex]=en.origMat;en.mesh.material=a;}}else{en.mesh.material=en.origMat;}
+  });
+  entry.checked = true;
+  if(Array.isArray(entry.mesh.material)){const matArr=[...entry.mesh.material];if(entry.matIndex>=0&&entry.matIndex<matArr.length){matArr[entry.matIndex]=entry.greyMat;entry.mesh.material=matArr;}}else{entry.mesh.material=entry.greyMat;}
+  buildMeshList();
+  _refreshZoneLabelStates();
   await applySwatchToEntries(dragItem.item, [entry]);
 }
 
@@ -4150,6 +4152,9 @@ function updateZoneLabelPositions() {
   if(W === 0 || H === 0) return;
   const svg = overlay.querySelector('#zone-svg');
 
+  // Phase 1 — project all mesh centers, compute initial label positions
+  const items = [];
+  const hidden = [];
   meshEntries.forEach((entry) => {
     const label = overlay.querySelector(`.zone-label[data-eid="${entry.id}"]`);
     const svgLine = svg && svg.querySelector(`line[data-eid="${entry.id}"]`);
@@ -4158,47 +4163,75 @@ function updateZoneLabelPositions() {
     try {
       const box = new THREE.Box3().setFromObject(entry.mesh);
       const center = box.getCenter(new THREE.Vector3());
-      const projected = center.clone().project(camera);
-      if(projected.z >= 1) {
-        label.style.opacity = '0';
-        if(svgG) svgG.style.opacity = '0';
-        return;
-      }
+      const proj = center.clone().project(camera);
+      if(proj.z >= 1) { hidden.push({ label, svgG }); return; }
 
-      // Anchor point (actual 3D projected position)
-      const sx = (projected.x * 0.5 + 0.5) * W;
-      const sy = (-projected.y * 0.5 + 0.5) * H;
+      const sx = (proj.x * 0.5 + 0.5) * W;
+      const sy = (-proj.y * 0.5 + 0.5) * H;
 
-      // Push label outward from viewport centre
-      const cx = W * 0.5, cy = H * 0.45;
+      // Push outward from focal centre — stronger push the closer to centre
+      const cx = W * 0.5, cy = H * 0.42;
       let dx = sx - cx, dy = sy - cy;
-      const len = Math.sqrt(dx*dx + dy*dy) || 1;
-      dx /= len; dy /= len;
-      let lx = sx + dx * 85;
-      let ly = sy + dy * 70;
+      const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+      const push = Math.max(110, 160 - dist * 0.25);
+      const lx0 = sx + (dx / dist) * push;
+      const ly0 = sy + (dy / dist) * push;
 
-      // Clamp label within viewport
-      const lw = 120, lh = 28;
-      lx = Math.max(lw/2 + 8, Math.min(W - lw/2 - 8, lx));
-      ly = Math.max(lh/2 + 8, Math.min(H - lh/2 - 44, ly));
+      const lw = label.offsetWidth || 110;
+      const lh = label.offsetHeight || 28;
+      items.push({ label, svgLine, svgG, sx, sy, lx: lx0, ly: ly0, lw, lh });
+    } catch(_) { hidden.push({ label, svgG }); }
+  });
 
-      label.style.left = (lx - lw/2) + 'px';
-      label.style.top  = (ly - lh/2) + 'px';
-      label.style.opacity = '1';
+  // Hide culled labels
+  hidden.forEach(({ label, svgG }) => {
+    label.style.opacity = '0';
+    if(svgG) svgG.style.opacity = '0';
+  });
 
-      // Update SVG connector line anchor → label centre
-      if(svgLine) {
-        svgLine.setAttribute('x1', sx); svgLine.setAttribute('y1', sy);
-        svgLine.setAttribute('x2', lx); svgLine.setAttribute('y2', ly);
+  // Phase 2 — iterative overlap separation (up to 20 passes)
+  for(let iter = 0; iter < 20; iter++) {
+    let moved = false;
+    for(let i = 0; i < items.length; i++) {
+      for(let j = i + 1; j < items.length; j++) {
+        const a = items[i], b = items[j];
+        const gapX = (a.lw + b.lw) / 2 + 12;
+        const gapY = (a.lh + b.lh) / 2 + 10;
+        const odx = a.lx - b.lx, ody = a.ly - b.ly;
+        const ox = gapX - Math.abs(odx);
+        const oy = gapY - Math.abs(ody);
+        if(ox > 0 && oy > 0) {
+          // Separate along the axis with the smaller overlap
+          if(ox < oy) {
+            const push = (ox * 0.5 + 1) * (odx >= 0 ? 1 : -1);
+            a.lx += push; b.lx -= push;
+          } else {
+            const push = (oy * 0.5 + 1) * (ody >= 0 ? 1 : -1);
+            a.ly += push; b.ly -= push;
+          }
+          moved = true;
+        }
       }
-      // Update anchor dot position
-      if(svgG) {
-        svgG.setAttribute('transform', `translate(${sx},${sy})`);
-        svgG.style.opacity = '1';
-      }
-    } catch(e) {
-      label.style.opacity = '0';
-      if(svgG) svgG.style.opacity = '0';
+    }
+    if(!moved) break;
+  }
+
+  // Phase 3 — clamp to viewport, then write DOM
+  items.forEach(({ label, svgLine, svgG, sx, sy, lx, ly, lw, lh }) => {
+    lx = Math.max(lw/2 + 8, Math.min(W - lw/2 - 8, lx));
+    ly = Math.max(lh/2 + 8, Math.min(H - lh/2 - 44, ly));
+
+    label.style.left = (lx - lw/2) + 'px';
+    label.style.top  = (ly - lh/2) + 'px';
+    label.style.opacity = '1';
+
+    if(svgLine) {
+      svgLine.setAttribute('x1', sx); svgLine.setAttribute('y1', sy);
+      svgLine.setAttribute('x2', lx); svgLine.setAttribute('y2', ly);
+    }
+    if(svgG) {
+      svgG.setAttribute('transform', `translate(${sx},${sy})`);
+      svgG.style.opacity = '1';
     }
   });
 }
