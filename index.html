@@ -2287,11 +2287,8 @@ async function dropFabricOnCanvas(e, rect) {
 
   const entry = getHitEntry(e, rect);
   if(!entry) { showToast('Drop on a furniture part'); return; }
-  // Select only the dropped-on entry so the right panel always reflects what was just targeted
-  meshEntries.forEach(en => {
-    en.checked = false;
-    if(Array.isArray(en.mesh.material)){const a=[...en.mesh.material];if(en.matIndex>=0&&en.matIndex<a.length){a[en.matIndex]=en.origMat;en.mesh.material=a;}}else{en.mesh.material=en.origMat;}
-  });
+  // Select only the dropped-on entry — leave other entries' materials intact
+  meshEntries.forEach(en => { en.checked = false; });
   entry.checked = true;
   if(Array.isArray(entry.mesh.material)){const matArr=[...entry.mesh.material];if(entry.matIndex>=0&&entry.matIndex<matArr.length){matArr[entry.matIndex]=entry.greyMat;entry.mesh.material=matArr;}}else{entry.mesh.material=entry.greyMat;}
   buildMeshList();
