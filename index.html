@@ -216,11 +216,13 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;b
 .curtain-swatch-label{font-size:8.5px;color:var(--text-muted);text-align:center;display:block;margin-top:2px}
 .curtain-color-row{display:flex;align-items:center;gap:8px;margin-top:10px}
 .curtain-color-label{font-size:10px;color:var(--text-mid);font-weight:500;margin-bottom:6px;display:block}
-.curtain-color-presets{display:flex;gap:6px;flex-wrap:wrap}
+.curtain-color-presets{display:flex;flex-direction:column;gap:6px}
 .curtain-color-group-label{font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--text-muted);text-transform:uppercase;margin:8px 0 4px}
 .curtain-color-group-row{display:flex;gap:6px;flex-wrap:wrap}
 .curtain-color-chip{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color .15s,transform .12s;padding:0;outline:none;flex-shrink:0}
 .curtain-color-chip.active{border-color:var(--accent);transform:scale(1.2)}
+.curtain-color-chip.recommended{box-shadow:0 0 0 2px var(--bg-panel),0 0 0 3px #c9a227}
+.curtain-color-chip.recommended.active{box-shadow:0 0 0 2px var(--bg-panel),0 0 0 3px var(--accent)}
 .curtain-size-row{display:flex;align-items:center;gap:8px;margin-top:6px}
 .curtain-size-label{font-size:10px;color:var(--text-mid);font-weight:500;width:42px;flex-shrink:0}
 .curtain-size-slider{flex:1;accent-color:var(--accent);cursor:pointer;height:4px}
@@ -3774,6 +3776,7 @@ function setCurtainFabric(id) {
   if (btn) btn.classList.add('active');
   // Sync bar swatches
   document.querySelectorAll('[data-cfab]').forEach(b => b.classList.toggle('active', b.dataset.cfab === id));
+  renderCurtainColorGroups(); // refresh recommended-colour highlight for the new fabric
   _applyCurtainMaterial();
 }
 
