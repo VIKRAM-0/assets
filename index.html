@@ -4189,14 +4189,48 @@ function _ensureCompanionLoaded() {
   });
 }
 
-// Capture the current room canvas as-is (furniture + curtains together)
+// Capture sofa + chair on a clean neutral background (no room GLB decorations)
+// so Gemini sees only the configured furniture, not the virtual room props.
 async function captureDesignedScene() {
-  await _ensureCompanionLoaded(); // wait for companion piece before snapping
+  await _ensureCompanionLoaded();
+
+  // Save state
+  const savedSph   = { ...sph };
+  const savedTgt   = tgt.clone();
+  const savedBg    = scene.background;
+  const savedClear = renderer.getClearColor(new THREE.Color()).clone();
+  const savedClearAlpha = renderer.getClearAlpha();
+
+  // Hide room GLB (contains baked-in plants, bookcase, etc.)
+  if (roomGroup) roomGroup.visible = false;
+
+  // Neutral warm-white background
+  const bg = new THREE.Color(0xf5f2ee);
+  scene.background = bg;
+  renderer.setClearColor(bg, 1);
+
+  // Frame both sofa (x≈0.2, z≈1.0) and chair (x≈2.2, z≈0.89) together
+  tgt.set(1.0, 0.0, 0.8);
+  sph = { theta: Math.PI, phi: 1.1, r: 5.5 };
+  camUpdate();
+
   renderer.render(scene, camera);
   await new Promise(r => setTimeout(r, 80));
   renderer.render(scene, camera);
   await new Promise(r => setTimeout(r, 40));
-  return renderer.domElement.toDataURL('image/jpeg', 0.88);
+
+  const dataUrl = renderer.domElement.toDataURL('image/jpeg', 0.92);
+
+  // Restore everything
+  if (roomGroup) roomGroup.visible = true;
+  scene.background = savedBg;
+  renderer.setClearColor(savedClear, savedClearAlpha);
+  sph = savedSph;
+  tgt.copy(savedTgt);
+  camUpdate();
+  markDirty();
+
+  return dataUrl;
 }
 
 // Resize + compress an image dataUrl so payload stays within Vercel's 4.5 MB limit

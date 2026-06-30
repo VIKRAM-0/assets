@@ -2,26 +2,22 @@ import { GoogleGenAI } from '@google/genai';
 
 const PROMPT = `You are a photorealistic interior design visualizer. You will receive two images.
 
-IMAGE 1 = the user's real room photograph.
-IMAGE 2 = a 3D scene showing the configured furniture (sofa, chair, or both) with the exact custom fabrics and materials the user has chosen.
+IMAGE 1 = a real photograph of the user's room (may contain existing furniture).
+IMAGE 2 = a clean 3D render of the furniture (sofa and/or accent chair) shown on a neutral background, with the exact custom fabrics and colors the user has chosen.
 
 YOUR TASK: Produce a single photorealistic image of IMAGE 1's room with the furniture from IMAGE 2 placed naturally inside it.
 
-WHAT YOU MUST PRESERVE FROM IMAGE 2 — FABRIC AND DESIGN:
-- The fabric pattern, color, weave, and texture of every furniture piece must be preserved exactly as shown in IMAGE 2.
-- You may adapt how the fabric is lit (shadows, highlights, shading) to match the real room's lighting — but the underlying pattern, color, and design must NOT change.
-- Think of it this way: the fabric design is fixed; only the lighting on top of it adapts to the room.
+RULES — READ CAREFULLY:
 
-WHAT YOU MUST PRESERVE FROM IMAGE 1 — THE ROOM:
-- Walls, floor, ceiling, windows, doors, light fixtures, baseboards — all must look identical to IMAGE 1.
-- Do not apply any color grading, filters, or style changes to the room.
+1. FURNITURE: Place only the sofa and/or chair shown in IMAGE 2. Do not add any other items — no coffee table, no plants, no rug, no bookcase, no cushions, no lamps, no decorations. Only what is visible in IMAGE 2.
 
-STEPS:
-1. If IMAGE 1 has any moveable furniture (sofas, chairs, beds, tables, rugs, floor lamps, cushions, objects), remove them — keep only permanent architecture.
-2. Place all furniture pieces from IMAGE 2 (there may be a sofa, an accent chair, or both) into the cleared room at natural positions with correct floor contact, realistic perspective, and a soft contact shadow.
-3. Render the furniture photorealistically under the room's lighting — but with the exact same fabric pattern and color from IMAGE 2 intact.
+2. FABRIC FIDELITY: The fabric color, pattern, texture, and weave of the sofa and chair must look exactly as they do in IMAGE 2. You may add realistic lighting and shadows on top of the fabric, but do not change the underlying color, pattern, or design. The fabric design is fixed.
 
-Output exactly one photorealistic image: IMAGE 1's room with IMAGE 2's furniture placed inside it, fabric designs unchanged.`;
+3. ROOM: Remove any existing moveable furniture from IMAGE 1 (sofas, chairs, tables, rugs, lamps, cushions). Keep all permanent architecture: walls, floor, ceiling, windows, doors, fireplace, baseboards, wall art. Do not alter the room's colors, lighting, or style in any way.
+
+4. REALISM: The placed furniture should look photorealistic — natural perspective, correct scale, floor contact, and soft shadow — as if professionally photographed inside IMAGE 1's room.
+
+Output exactly one photorealistic image: IMAGE 1's room with only the furniture from IMAGE 2 placed inside it.`;
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
