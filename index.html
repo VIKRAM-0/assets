@@ -217,6 +217,8 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;b
 .curtain-color-row{display:flex;align-items:center;gap:8px;margin-top:10px}
 .curtain-color-label{font-size:10px;color:var(--text-mid);font-weight:500;margin-bottom:6px;display:block}
 .curtain-color-presets{display:flex;gap:6px;flex-wrap:wrap}
+.curtain-color-group-label{font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--text-muted);text-transform:uppercase;margin:8px 0 4px}
+.curtain-color-group-row{display:flex;gap:6px;flex-wrap:wrap}
 .curtain-color-chip{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color .15s,transform .12s;padding:0;outline:none;flex-shrink:0}
 .curtain-color-chip.active{border-color:var(--accent);transform:scale(1.2)}
 .curtain-size-row{display:flex;align-items:center;gap:8px;margin-top:6px}
@@ -1710,14 +1712,37 @@ function _saveCurtainState() { _savedCurtainState = { ...curtainState }; }
 let _curtainNormTex = null, _curtainRoughTex = null;
 
 const CURTAIN_COLORS = [
-  { hex:'#f5f2ee', label:'White'   },
-  { hex:'#c8b89a', label:'Cream'   },
-  { hex:'#a89880', label:'Sand'    },
-  { hex:'#8c9ba8', label:'Grey'    },
-  { hex:'#1e3a5f', label:'Navy'    },
-  { hex:'#4a6741', label:'Sage'    },
-  { hex:'#7a3535', label:'Rust'    },
-  { hex:'#2d2420', label:'Dark'    },
+  { hex:'#EDE6D8', label:'Cream'   },
+  { hex:'#D9CFC0', label:'Greige'  },
+  { hex:'#A89F90', label:'Taupe'   },
+  { hex:'#B9C4A6', label:'Sage'    },
+  { hex:'#9AA9B0', label:'Steel'   },
+  { hex:'#1F4E5F', label:'Teal'    },
+  { hex:'#1C2733', label:'Navy'    },
+  { hex:'#2B2B2B', label:'Charcoal'},
+];
+
+// Curated palettes for the side panel (the flat CURTAIN_COLORS above stays for the bottom bar).
+const CURTAIN_COLOR_GROUPS = [
+  { group:'Neutrals', colors:[
+    {hex:'#F5F2EC',label:'Ivory'},{hex:'#EDE6D8',label:'Cream'},{hex:'#D9CFC0',label:'Greige'},
+    {hex:'#C2B6A3',label:'Oatmeal'},{hex:'#A89F90',label:'Taupe'},{hex:'#8C8377',label:'Mushroom'},
+    {hex:'#6E6960',label:'Slate Grey'},{hex:'#FFFFFF',label:'White'} ]},
+  { group:'Warm / Earth', colors:[
+    {hex:'#E7D3B5',label:'Sand'},{hex:'#D9B38C',label:'Camel'},{hex:'#C68A5E',label:'Terracotta'},
+    {hex:'#A9602F',label:'Rust'},{hex:'#7C4A21',label:'Cognac'},{hex:'#B08D57',label:'Ochre'},{hex:'#8A5A3B',label:'Clay'} ]},
+  { group:'Cool / Blue-Grey', colors:[
+    {hex:'#DDE3E6',label:'Mist'},{hex:'#BFC9CE',label:'Fog Blue'},{hex:'#9AA9B0',label:'Steel'},
+    {hex:'#6F7E87',label:'Slate Blue'},{hex:'#4F606B',label:'Denim'},{hex:'#36454F',label:'Charcoal Blue'},{hex:'#283845',label:'Deep Slate'} ]},
+  { group:'Greens', colors:[
+    {hex:'#DCE3D2',label:'Pale Sage'},{hex:'#B9C4A6',label:'Sage'},{hex:'#8FA079',label:'Moss'},
+    {hex:'#6B7B53',label:'Olive'},{hex:'#46583C',label:'Fern'},{hex:'#2E4034',label:'Forest'},{hex:'#7A8B6F',label:'Eucalyptus'} ]},
+  { group:'Jewel', colors:[
+    {hex:'#1F4E5F',label:'Teal'},{hex:'#10403B',label:'Emerald'},{hex:'#3B2A6B',label:'Amethyst'},
+    {hex:'#6A1B3A',label:'Garnet'},{hex:'#7A2E2E',label:'Ruby'},{hex:'#8C6A1F',label:'Antique Gold'},{hex:'#244B7A',label:'Sapphire'} ]},
+  { group:'Deep / Dark', colors:[
+    {hex:'#2B2B2B',label:'Near Black'},{hex:'#1C2733',label:'Midnight Navy'},{hex:'#3A2C2A',label:'Espresso'},
+    {hex:'#402233',label:'Aubergine'},{hex:'#28332B',label:'Deep Forest'},{hex:'#4A1F22',label:'Oxblood'},{hex:'#23252A',label:'Graphite'} ]},
 ];
 
 // Piece system (room mode per-mesh fabric targeting)
@@ -3496,19 +3521,7 @@ function _initCurtainFabricSwatches() {
       row.appendChild(wrap);
     });
   }
-  const colorRow = document.getElementById('curtain-color-presets');
-  if (colorRow) {
-    colorRow.innerHTML = '';
-    CURTAIN_COLORS.forEach(c => {
-      const btn = document.createElement('button');
-      btn.className = 'curtain-color-chip' + (c.hex === curtainState.color ? ' active' : '');
-      btn.id = 'cclr-' + c.hex.replace('#','');
-      btn.title = c.label;
-      btn.style.background = c.hex;
-      btn.onclick = () => setCurtainColor(c.hex);
-      colorRow.appendChild(btn);
-    });
-  }
+  renderCurtainColorGroups();
   // Sync active shape button to current/restored state
   document.querySelectorAll('.curtain-shape-btn').forEach(b => b.classList.remove('active'));
   const shapeBtn = document.getElementById('cshape-' + curtainState.shape);
@@ -3521,6 +3534,37 @@ function _initCurtainFabricSwatches() {
   if (wVal) wVal.textContent = Math.round(wf * 100) + '%';
   if (lEl)  lEl.value = lf;
   if (lVal) lVal.textContent = Math.round(lf * 100) + '%';
+}
+
+// Renders the grouped colour palettes into the side panel. Highlights the active
+// fabric's recommended colours (filled in by Task 3 via the `recommend` field).
+function renderCurtainColorGroups() {
+  const host = document.getElementById('curtain-color-presets');
+  if (!host) return;
+  host.innerHTML = '';
+  const preset = CURTAIN_FABRICS.find(f => f.id === curtainState.fabric);
+  const rec = new Set((preset && preset.recommend) ? preset.recommend.map(h => h.toUpperCase()) : []);
+  CURTAIN_COLOR_GROUPS.forEach(g => {
+    const lbl = document.createElement('div');
+    lbl.className = 'curtain-color-group-label';
+    lbl.textContent = g.group;
+    host.appendChild(lbl);
+    const rowEl = document.createElement('div');
+    rowEl.className = 'curtain-color-group-row';
+    g.colors.forEach(c => {
+      const btn = document.createElement('button');
+      const isRec = rec.has(c.hex.toUpperCase());
+      btn.className = 'curtain-color-chip'
+        + (c.hex.toLowerCase() === (curtainState.color || '').toLowerCase() ? ' active' : '')
+        + (isRec ? ' recommended' : '');
+      btn.id = 'cclr-' + c.hex.replace('#','');
+      btn.title = c.label + (isRec ? ' · recommended' : '');
+      btn.style.background = c.hex;
+      btn.onclick = () => setCurtainColor(c.hex);
+      rowEl.appendChild(btn);
+    });
+    host.appendChild(rowEl);
+  });
 }
 
 // TODO[three-upgrade]: this material code targets Three.js r128 — when upgrading
