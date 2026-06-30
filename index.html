@@ -624,6 +624,10 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;b
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
           Render
         </button>
+        <button class="btn-topbar-label" id="btn-view-in-my-room" onclick="openViewInMyRoom()" title="View in My Room" style="display:none">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          View in My Room
+        </button>
         <button class="btn-topbar" onclick="document.getElementById('glb-input').click()" title="Upload GLB">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         </button>
@@ -3145,6 +3149,8 @@ function toggleRoomView() {
   roomMode = !roomMode;
   const btn = document.getElementById('btn-room-view');
   if(btn){ btn.classList.toggle('active-view', roomMode); btn.textContent = roomMode ? '× Exit Room' : '🏠 Room View'; }
+  const vimrBtn = document.getElementById('btn-view-in-my-room');
+  if (vimrBtn) vimrBtn.style.display = roomMode ? '' : 'none';
   // Sidebar nav state
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const activeNav = document.getElementById(roomMode ? 'nav-room' : 'nav-simulator');
@@ -4140,6 +4146,227 @@ async function renderScene() {
     document.getElementById('loading').classList.remove('on');
   }
 }
+// ── View in My Room ───────────────────────────────────────────────────────
+
+async function captureIsolatedFurniture() {
+  if (!currentModel) return null;
+
+  const savedBg        = scene.background;
+  const savedClear     = renderer.getClearColor(new THREE.Color()).clone();
+  const savedClearAlpha= renderer.getClearAlpha();
+  const savedSph       = { ...sph };
+  const savedTgt       = tgt.clone();
+
+  // White background, hide room shell
+  scene.background = new THREE.Color(0xffffff);
+  renderer.setClearColor(0xffffff, 1);
+  if (roomGroup) roomGroup.visible = false;
+
+  // Aim camera at the furniture's bounding-box centre
+  const box    = new THREE.Box3().setFromObject(currentModel);
+  const center = box.getCenter(new THREE.Vector3());
+  const size   = box.getSize(new THREE.Vector3());
+  tgt.copy(center);
+  sph = { theta: 0.5, phi: 1.1, r: Math.max(size.x, size.y, size.z) * 2.8 };
+  camUpdate();
+
+  renderer.render(scene, camera);
+  await new Promise(r => setTimeout(r, 80));
+  renderer.render(scene, camera);
+  await new Promise(r => setTimeout(r, 60));
+
+  const dataUrl = renderer.domElement.toDataURL('image/jpeg', 0.93);
+
+  // Restore
+  if (roomGroup) roomGroup.visible = true;
+  scene.background = savedBg;
+  renderer.setClearColor(savedClear, savedClearAlpha);
+  sph = savedSph;
+  tgt.copy(savedTgt);
+  camUpdate();
+  markDirty();
+
+  return dataUrl;
+}
+
+function openViewInMyRoom() {
+  if (!roomMode) { showToast('Switch to Room View first'); return; }
+  if (!currentModel) { showToast('Load a furniture piece first'); return; }
+
+  // ── Overlay ──────────────────────────────────────────────────────────
+  const ov = document.createElement('div');
+  ov.id = 'vimr-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:2000;backdrop-filter:blur(8px)';
+
+  const md = document.createElement('div');
+  md.style.cssText = 'background:#fff;border-radius:14px;width:min(560px,95vw);max-height:92vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.4);display:flex;flex-direction:column';
+
+  // Header
+  const hd = document.createElement('div');
+  hd.style.cssText = 'padding:18px 22px 14px;border-bottom:1px solid #ebebeb;display:flex;justify-content:space-between;align-items:center;flex-shrink:0';
+  const ti = document.createElement('div');
+  ti.innerHTML = '<div style="font-size:15px;font-weight:800;color:#111;font-family:var(--font-d)">View in My Room</div><div style="font-size:11px;color:#9ca3af;margin-top:2px">Upload your room photo — we\'ll place your furniture inside it</div>';
+  const cl = document.createElement('button');
+  cl.textContent = '×';
+  cl.style.cssText = 'background:none;border:none;font-size:26px;cursor:pointer;color:#aaa;padding:0;line-height:1;flex-shrink:0';
+  cl.onclick = () => document.body.removeChild(ov);
+  hd.appendChild(ti); hd.appendChild(cl);
+
+  // Body
+  const body = document.createElement('div');
+  body.style.cssText = 'padding:22px;display:flex;flex-direction:column;gap:16px';
+
+  // Tip strip
+  const tip = document.createElement('div');
+  tip.style.cssText = 'background:#f0eeff;border:1px solid #c4b5fd;border-radius:8px;padding:10px 14px;font-size:11px;color:#5b21b6;line-height:1.6';
+  tip.innerHTML = '<strong>Tips for best results:</strong> Take a wide-angle photo showing as much of the room as possible. Good lighting helps. Existing furniture is OK — we\'ll remove it automatically.';
+
+  // Upload zone
+  const uploadZone = document.createElement('div');
+  uploadZone.id = 'vimr-upload-zone';
+  uploadZone.style.cssText = 'border:2px dashed #d1d5db;border-radius:10px;padding:32px 20px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;position:relative';
+  uploadZone.innerHTML = `
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" style="margin:0 auto 10px;display:block"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:4px">Upload your room photo</div>
+    <div style="font-size:11px;color:#9ca3af">Click to browse or drag & drop · JPG, PNG, HEIC</div>
+    <input type="file" id="vimr-file-input" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%">
+  `;
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.style.borderColor='#7c3aed'; uploadZone.style.background='#faf9ff'; });
+  uploadZone.addEventListener('dragleave', () => { uploadZone.style.borderColor='#d1d5db'; uploadZone.style.background=''; });
+  uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.style.borderColor='#d1d5db'; uploadZone.style.background=''; if (e.dataTransfer.files[0]) _vimrHandleFile(e.dataTransfer.files[0]); });
+
+  // Preview (hidden initially)
+  const preview = document.createElement('div');
+  preview.id = 'vimr-preview';
+  preview.style.cssText = 'display:none;position:relative;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb';
+  const previewImg = document.createElement('img');
+  previewImg.id = 'vimr-preview-img';
+  previewImg.style.cssText = 'width:100%;max-height:220px;object-fit:cover;display:block';
+  const previewChange = document.createElement('button');
+  previewChange.textContent = 'Change photo';
+  previewChange.style.cssText = 'position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:5px;font-size:10px;padding:4px 10px;cursor:pointer';
+  previewChange.onclick = () => { document.getElementById('vimr-file-input').click(); };
+  preview.appendChild(previewImg); preview.appendChild(previewChange);
+
+  // Generate button
+  const genBtn = document.createElement('button');
+  genBtn.id = 'vimr-gen-btn';
+  genBtn.style.cssText = 'padding:12px;border-radius:8px;border:none;background:#7c3aed;color:#fff;font-size:13px;font-weight:700;cursor:pointer;opacity:.4;pointer-events:none;font-family:var(--font-b);transition:opacity .15s';
+  genBtn.textContent = '✨  Generate — View in My Room';
+  genBtn.onclick = () => _vimrGenerate(ov, body, genBtn);
+
+  body.appendChild(tip);
+  body.appendChild(uploadZone);
+  body.appendChild(preview);
+  body.appendChild(genBtn);
+  md.appendChild(hd); md.appendChild(body);
+  ov.appendChild(md);
+  document.body.appendChild(ov);
+
+  // File input handler
+  document.getElementById('vimr-file-input').addEventListener('change', function() {
+    if (this.files[0]) _vimrHandleFile(this.files[0]);
+  });
+}
+
+let _vimrRoomPhotoDataUrl = null;
+
+function _vimrHandleFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    _vimrRoomPhotoDataUrl = e.target.result;
+    const img = document.getElementById('vimr-preview-img');
+    if (img) img.src = _vimrRoomPhotoDataUrl;
+    document.getElementById('vimr-preview').style.display = 'block';
+    document.getElementById('vimr-upload-zone').style.display = 'none';
+    const btn = document.getElementById('vimr-gen-btn');
+    if (btn) { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function _vimrGenerate(ov, body, genBtn) {
+  if (!_vimrRoomPhotoDataUrl) return;
+
+  // Replace body content with loading state
+  body.innerHTML = '';
+  const loadEl = document.createElement('div');
+  loadEl.style.cssText = 'text-align:center;padding:48px 20px;display:flex;flex-direction:column;align-items:center;gap:14px';
+  loadEl.innerHTML = `
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="1.8" style="animation:spin 1.2s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+    <div style="font-size:14px;font-weight:700;color:#111;font-family:var(--font-d)">Generating your room view…</div>
+    <div style="font-size:11px;color:#9ca3af;line-height:1.6">Capturing your furniture · Clearing your room · Placing furniture<br>This may take 20–40 seconds</div>
+  `;
+  body.appendChild(loadEl);
+
+  let furnitureRender = null;
+  try {
+    furnitureRender = await captureIsolatedFurniture();
+  } catch (e) {
+    console.error('Furniture capture failed:', e);
+  }
+  if (!furnitureRender) {
+    body.innerHTML = '<div style="padding:32px;text-align:center;color:#ef4444;font-size:13px">Failed to capture furniture. Please try again.</div>';
+    return;
+  }
+
+  try {
+    const resp = await fetch('/api/gemini-room', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        roomPhoto: _vimrRoomPhotoDataUrl,
+        furnitureRender,
+      }),
+      signal: AbortSignal.timeout(90000),
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error || 'Server error');
+    }
+    const result = await resp.json();
+    if (!result.imageUrl) throw new Error('No image returned');
+
+    // ── Result UI ─────────────────────────────────────────────────────
+    body.innerHTML = '';
+
+    const resultImg = document.createElement('img');
+    resultImg.src = result.imageUrl;
+    resultImg.style.cssText = 'width:100%;border-radius:8px;display:block;border:1px solid #e5e7eb';
+
+    const actions = document.createElement('div');
+    actions.style.cssText = 'display:flex;gap:10px;margin-top:4px';
+
+    const dlBtn = document.createElement('a');
+    dlBtn.textContent = '⬇  Download';
+    dlBtn.href = result.imageUrl;
+    dlBtn.download = 'my-room-render.png';
+    dlBtn.style.cssText = 'flex:1;padding:11px;background:#7c3aed;color:#fff;text-align:center;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;font-family:var(--font-b)';
+
+    const retryBtn = document.createElement('button');
+    retryBtn.textContent = 'Try Again';
+    retryBtn.style.cssText = 'padding:11px 18px;border:1.5px solid #d1d5db;background:#fff;color:#374151;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-b)';
+    retryBtn.onclick = () => { document.body.removeChild(ov); _vimrRoomPhotoDataUrl = null; openViewInMyRoom(); };
+
+    actions.appendChild(dlBtn); actions.appendChild(retryBtn);
+    body.appendChild(resultImg); body.appendChild(actions);
+
+  } catch (e) {
+    console.error('View in My Room error:', e);
+    body.innerHTML = '';
+    const errEl = document.createElement('div');
+    errEl.style.cssText = 'padding:32px;text-align:center';
+    errEl.innerHTML = `<div style="color:#ef4444;font-size:13px;font-weight:600;margin-bottom:12px">Generation failed</div><div style="font-size:11px;color:#6b7280;margin-bottom:18px">${e.message || 'Please try again.'}</div>`;
+    const retryBtn2 = document.createElement('button');
+    retryBtn2.textContent = 'Try Again';
+    retryBtn2.style.cssText = 'padding:10px 24px;border:1.5px solid #d1d5db;background:#fff;color:#374151;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer';
+    retryBtn2.onclick = () => { document.body.removeChild(ov); _vimrRoomPhotoDataUrl = null; openViewInMyRoom(); };
+    errEl.appendChild(retryBtn2);
+    body.appendChild(errEl);
+  }
+}
+
 function showRenderedImage(imageUrl, isLocal) {
   const ov=document.createElement('div');
   ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(6px)';
