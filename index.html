@@ -915,10 +915,6 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;b
               </div>
               <div class="curtain-style-group-label">Shades</div>
               <div class="curtain-shape-grid">
-                <button class="curtain-shape-btn" id="cshape-roman" onclick="setCurtainShape('roman')" title="Roman">
-                  <svg viewBox="0 0 48 30" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="7" y="3" width="34" height="3" rx="1" fill="currentColor" stroke="none"/><path d="M9 12 H39 M9 18 H39 M9 24 H39" fill="none"/><rect x="7" y="26" width="34" height="3" rx="1" fill="currentColor" stroke="none"/></svg>
-                  <span>Roman</span>
-                </button>
                 <button class="curtain-shape-btn" id="cshape-blinds" onclick="setCurtainShape('blinds')" title="Blinds">
                   <svg viewBox="0 0 48 30" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="7" y="3" width="34" height="3" rx="1" fill="currentColor" stroke="none"/><path d="M9 10 H39 M9 14 H39 M9 18 H39 M9 22 H39 M9 26 H39" fill="none"/></svg>
                   <span>Blinds</span>
@@ -1688,9 +1684,8 @@ let tcMode = 'translate';
 let curtainMeshEntries = [];
 let _curtainNodes = []; // top-level curtain GLB nodes (curtains_1/_2) — scaled for sizing
 let _blindsGroup = null;     // procedural venetian-blinds group (shape==='blinds')
-let _romanGroup = null;      // procedural roman-shade panel (shape==='roman')
-let _curtainBaseBox = null;  // {center,size} of curtains at base scale — anchors blinds/roman
-let _curtainFace = null;     // room-facing normal (≈ -X) — orients blinds slats / roman panel
+let _curtainBaseBox = null;  // {center,size} of curtains at base scale — anchors blinds
+let _curtainFace = null;     // room-facing normal (≈ -X) — orients blinds slats
 let bedroomCurtainsVisible = true;
 
 // ── Curtain configurator data ─────────────────────────────────────────────
@@ -1700,14 +1695,14 @@ const CURTAIN_FABRICS = [
     normFallback: [SB+'cotton_fabric/Normal.jpg', SB+'cotton_fabric/Normal.webp'],
     roughFallback:[SB+'cotton_fabric/Roughness.jpg',SB+'cotton_fabric/Roughness.webp'], recommend:['#EDE6D8','#D9CFC0','#B9C4A6','#D9B38C','#A89F90'] },
   { id:'cotton', label:'Cotton', roughness:0.85, opacity:1.00, normalScale:0.85, envMapIntensity:0.3, swatch:'linear-gradient(135deg,#f2f0ea,#dcdad2)',
-    polyId:'fabric_pattern_05',
+    polyId:'cotton_jersey',
     normFallback: [SB+'cotton_fabric/Normal.jpg', SB+'cotton_fabric/Normal.webp'],
     roughFallback:[SB+'cotton_fabric/Roughness.jpg',SB+'cotton_fabric/Roughness.webp'], recommend:['#EDE6D8','#D9CFC0','#9AA9B0','#BFC9CE','#A89F90'] },
   { id:'velvet', label:'Velvet', roughness:0.85, opacity:1.00, normalScale:0.55, envMapIntensity:0.4, swatch:'linear-gradient(135deg,#55585f,#2b2d31)',
     polyId:'velour_velvet', desaturateDiffuse:true, physical:true,
     normFallback: [SB+'cotton_fabric/Normal.jpg', SB+'cotton_fabric/Normal.webp'],
     roughFallback:[SB+'cotton_fabric/Roughness.jpg',SB+'cotton_fabric/Roughness.webp'], recommend:['#1F4E5F','#6A1B3A','#1C2733','#10403B','#402233'] },
-  { id:'silk',   label:'Silk',   roughness:0.60, opacity:1.00, normalScale:0.45, envMapIntensity:0.5, swatch:'linear-gradient(135deg,#f6efe0,#e2d7bf)',
+  { id:'silk',   label:'Silk',   roughness:0.80, opacity:1.00, normalScale:0.45, envMapIntensity:0.5, swatch:'linear-gradient(135deg,#f6efe0,#e2d7bf)',
     polyId:'crepe_satin', desaturateDiffuse:true,
     normFallback: [SB+'leather_fabric/Normal.jpg', SB+'leather_fabric/Normal.webp'],
     roughFallback:[SB+'leather_fabric/Roughness.jpg',SB+'leather_fabric/Roughness.webp'], recommend:['#8C6A1F','#3B2A6B','#1F4E5F','#244B7A','#6A1B3A'] },
@@ -1716,19 +1711,19 @@ const CURTAIN_FABRICS = [
     normFallback: [SB+'cotton_fabric/Normal.jpg', SB+'cotton_fabric/Normal.webp'],
     roughFallback:[SB+'cotton_fabric/Roughness.jpg',SB+'cotton_fabric/Roughness.webp'], recommend:['#FFFFFF','#F5F2EC','#DDE3E6','#EDE6D8'] },
   { id:'cotton-blend', label:'Cotton-blend', roughness:0.78, opacity:1.00, normalScale:0.85, envMapIntensity:0.32, swatch:'linear-gradient(135deg,#f0ece2,#d6d0c4)',
-    polyId:'fabric_pattern_05',
+    polyId:'stretch_poplin',
     normFallback: [SB+'cotton_fabric/Normal.jpg', SB+'cotton_fabric/Normal.webp'],
     roughFallback:[SB+'cotton_fabric/Roughness.jpg',SB+'cotton_fabric/Roughness.webp'], recommend:['#EDE6D8','#D9CFC0','#9AA9B0','#A89F90'] },
   { id:'wool', label:'Wool', roughness:0.92, opacity:1.00, normalScale:1.20, envMapIntensity:0.28, swatch:'linear-gradient(135deg,#cbbfa8,#9c8e74)',
-    polyId:'rough_linen',
+    polyId:'poly_wool_herringbone',
     normFallback: [SB+'cotton_fabric/Normal.jpg', SB+'cotton_fabric/Normal.webp'],
     roughFallback:[SB+'cotton_fabric/Roughness.jpg',SB+'cotton_fabric/Roughness.webp'], recommend:['#6E6960','#3A2C2A','#6B7B53','#7C4A21','#36454F'] },
-  { id:'jacquard', label:'Jacquard', roughness:0.55, opacity:1.00, normalScale:1.40, envMapIntensity:0.42, swatch:'linear-gradient(135deg,#cdb98f,#9a7d4f)',
-    polyId:'fabric_pattern_05',
+  { id:'jacquard', label:'Jacquard', roughness:0.80, opacity:1.00, normalScale:1.40, envMapIntensity:0.42, swatch:'linear-gradient(135deg,#cdb98f,#9a7d4f)',
+    polyId:'floral_jacquard',
     normFallback: [SB+'cotton_fabric/Normal.jpg', SB+'cotton_fabric/Normal.webp'],
     roughFallback:[SB+'cotton_fabric/Roughness.jpg',SB+'cotton_fabric/Roughness.webp'], recommend:['#D9CFC0','#1F4E5F','#8C6A1F','#A89F90'] },
   { id:'blackout', label:'Blackout', roughness:0.86, opacity:1.00, normalScale:0.50, envMapIntensity:0.25, swatch:'linear-gradient(135deg,#3a3733,#23211e)',
-    polyId:'rough_linen',
+    polyId:'denim_fabric_05',
     normFallback: [SB+'cotton_fabric/Normal.jpg', SB+'cotton_fabric/Normal.webp'],
     roughFallback:[SB+'cotton_fabric/Roughness.jpg',SB+'cotton_fabric/Roughness.webp'], recommend:['#1C2733','#2B2B2B','#36454F','#3A2C2A'] },
 ];
@@ -1824,7 +1819,7 @@ function makeGreyscaleTex(origTex) {
     const ctx = c.getContext('2d');
     if(!ctx) return null;
     ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,w,h);
-    ctx.filter = 'grayscale(100%) brightness(1.8) contrast(0.85)';
+    ctx.filter = 'grayscale(100%) brightness(1.35) contrast(1.25)';
     ctx.drawImage(img,0,0,w,h);
     const t = new THREE.CanvasTexture(c);
     t.encoding = origTex.encoding || THREE.sRGBEncoding;
@@ -1837,6 +1832,16 @@ function makeGreyscaleTex(origTex) {
     t.needsUpdate = true;
     return t;
   } catch(e) { return null; }
+}
+// Curtain chip colours are sRGB hex. With renderer.outputEncoding = sRGBEncoding
+// the shader treats a material's .color as LINEAR, so an sRGB hex assigned raw is
+// gamma-encoded TWICE on output → the fabric renders pale and desaturated (a deep
+// forest green came out sage-grey). Convert sRGB→linear here so the rendered colour
+// round-trips to the true chip hue. `scalar` optionally darkens (rails/pleat/sheen).
+function _curtainLinColor(hex, scalar) {
+  const c = new THREE.Color(hex).convertSRGBToLinear();
+  if (scalar !== undefined) c.multiplyScalar(scalar);
+  return c;
 }
 const POLY_NORM_KEYS  = ['nor_gl','Normal','nor_dx','nor','Nor_GL','NormalGL'];
 const POLY_ROUGH_KEYS = ['Rough','rough','Roughness','roughness'];
@@ -3483,6 +3488,8 @@ function buildBedroomRoom(onReadyCallback) {
     curtainState = _savedCurtainState
       ? { ...{ shape:'drape', fabric:'linen', color:'#EDE6D8', widthFactor:1, lengthFactor:1 }, ..._savedCurtainState }
       : { shape:'drape', fabric:'linen', color:'#EDE6D8', widthFactor:1, lengthFactor:1 };
+    if (curtainState.shape === 'roman') curtainState.shape = 'drape'; // roman shade removed
+
     const _cc = document.getElementById('chip-bedroom-curtains');
     if (_cc) _cc.classList.add('on');
     _initCurtainFabricSwatches();
@@ -3611,16 +3618,11 @@ function _buildCurtainMat(normTex, roughTex, diffTex) {
 
   let roughness  = preset.roughness;
   let opacity    = preset.opacity;
-  const baseCol  = new THREE.Color(curtainState.color);
+  const baseCol  = _curtainLinColor(curtainState.color);
 
   if (shape === 'sheer') {
     roughness = Math.min(preset.roughness + 0.04, 1.0);
     opacity   = 0.42;
-  } else if (shape === 'roman') {
-    // Structured shade: matte and TRUE colour. The old 1.18× brighten washed it
-    // out under the window backlight. (Macro folds are still the drape mesh — a
-    // true roman's horizontal folds would need dedicated geometry.)
-    roughness = Math.min(preset.roughness + 0.06, 1.0);
   } else if (shape === 'blinds') {
     // Vertical fabric blinds read off the pleat geometry. Matte woven fabric with
     // the full texture set — NOT the shiny metal (metalness 0.55 / rough 0.25) it
@@ -3647,7 +3649,7 @@ function _buildCurtainMat(normTex, roughTex, diffTex) {
     ? new THREE.MeshPhysicalMaterial(matOpts)
     : new THREE.MeshStandardMaterial(matOpts);
   if (preset.physical) {
-    mat.sheen = new THREE.Color(curtainState.color).multiplyScalar(0.7);
+    mat.sheen = _curtainLinColor(curtainState.color, 0.7);
   }
 
   // Texture repeat scales with curtain size so the weave density stays constant.
@@ -3684,9 +3686,13 @@ function _buildCurtainMat(normTex, roughTex, diffTex) {
   }
 
   // Fabric should barely reflect the RoomEnvironment — default 1.0 made it look like satin/vinyl.
-  // 0.7× further: the HDRI's blue window light was casting fabric cold; dialing the
-  // env back (paired with the warm fill in initThree) keeps the chip colour true.
-  mat.envMapIntensity = (preset.envMapIntensity ?? 1.0) * 0.7;
+  // 0.25× (was 0.7×): the blue interior HDRI was reflecting off the fabric as bright
+  // SPECULAR streaks (the "shiny plastic" look — confirmed by env-off isolation), worst
+  // on dark colours once the sRGB→linear fix made them correctly dark. The env also
+  // doubled as the fabric's fill light, so the neutral AmbientLight in initThree was
+  // raised (0.18→0.30) to keep dark fabrics readable instead of black. Decoupling the
+  // fill (neutral ambient) from the specular source (blue env) is the actual fix.
+  mat.envMapIntensity = (preset.envMapIntensity ?? 1.0) * 0.25;
 
   return mat;
 }
@@ -3694,7 +3700,6 @@ function _buildCurtainMat(normTex, roughTex, diffTex) {
 async function _applyCurtainMaterial() {
   if (!curtainMeshEntries.length) return;
   if (_blindsGroup) _blindsGroup.visible = false; // default hidden; blinds branch re-shows
-  if (_romanGroup)  _romanGroup.visible  = false; // default hidden; roman branch re-shows
   if (curtainState.shape === 'none') {
     curtainMeshEntries.forEach(e => { e.mesh.visible = false; });
     markDirty();
@@ -3731,12 +3736,6 @@ async function _applyCurtainMaterial() {
   _curtainRoughTex = roughTex;
 
   const mat = _buildCurtainMat(normTex, roughTex, diffTex);
-  if (curtainState.shape === 'roman') {
-    // Roman uses the fabric material on a procedural folded panel, not the drape.
-    curtainMeshEntries.forEach(e => { e.mesh.visible = false; });
-    _applyRoman(mat);
-    return;
-  }
   curtainMeshEntries.forEach(e => { e.mesh.material = mat; });
   _applyCurtainSize(); // re-apply node scale + UV repeat (fresh meshes after room load)
 }
@@ -3746,36 +3745,22 @@ function _applyCurtainColor() {
   if (curtainState.shape === 'none') return;
   if (curtainState.shape === 'blinds') {
     if (_blindsGroup) {
-      _blindsGroup.userData.slatMat.color.set(curtainState.color);
-      _blindsGroup.userData.railMat.color.copy(new THREE.Color(curtainState.color).multiplyScalar(0.7));
+      _blindsGroup.userData.slatMat.color.copy(_curtainLinColor(curtainState.color));
+      _blindsGroup.userData.railMat.color.copy(_curtainLinColor(curtainState.color, 0.7));
       _blindsGroup.userData.slatMat.needsUpdate = true;
-    }
-    markDirty();
-    return;
-  }
-  if (curtainState.shape === 'roman') {
-    if (_romanGroup) {
-      const m = _romanGroup.userData.mat;
-      if (m && m.color) {
-        m.color.set(curtainState.color);
-        if (m.sheen instanceof THREE.Color) m.sheen.copy(new THREE.Color(curtainState.color)).multiplyScalar(0.7);
-        m.needsUpdate = true;
-      }
-      _romanGroup.userData.railMat.color.copy(new THREE.Color(curtainState.color).multiplyScalar(0.85));
     }
     markDirty();
     return;
   }
   const preset  = CURTAIN_FABRICS.find(f => f.id === curtainState.fabric) || CURTAIN_FABRICS[0];
   const shape   = curtainState.shape;
-  const baseCol = new THREE.Color(curtainState.color);
+  const baseCol = _curtainLinColor(curtainState.color);
   let opacity   = preset.opacity;
   if (shape === 'sheer') {
     opacity = 0.42;
   } else if (shape === 'pleated') {
     baseCol.multiplyScalar(0.78);
   }
-  // roman & blinds now use the true chip colour (roman's old 1.18× washed out).
   curtainMeshEntries.forEach(e => {
     if (!e.mesh.material) return;
     const mats = Array.isArray(e.mesh.material) ? e.mesh.material : [e.mesh.material];
@@ -3831,7 +3816,6 @@ function _applyCurtainSize() {
   const wf = curtainState.widthFactor  || 1;
   const lf = curtainState.lengthFactor || 1;
   if (curtainState.shape === 'blinds') { _applyBlinds(); return; } // slats rebuild to new dims
-  if (curtainState.shape === 'roman')  { _buildRomanGeometry(); if (_romanGroup) _romanGroup.visible = bedroomCurtainsVisible; markDirty(); return; }
   _curtainNodes.forEach(n => {
     const base = n.userData._curtainBaseScale;
     if (!base) return;
@@ -3916,6 +3900,17 @@ function _fixCurtainNormals(curtainNodes, roomScene) {
 // See docs/superpowers/specs/2026-06-30-procedural-blinds-design.md.
 const BLINDS_TILT = THREE.MathUtils.degToRad(32); // half-open venetian angle
 
+// Blinds mount AT the window, but our only anchor is the drape
+// footprint (_curtainBaseBox), which spans the full floor-to-rod drape — the rod
+// sits well above the window head and the panels puddle to the floor. Reusing it
+// raw makes the shade ride up the bare wall above the window (and overshoot the
+// sill below). Confine the shade to the window band: cover ~72% of the drape
+// height, biased slightly upward so the top drops below the rod and the bottom
+// lifts off the floor. Eyeballed against the bedroom GLB — nudge if a future room
+// changes the drape/window proportions.
+const SHADE_VCOVER = 0.72; // shade height as a fraction of the drape footprint height
+const SHADE_VRISE  = 0.04; // shade centre lifted above the drape-box centre (× footprint height)
+
 function _disposeBlinds() {
   if (!_blindsGroup) return;
   _blindsGroup.traverse(o => {
@@ -3928,7 +3923,7 @@ function _disposeBlinds() {
 
 // Build the slat group from the captured base box + facing normal, scaled by the
 // current width/length factors. Faux-wood matte slats tinted by the colour chip.
-// Shared orientation + position for the rigid blind / roman panels. The drape's
+// Shared orientation + position for the rigid blind panel. The drape's
 // averaged normal (_curtainFace) is noisy because the drape is wavy; feeding that
 // straight in skews the flat panel a few degrees, swinging its far edge back through
 // the window glass → z-fighting. Snap the facing axis to the nearest world cardinal
@@ -3954,21 +3949,23 @@ function _buildBlindsGeometry() {
   const wf = curtainState.widthFactor || 1;
   const lf = curtainState.lengthFactor || 1;
   const sz = _curtainBaseBox.size;
+  const fullH  = sz.y * lf;                          // full drape footprint height
   const width  = Math.max(sz.x, sz.z) * wf * 0.98;
-  const height = sz.y * lf * 0.98;
+  const height = fullH * SHADE_VCOVER * 0.98;        // confined to the window band
   if (width <= 0 || height <= 0) return;
 
   const grp = new THREE.Group();
   const frame = _curtainPanelFrame(0.05); // stand off the glass; snapped square to it
   grp.position.copy(frame.position);
+  grp.position.y += fullH * SHADE_VRISE;             // lift off the floor / below the rod
   grp.quaternion.copy(frame.quaternion);
 
   // Faux-wood louvers: solid boxes (real thickness) so edges catch light.
   const slatMat = new THREE.MeshStandardMaterial({
-    color: new THREE.Color(curtainState.color), roughness: 0.62, metalness: 0,
+    color: _curtainLinColor(curtainState.color), roughness: 0.62, metalness: 0,
   });
   const railMat = new THREE.MeshStandardMaterial({
-    color: new THREE.Color(curtainState.color).multiplyScalar(0.7), roughness: 0.7, metalness: 0,
+    color: _curtainLinColor(curtainState.color, 0.7), roughness: 0.7, metalness: 0,
   });
 
   const tilt      = BLINDS_TILT;
@@ -4020,77 +4017,6 @@ function _buildBlindsGeometry() {
 function _applyBlinds() {
   _buildBlindsGeometry();
   if (_blindsGroup) _blindsGroup.visible = bedroomCurtainsVisible;
-  markDirty();
-}
-
-// ── Procedural Roman shade ────────────────────────────────────────────────
-// A soft fabric panel with horizontal flat-folds. Unlike blinds it reuses the FABRIC
-// material (so the colour-fidelity + texture + warm-light work all apply) on a plane
-// with a Gaussian dowel ridge at each fold seam. The headrail/material are kept across rebuilds.
-function _disposeRoman() {
-  if (!_romanGroup) return;
-  _romanGroup.traverse(o => { if (o.geometry) o.geometry.dispose(); });
-  if (_romanGroup.userData.railMat) _romanGroup.userData.railMat.dispose();
-  // NOTE: the fabric material is owned/reused across rebuilds — not disposed here.
-  if (_romanGroup.parent) _romanGroup.parent.remove(_romanGroup);
-  _romanGroup = null;
-}
-
-function _buildRomanGeometry(mat) {
-  const keepMat = mat || (_romanGroup && _romanGroup.userData.mat);
-  _disposeRoman();
-  if (!_curtainBaseBox || !_curtainFace || !scene || !keepMat) return;
-  const wf = curtainState.widthFactor || 1, lf = curtainState.lengthFactor || 1;
-  const sz = _curtainBaseBox.size;
-  const width  = Math.max(sz.x, sz.z) * wf * 0.98;
-  const height = sz.y * lf * 0.99;
-  if (width <= 0 || height <= 0) return;
-
-  // Flat-fold panel: a Gaussian dowel ridge at each fold seam + a gentle overall bow.
-  const geo = new THREE.PlaneGeometry(width, height, 8, 160); // denser vertical segments for crisp ridges
-  const pos = geo.attributes.position;
-  const numFolds  = Math.min(9, Math.max(4, Math.round(height / 0.30)));
-  const foldH     = height / numFolds;
-  const ridgeDepth = Math.min(0.06, foldH * 0.28);  // how far each dowel ridge bulges toward the room
-  const baseBow    = Math.min(0.015, height * 0.008); // gentle overall outward bow so it isn't a flat board
-  for (let i = 0; i < pos.count; i++) {
-    const yy = pos.getY(i);                          // -height/2 .. height/2
-    const up = (yy + height / 2);                    // 0 bottom .. height top
-    const seam = (up / foldH) % 1;                   // 0 at a seam, rises to 1 at next seam
-    const d = Math.min(seam, 1 - seam);              // distance to nearest seam (0 = on the ridge)
-    const ridge = ridgeDepth * Math.exp(-Math.pow(d / 0.16, 2)); // gaussian bump centred on the seam
-    const bow   = baseBow * Math.sin((up / height) * Math.PI);
-    pos.setZ(i, ridge + bow);                        // +Z = toward room (away from glass)
-  }
-  pos.needsUpdate = true;
-  geo.computeVertexNormals(); // so the folds actually catch light
-
-  const grp = new THREE.Group();
-  const frame = _curtainPanelFrame(0.05); // square to glass + standoff (see _curtainPanelFrame)
-  grp.position.copy(frame.position);
-  grp.quaternion.copy(frame.quaternion);
-
-  const panel = new THREE.Mesh(geo, keepMat);
-  panel.castShadow = true; panel.receiveShadow = true;
-  grp.add(panel);
-
-  const railMat = new THREE.MeshStandardMaterial({
-    color: new THREE.Color(curtainState.color).multiplyScalar(0.85), roughness: 0.8, metalness: 0,
-  });
-  const rail = new THREE.Mesh(new THREE.BoxGeometry(width * 1.01, height * 0.03, 0.05), railMat);
-  rail.position.y = height / 2 + height * 0.012;
-  rail.castShadow = true; rail.receiveShadow = true;
-  grp.add(rail);
-
-  grp.userData.mat = keepMat;
-  grp.userData.railMat = railMat;
-  _romanGroup = grp;
-  scene.add(grp);
-}
-
-function _applyRoman(mat) {
-  _buildRomanGeometry(mat);
-  if (_romanGroup) _romanGroup.visible = bedroomCurtainsVisible;
   markDirty();
 }
 
@@ -4166,7 +4092,6 @@ function toggleBedroomCurtains() {
   } else {
     curtainMeshEntries.forEach(e => { e.mesh.visible = false; });
     if (_blindsGroup) _blindsGroup.visible = false;
-    if (_romanGroup)  _romanGroup.visible  = false;
     markDirty();
   }
   _showCurtainConfigPanel(bedroomCurtainsVisible);
@@ -4523,7 +4448,7 @@ function _removeCurtainEntries() {
   });
   curtainMeshEntries = [];
   _curtainNodes = [];
-  _disposeBlinds(); _disposeRoman(); _curtainBaseBox = null; _curtainFace = null;
+  _disposeBlinds(); _curtainBaseBox = null; _curtainFace = null;
   // Remove curtain entries from meshEntries
   meshEntries = meshEntries.filter(e => !e._isCurtain);
   _showCurtainConfigPanel(false);
@@ -4885,7 +4810,7 @@ function initThree() {
   // fill, so heavy artificial lights would wash it out and re-flatten the fabric.
   // Neutral, near-white lights for COLOR FIDELITY (configurator: a cream curtain must
   // read cream). The old blue fill (0xd0e8ff) + blue hemi ground (0x8090a0) cast fabric cold.
-  const amb=new THREE.AmbientLight(0xffffff,0.18);
+  const amb=new THREE.AmbientLight(0xffffff,0.30); // neutral fabric fill — replaces the blue-env fill cut in _buildCurtainMat (0.18→0.30)
   const dir=new THREE.DirectionalLight(0xfff1e0,1.1); // soft warm key (lights room + curtain backs)
   dir.position.set(3,5,4);
   // Shadow casting: gives draped fabric deep self-shadowing in the pleats (the
