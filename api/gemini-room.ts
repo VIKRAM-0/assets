@@ -1,24 +1,22 @@
 import { GoogleGenAI } from '@google/genai';
 
-const PROMPT = `You are a professional interior design visualizer.
+const PROMPT = `You are a precise interior compositing tool. You will receive two images and must follow these rules without exception.
 
-I am providing two images in this order:
-1. ROOM PHOTO: A real photograph of an interior room (may contain existing furniture)
-2. FURNITURE RENDER: A 3D visualization of custom furniture with specific fabrics and materials
+IMAGE 1 = the user's real room photograph.
+IMAGE 2 = a 3D render of furniture with custom fabric/material that the user has configured.
 
-Your task is to produce a single photorealistic interior design image:
+ABSOLUTE CONSTRAINTS — violating any of these makes the output wrong:
+- The fabric color, pattern, texture, and material of the furniture in your output must be IDENTICAL to IMAGE 2. Do not improve it, reinterpret it, make it "look more real", or substitute any color or texture. Copy it exactly.
+- Every part of the room that is not furniture must look IDENTICAL to IMAGE 1: walls, floor, ceiling, windows, doors, light fixtures, baseboards, paint color, flooring material. Do not alter, enhance, or stylize the room in any way.
+- Do not add any objects that are not in IMAGE 2 (no extra cushions, plants, rugs, lamps, artwork).
+- Do not apply any artistic filter, style transfer, or color grading to either the room or the furniture.
 
-STEP 1 — Clear the room: Remove ALL moveable items from the ROOM PHOTO — sofas, chairs, beds, tables, rugs, lamps, floor plants, curtains, cushions, and any decorative objects. Preserve only the permanent architecture: walls, floor, ceiling, windows, doors, baseboards, and built-in shelving.
+YOUR ONLY TASK:
+1. Look at IMAGE 1. If it contains any moveable furniture (sofas, chairs, beds, tables, rugs, floor lamps, cushions, decorative objects), erase those items so the room is empty — keeping only the permanent architecture.
+2. Take the furniture shown in IMAGE 2 and place it in the cleared area of IMAGE 1 at a natural position with correct floor contact and a subtle shadow. Scale it to realistic proportions relative to the room.
+3. The furniture's appearance (fabric, color, texture) must match IMAGE 2 exactly — the only change is that it now sits inside the real room from IMAGE 1.
 
-STEP 2 — Place the furniture: Position the furniture piece shown in the FURNITURE RENDER naturally inside the cleared room. Place it against the most appropriate wall or in a natural position on the floor. Scale it to real-world proportions.
-
-STEP 3 — Match the environment: The placed furniture must match the existing lighting, color temperature, and camera perspective of the ROOM PHOTO. It must cast a realistic contact shadow on the floor. The result should look like the furniture was professionally photographed sitting in that real room.
-
-STRICT RULES:
-- Preserve the EXACT fabric color, texture, pattern, and material from the FURNITURE RENDER — do not change, improve, or substitute any material
-- The floor, walls, ceiling, and windows must look identical to the ROOM PHOTO
-- The result must be fully photorealistic — not 3D rendered or illustrated
-- Output exactly one image: the room with the furniture placed inside it`;
+Output exactly one image: the real room from IMAGE 1 with only the furniture from IMAGE 2 placed inside it.`;
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {

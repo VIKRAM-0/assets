@@ -4148,8 +4148,50 @@ async function renderScene() {
 }
 // ── View in My Room ───────────────────────────────────────────────────────
 
+// In living room mode, ensure the companion piece (chair ↔ sofa) is loaded and
+// in scene before we capture. Chair is not preloaded so it can still be loading
+// when the user clicks "View in My Room".
+function _ensureCompanionLoaded() {
+  if (!roomMode || activeRoomSection === 'bedroom') return Promise.resolve();
+  const otherKey = currentModelKey === 'chair' ? 'sofa' : 'chair';
+  const other = roomFurnitureModels[otherKey];
+  if (other && scene.getObjectById(other.id)) return Promise.resolve(); // already visible
+  if (other) {
+    // Loaded but not in scene — add it now
+    scene.add(other);
+    const os = FURNITURE_SLOTS[otherKey];
+    if (os) _seatOnFloor(other, os.x, os.z, os.rotY, os.scale || 1.0);
+    markDirty();
+    return Promise.resolve();
+  }
+  // Not loaded yet — kick off load and wait (max 10 s)
+  return new Promise(resolve => {
+    const url = getGLBUrl(otherKey);
+    const _gen = _roomLoadGen;
+    const fallback = setTimeout(resolve, 10000);
+    gltfLoader.load(url, gltf => {
+      clearTimeout(fallback);
+      if (_roomLoadGen !== _gen) { resolve(); return; }
+      if (roomFurnitureModels[otherKey]) { resolve(); return; } // beat us to it
+      const m = gltf.scene;
+      const b = new THREE.Box3().setFromObject(m);
+      const sz = b.getSize(new THREE.Vector3());
+      m.scale.setScalar(1.6 / Math.max(sz.x, sz.y, sz.z));
+      m.updateMatrixWorld(true);
+      roomFurnitureModels[otherKey] = m;
+      scene.add(m);
+      const os = FURNITURE_SLOTS[otherKey];
+      if (os) _seatOnFloor(m, os.x, os.z, os.rotY, os.scale || 1.0);
+      _applySnapshotToModel(m, otherKey);
+      markDirty();
+      resolve();
+    }, undefined, () => { clearTimeout(fallback); resolve(); });
+  });
+}
+
 // Capture the current room canvas as-is (furniture + curtains together)
 async function captureDesignedScene() {
+  await _ensureCompanionLoaded(); // wait for companion piece before snapping
   renderer.render(scene, camera);
   await new Promise(r => setTimeout(r, 80));
   renderer.render(scene, camera);
@@ -4287,9 +4329,9 @@ async function _vimrGenerate(ov, body, genBtn) {
 
   let furnitureRender = null;
   try {
-    // Capture full scene (bed + curtains) then compress to ~900px
+    // Capture full scene (bed + curtains) then compress to ~1200px
     const raw = await captureDesignedScene();
-    furnitureRender = await _vimrCompressImage(raw, 900, 0.85);
+    furnitureRender = await _vimrCompressImage(raw, 1200, 0.88);
   } catch (e) {
     console.error('Scene capture failed:', e);
   }
