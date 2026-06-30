@@ -3928,9 +3928,9 @@ function _applyBlinds() {
 }
 
 // ── Procedural Roman shade ────────────────────────────────────────────────
-// A soft fabric panel with horizontal folds. Unlike blinds it reuses the FABRIC
-// material (so the colour-fidelity + texture + warm-light work all apply) on a
-// vertically-rippled plane. The headrail/material are kept across rebuilds.
+// A soft fabric panel with horizontal flat-folds. Unlike blinds it reuses the FABRIC
+// material (so the colour-fidelity + texture + warm-light work all apply) on a plane
+// with a Gaussian dowel ridge at each fold seam. The headrail/material are kept across rebuilds.
 function _disposeRoman() {
   if (!_romanGroup) return;
   _romanGroup.traverse(o => { if (o.geometry) o.geometry.dispose(); });
