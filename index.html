@@ -205,10 +205,14 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;b
 .room-chip:hover:not(.on){border-color:var(--border-strong);color:var(--text);background:var(--bg)}
 .room-chip-ico{font-size:13px;line-height:1}
 /* ── Curtain configurator ───────────────────────────────────────────────── */
-.curtain-shape-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:4px}
-.curtain-shape-btn{padding:6px 4px;font-size:9.5px;font-weight:500;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);border-radius:7px;cursor:pointer;transition:all .15s;text-align:center;font-family:var(--font-b);line-height:1.2}
-.curtain-shape-btn.active{background:var(--accent-pale);border-color:var(--accent);color:var(--accent);font-weight:600}
+.curtain-shape-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:6px}
+.curtain-style-group-label{font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--text-muted);text-transform:uppercase;margin:6px 0 4px}
+.curtain-shape-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 4px;font-size:9.5px;font-weight:500;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);border-radius:8px;cursor:pointer;transition:all .15s;font-family:var(--font-b)}
+.curtain-shape-btn svg{width:100%;height:24px;color:var(--text-mid)}
+.curtain-shape-btn.active{background:var(--accent-pale);border-color:var(--accent);color:var(--accent)}
+.curtain-shape-btn.active svg{color:var(--accent)}
 .curtain-shape-btn:hover:not(.active){border-color:var(--border-strong);color:var(--text);background:var(--bg)}
+.curtain-shape-none{width:100%;flex-direction:row;justify-content:center;padding:6px;font-size:10px;margin-top:2px}
 .curtain-fabric-row{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
 .curtain-swatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2.5px solid transparent;transition:border-color .15s,transform .12s;flex-shrink:0;padding:0;outline:none;position:relative}
 .curtain-swatch.active{border-color:var(--accent);transform:scale(1.18)}
@@ -891,14 +895,33 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;b
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 3v18M20 3v18M8 3c0 5 8 5 8 10S8 21 8 21" stroke-linecap="round"/></svg>
                 Curtain Style
               </div>
+              <div class="curtain-style-group-label">Drapery</div>
               <div class="curtain-shape-grid">
-                <button class="curtain-shape-btn"        id="cshape-sheer"   onclick="setCurtainShape('sheer')">Sheer</button>
-                <button class="curtain-shape-btn active" id="cshape-drape"   onclick="setCurtainShape('drape')">Drape</button>
-                <button class="curtain-shape-btn"        id="cshape-roman"   onclick="setCurtainShape('roman')">Roman</button>
-                <button class="curtain-shape-btn"        id="cshape-blinds"  onclick="setCurtainShape('blinds')">Blinds</button>
-                <button class="curtain-shape-btn"        id="cshape-pleated" onclick="setCurtainShape('pleated')">Pleated</button>
-                <button class="curtain-shape-btn"        id="cshape-none"    onclick="setCurtainShape('none')">None</button>
+                <button class="curtain-shape-btn active" id="cshape-drape" onclick="setCurtainShape('drape')" title="Drape">
+                  <svg viewBox="0 0 48 30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 3 Q6 15 9 27 M19 3 Q16 15 19 27 M29 3 Q26 15 29 27 M39 3 Q36 15 39 27"/></svg>
+                  <span>Drape</span>
+                </button>
+                <button class="curtain-shape-btn" id="cshape-pleated" onclick="setCurtainShape('pleated')" title="Pleated">
+                  <svg viewBox="0 0 48 30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7 L14 3 L20 7 L26 3 L32 7 L38 3 L44 7"/><path d="M11 6 V27 M23 6 V27 M35 6 V27"/></svg>
+                  <span>Pleated</span>
+                </button>
+                <button class="curtain-shape-btn" id="cshape-sheer" onclick="setCurtainShape('sheer')" title="Sheer">
+                  <svg viewBox="0 0 48 30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 2" stroke-opacity="0.6"><path d="M9 3 Q6 15 9 27 M19 3 Q16 15 19 27 M29 3 Q26 15 29 27 M39 3 Q36 15 39 27"/></svg>
+                  <span>Sheer</span>
+                </button>
               </div>
+              <div class="curtain-style-group-label">Shades</div>
+              <div class="curtain-shape-grid">
+                <button class="curtain-shape-btn" id="cshape-roman" onclick="setCurtainShape('roman')" title="Roman">
+                  <svg viewBox="0 0 48 30" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="7" y="3" width="34" height="3" rx="1" fill="currentColor" stroke="none"/><path d="M9 12 H39 M9 18 H39 M9 24 H39" fill="none"/><rect x="7" y="26" width="34" height="3" rx="1" fill="currentColor" stroke="none"/></svg>
+                  <span>Roman</span>
+                </button>
+                <button class="curtain-shape-btn" id="cshape-blinds" onclick="setCurtainShape('blinds')" title="Blinds">
+                  <svg viewBox="0 0 48 30" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="7" y="3" width="34" height="3" rx="1" fill="currentColor" stroke="none"/><path d="M9 10 H39 M9 14 H39 M9 18 H39 M9 22 H39 M9 26 H39" fill="none"/></svg>
+                  <span>Blinds</span>
+                </button>
+              </div>
+              <button class="curtain-shape-btn curtain-shape-none" id="cshape-none" onclick="setCurtainShape('none')">Clear / None</button>
               <div class="room-section-label" style="margin-top:12px">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg>
                 Fabric
