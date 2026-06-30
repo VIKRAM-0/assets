@@ -3951,14 +3951,20 @@ function _buildRomanGeometry(mat) {
   if (width <= 0 || height <= 0) return;
 
   // Rippled plane: bulge toward the room in evenly-spaced horizontal folds.
-  const geo = new THREE.PlaneGeometry(width, height, 24, 96);
+  const geo = new THREE.PlaneGeometry(width, height, 8, 160); // denser vertical segments for crisp ridges
   const pos = geo.attributes.position;
-  const numFolds  = Math.max(4, Math.round(height / 0.42));
-  const foldDepth = Math.min(0.09, height * 0.05);
+  const numFolds  = Math.min(9, Math.max(4, Math.round(height / 0.30)));
+  const foldH     = height / numFolds;
+  const ridgeDepth = Math.min(0.06, foldH * 0.28);  // how far each dowel ridge bulges toward the room
+  const baseBow    = Math.min(0.015, height * 0.008); // gentle overall outward bow so it isn't a flat board
   for (let i = 0; i < pos.count; i++) {
-    const v = (pos.getY(i) + height / 2) / height; // 0 bottom .. 1 top
-    const phase = (v * numFolds) % 1;
-    pos.setZ(i, foldDepth * Math.sin(phase * Math.PI)); // one bulge per fold
+    const yy = pos.getY(i);                          // -height/2 .. height/2
+    const up = (yy + height / 2);                    // 0 bottom .. height top
+    const seam = (up / foldH) % 1;                   // 0 at a seam, rises to 1 at next seam
+    const d = Math.min(seam, 1 - seam);              // distance to nearest seam (0 = on the ridge)
+    const ridge = ridgeDepth * Math.exp(-Math.pow(d / 0.16, 2)); // gaussian bump centred on the seam
+    const bow   = baseBow * Math.sin((up / height) * Math.PI);
+    pos.setZ(i, ridge + bow);                        // +Z = toward room (away from glass)
   }
   pos.needsUpdate = true;
   geo.computeVertexNormals(); // so the folds actually catch light
