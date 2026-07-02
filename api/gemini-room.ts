@@ -42,12 +42,22 @@ FINAL CHECK (apply before output):
 - Does the furniture's shape and design still match IMAGE 2 exactly?
 - Does the furniture read as part of the original photograph, or as a paste-in? It must read as part of the photograph.`;
 
-function buildPrompt(singleAsset: boolean, assetLabel: string): string {
+function buildPrompt(
+  singleAsset: boolean,
+  assetLabel: string,
+  curtainText: string,
+  hasCurtainImage: boolean
+): string {
+  const hasCurtainRequest = !!curtainText || hasCurtainImage;
+  const curtainImageLine = hasCurtainImage
+    ? `\nIMAGE 3 = a reference photo showing the curtain style, fabric, and/or color the user wants.`
+    : '';
+
   const intro = `You are a world-class VFX compositor and interior design photographer with 20 years of experience making furniture composites completely indistinguishable from real photographs. Your output will be scrutinised by professional photographers — it must be flawless.
 
-You will receive two images:
+You will receive ${hasCurtainImage ? 'three images' : 'two images'}:
 IMAGE 1 = a real photograph of the user's room${singleAsset ? ' (it may already contain other furniture)' : ''}.
-IMAGE 2 = a photorealistic product photo of ${singleAsset ? `a single furniture piece — a ${assetLabel}` : 'a sofa and/or accent chair'}, on a neutral background, with the exact custom fabric, material, and shape the user has designed.
+IMAGE 2 = a photorealistic product photo of ${singleAsset ? `a single furniture piece — a ${assetLabel}` : 'a sofa and/or accent chair'}, on a neutral background, with the exact custom fabric, material, and shape the user has designed.${curtainImageLine}
 
 YOUR GOAL: Produce one image that looks like IMAGE 1's room was photographed on the same day with IMAGE 2's furniture already sitting inside it — zero evidence of compositing.`;
 
@@ -62,7 +72,7 @@ Remove ONLY that piece and replace it with IMAGE 2's ${assetLabel}, in the EXACT
 CASE B — IMAGE 1 has no existing ${assetLabel}:
 Add IMAGE 2's ${assetLabel} into a natural, empty area of the room, facing the camera, at a realistic real-world scale, without disturbing or rearranging any existing furniture already in the room.
 
-Do not add any object types beyond the ${assetLabel} shown in IMAGE 2.`
+Do not add any object types beyond the ${assetLabel} shown in IMAGE 2${hasCurtainRequest ? ' (curtains are handled separately below)' : ''}.`
     : `━━━ PLACEMENT ━━━
 
 CASE A — IMAGE 1 already has a sofa or chair:
@@ -71,11 +81,21 @@ Replace each matching piece (sofa → sofa, chair → chair) with the correspond
 CASE B — IMAGE 1 has no sofa or chair:
 Place the sofa as the primary piece facing the camera, with the accent chair angled toward it. Use real-world scale: sofa ~200–230 cm wide, chair ~70–80 cm wide. Position them naturally in the available floor space.
 
-In all cases: remove only the furniture being replaced. Keep all permanent architecture (walls, floor, ceiling, windows, fireplace, built-in shelving, wall art). Add no extra objects not in IMAGE 2.`;
+In all cases: remove only the furniture being replaced. Keep all permanent architecture (walls, floor, ceiling, windows, fireplace, built-in shelving, wall art). Add no extra objects not in IMAGE 2${hasCurtainRequest ? ' (curtains are handled separately below)' : ''}.`;
+
+  const curtainInstructions = hasCurtainRequest
+    ? `\n\n━━━ CURTAINS (OPTIONAL USER REQUEST) ━━━
+${hasCurtainImage ? 'Use IMAGE 3 as a visual reference for the curtain fabric, pattern, and color.' : ''}${curtainText ? ` The user described the curtains they want as: "${curtainText}".` : ''}
+- If IMAGE 1's room has visible windows with existing curtains, replace those curtains to match this request.
+- If IMAGE 1 has visible windows with no curtains, add curtains matching this request in a natural, well-fitted way — proportional to the window, hanging correctly from a rod or track.
+- Apply the same lighting/shadow realism rules used for the furniture: the curtain fabric should be lit consistently with the room's light sources.
+- Do not alter the windows themselves, the walls, or any other room element beyond adding/changing the curtains.
+- If IMAGE 1 has no visible windows at all, skip this instruction entirely — do not invent a window.`
+    : '';
 
   const outro = `OUTPUT: One single photorealistic image — impossible to distinguish from a real interior photograph taken with ${singleAsset ? `this ${assetLabel}` : 'this furniture'} in the room.`;
 
-  return `${intro}\n\n${placement}\n\n${SHAPE_RULES}\n\n${PHOTOREALISM_RULES}\n\n${outro}`;
+  return `${intro}\n\n${placement}${curtainInstructions}\n\n${SHAPE_RULES}\n\n${PHOTOREALISM_RULES}\n\n${outro}`;
 }
 
 export default async function handler(req: any, res: any) {
@@ -83,7 +103,7 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { roomPhoto, furnitureRender, assetLabel, singleAsset } = req.body || {};
+  const { roomPhoto, furnitureRender, assetLabel, singleAsset, curtainText, curtainImage } = req.body || {};
   if (!roomPhoto || !furnitureRender) {
     return res.status(400).json({ error: 'Missing roomPhoto or furnitureRender' });
   }
@@ -98,19 +118,25 @@ export default async function handler(req: any, res: any) {
   const roomMime = roomPhoto.startsWith('data:image/png') ? 'image/png' : 'image/jpeg';
   const furnMime = furnitureRender.startsWith('data:image/png') ? 'image/png' : 'image/jpeg';
 
-  const prompt = buildPrompt(!!singleAsset, assetLabel || 'furniture piece');
+  const parts: any[] = [
+    { inlineData: { data: roomBase64, mimeType: roomMime } },
+    { inlineData: { data: furnBase64, mimeType: furnMime } },
+  ];
+
+  if (curtainImage) {
+    const curtainBase64 = curtainImage.replace(/^data:image\/[a-z]+;base64,/, '');
+    const curtainMime = curtainImage.startsWith('data:image/png') ? 'image/png' : 'image/jpeg';
+    parts.push({ inlineData: { data: curtainBase64, mimeType: curtainMime } });
+  }
+
+  const prompt = buildPrompt(!!singleAsset, assetLabel || 'furniture piece', curtainText || '', !!curtainImage);
+  parts.push({ text: prompt });
 
   try {
     const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: 'gemini-3.1-flash-image-preview',
-      contents: {
-        parts: [
-          { inlineData: { data: roomBase64, mimeType: roomMime } },
-          { inlineData: { data: furnBase64, mimeType: furnMime } },
-          { text: prompt },
-        ],
-      },
+      contents: { parts },
     });
 
     let generatedImageUrl: string | null = null;

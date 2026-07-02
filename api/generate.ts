@@ -11,17 +11,20 @@ Rules you must follow:
 - Preserve the furniture's exact fabric texture, colour, pattern, and material from the input image — do not change or improve it
 - Photorealistic, 8K quality, soft natural lighting`;
 
-const FURNITURE_RENDER_PROMPT = `You are a professional furniture product photographer. Convert this 3D render of furniture into a photorealistic product photograph.
+const FURNITURE_RENDER_PROMPT = `You are a professional furniture product photographer. Convert this 3D render into a photorealistic product photograph.
+
+The input may show furniture only (sofa, chair, or bed), or furniture together with curtain panels behind/beside it — treat curtains exactly like the furniture pieces for these rules.
 
 RULES:
-- Preserve the EXACT fabric color, pattern, texture, and weave of every piece — do not change or improve any material
+- Preserve the EXACT shape, silhouette, proportions, and structural design of every piece exactly as shown — do not redesign, restyle, resize, or reinterpret the arms, legs, backrest, frame, cushions, or curtain drape/pleats in any way. Only the surface rendering (lighting, material realism) should change; the form must stay identical.
+- Preserve the EXACT fabric/material color, pattern, texture, and weave of every piece (including curtains, if present) — do not change or improve any material
 - Apply professional studio lighting: soft key light from the upper-front, gentle fill from the sides — even, flattering, no harsh shadows
 - Add a soft realistic contact shadow directly beneath each furniture piece
-- Keep the background clean, plain, and neutral (warm white or soft cream) — NO room walls, floor props, plants, rugs, or any background elements
-- Show all furniture pieces (sofa and/or accent chair) clearly in the frame
+- Keep the background clean, plain, and neutral (warm white or soft cream) — NO room walls, floor props, plants, rugs, or any background elements other than what's described above
+- Show every piece present in the input (furniture and/or curtains) clearly in the frame, in the same pose, position, and arrangement as the input
 - Output should look like a professional furniture catalogue product photograph
 
-Do NOT add a room. Do NOT add any background objects. Only the furniture on a clean neutral background.`;
+Do NOT add a room. Do NOT add any background objects. Only the piece(s) shown, on a clean neutral background, with their exact original shape preserved.`;
 
 const ROOM_PROMPT = `You are a professional interior photography renderer. The input image is a 3D scene of a living room. Convert it into a photorealistic, bright, magazine-quality interior photograph.
 

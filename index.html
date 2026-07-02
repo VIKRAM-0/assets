@@ -205,20 +205,33 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;b
 .room-chip:hover:not(.on){border-color:var(--border-strong);color:var(--text);background:var(--bg)}
 .room-chip-ico{font-size:13px;line-height:1}
 /* ── Curtain configurator ───────────────────────────────────────────────── */
-.curtain-shape-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:4px}
-.curtain-shape-btn{padding:6px 4px;font-size:9.5px;font-weight:500;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);border-radius:7px;cursor:pointer;transition:all .15s;text-align:center;font-family:var(--font-b);line-height:1.2}
+.curtain-shape-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:6px}
+.curtain-style-group-label{font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--text-muted);text-transform:uppercase;margin:6px 0 4px}
+.curtain-shape-btn{padding:7px 4px;font-size:9.5px;font-weight:500;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);border-radius:8px;cursor:pointer;transition:all .15s;text-align:center;font-family:var(--font-b);line-height:1.2}
 .curtain-shape-btn.active{background:var(--accent-pale);border-color:var(--accent);color:var(--accent);font-weight:600}
 .curtain-shape-btn:hover:not(.active){border-color:var(--border-strong);color:var(--text);background:var(--bg)}
-.curtain-fabric-row{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
-.curtain-swatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2.5px solid transparent;transition:border-color .15s,transform .12s;flex-shrink:0;padding:0;outline:none;position:relative}
-.curtain-swatch.active{border-color:var(--accent);transform:scale(1.18)}
-.curtain-swatch:hover:not(.active){border-color:var(--border-strong);transform:scale(1.1)}
-.curtain-swatch-label{font-size:8.5px;color:var(--text-muted);text-align:center;display:block;margin-top:2px}
+.curtain-shape-none{width:100%;padding:6px;font-size:10px;margin-top:2px}
+.curtain-fabric-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.curtain-fab-card{display:flex;align-items:center;gap:7px;padding:6px 8px;border:1px solid var(--border);background:var(--surface);border-radius:8px;cursor:pointer;transition:all .15s;text-align:left;font-family:var(--font-b)}
+.curtain-fab-card:hover:not(.active){border-color:var(--border-strong);background:var(--bg)}
+.curtain-fab-card.active{border-color:var(--accent);background:var(--accent-pale)}
+.curtain-fab-dot{width:20px;height:20px;border-radius:50%;flex-shrink:0;border:1px solid rgba(0,0,0,.12)}
+.curtain-fab-text{display:flex;flex-direction:column;line-height:1.15;min-width:0}
+.curtain-fab-name{font-size:10.5px;font-weight:600;color:var(--text)}
+.curtain-fab-desc{font-size:8.5px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .curtain-color-row{display:flex;align-items:center;gap:8px;margin-top:10px}
 .curtain-color-label{font-size:10px;color:var(--text-mid);font-weight:500;margin-bottom:6px;display:block}
-.curtain-color-presets{display:flex;gap:6px;flex-wrap:wrap}
+.curtain-color-presets{display:flex;flex-direction:column;gap:6px}
+.curtain-color-group-label{font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--text-muted);text-transform:uppercase;margin:8px 0 4px}
+.curtain-color-group-row{display:flex;gap:6px;flex-wrap:wrap}
 .curtain-color-chip{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color .15s,transform .12s;padding:0;outline:none;flex-shrink:0}
 .curtain-color-chip.active{border-color:var(--accent);transform:scale(1.2)}
+.curtain-color-chip.recommended{box-shadow:0 0 0 2px var(--bg-panel),0 0 0 3px #c9a227}
+.curtain-color-chip.recommended.active{box-shadow:0 0 0 2px var(--bg-panel),0 0 0 3px var(--accent)}
+.curtain-size-row{display:flex;align-items:center;gap:8px;margin-top:6px}
+.curtain-size-label{font-size:10px;color:var(--text-mid);font-weight:500;width:42px;flex-shrink:0}
+.curtain-size-slider{flex:1;accent-color:var(--accent);cursor:pointer;height:4px}
+.curtain-size-val{font-size:9.5px;color:var(--text-muted);width:34px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums}
 .curtain-color-chip:hover:not(.active){border-color:var(--border-strong);transform:scale(1.1)}
 .bedroom-coming-soon{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:32px 16px;text-align:center}
 .bcs-icon{font-size:32px;opacity:.35}
@@ -865,6 +878,7 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;b
                 <button class="room-chip on" id="chip-doors" onclick="toggleRoomEl('doors')"><span class="room-chip-ico">🚪</span>Doors</button>
                 <button class="room-chip on" id="chip-rug" onclick="toggleRoomEl('rug')"><span class="room-chip-ico">🟫</span>Rug</button>
                 <button class="room-chip" id="chip-ceiling" onclick="toggleRoomEl('ceiling')"><span class="room-chip-ico">▫</span>Ceiling</button>
+                <button class="room-chip on" id="chip-curtains-living" onclick="toggleCurtains()"><span class="room-chip-ico">🪟</span>Curtains</button>
               </div>
             </div>
           </div><!-- /living room content -->
@@ -877,32 +891,7 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;b
                 Room Elements
               </div>
               <div class="room-chips-grid">
-                <button class="room-chip on" id="chip-bedroom-curtains" onclick="toggleBedroomCurtains()"><span class="room-chip-ico">🪟</span>Curtains</button>
-              </div>
-            </div>
-
-            <!-- Curtain configurator (shown when curtains are visible) -->
-            <div id="curtain-config-panel" class="room-section-block" style="display:none">
-              <div class="room-section-label">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 3v18M20 3v18M8 3c0 5 8 5 8 10S8 21 8 21" stroke-linecap="round"/></svg>
-                Curtain Style
-              </div>
-              <div class="curtain-shape-grid">
-                <button class="curtain-shape-btn"        id="cshape-sheer"   onclick="setCurtainShape('sheer')">Sheer</button>
-                <button class="curtain-shape-btn active" id="cshape-drape"   onclick="setCurtainShape('drape')">Drape</button>
-                <button class="curtain-shape-btn"        id="cshape-roman"   onclick="setCurtainShape('roman')">Roman</button>
-                <button class="curtain-shape-btn"        id="cshape-blinds"  onclick="setCurtainShape('blinds')">Blinds</button>
-                <button class="curtain-shape-btn"        id="cshape-pleated" onclick="setCurtainShape('pleated')">Pleated</button>
-                <button class="curtain-shape-btn"        id="cshape-none"    onclick="setCurtainShape('none')">None</button>
-              </div>
-              <div class="room-section-label" style="margin-top:12px">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg>
-                Fabric
-              </div>
-              <div class="curtain-fabric-row" id="curtain-fabric-row"></div>
-              <div style="margin-top:10px">
-                <span class="curtain-color-label">Color</span>
-                <div class="curtain-color-presets" id="curtain-color-presets"></div>
+                <button class="room-chip on" id="chip-curtains-bedroom" onclick="toggleCurtains()"><span class="room-chip-ico">🪟</span>Curtains</button>
               </div>
             </div>
 
@@ -917,6 +906,53 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;b
               </div>
             </div>
           </div><!-- /bedroom content -->
+
+          <!-- Curtain configurator — shared across living room + bedroom, shown whenever
+               the active room has curtain meshes and they're toggled visible -->
+          <div id="curtain-config-panel" class="room-section-block" style="display:none">
+            <div class="room-section-label">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 3v18M20 3v18M8 3c0 5 8 5 8 10S8 21 8 21" stroke-linecap="round"/></svg>
+              Curtain Style
+            </div>
+            <div class="curtain-style-group-label">Drapery</div>
+            <div class="curtain-shape-grid">
+              <button class="curtain-shape-btn active" id="cshape-drape" onclick="setCurtainShape('drape')" title="Drape">Drape</button>
+              <button class="curtain-shape-btn" id="cshape-pleated" onclick="setCurtainShape('pleated')" title="Pleated">Pleated</button>
+              <button class="curtain-shape-btn" id="cshape-sheer" onclick="setCurtainShape('sheer')" title="Sheer">Sheer</button>
+            </div>
+            <div class="curtain-style-group-label">Shades</div>
+            <div class="curtain-shape-grid">
+              <button class="curtain-shape-btn" id="cshape-blinds" onclick="setCurtainShape('blinds')" title="Blinds">Blinds</button>
+            </div>
+            <button class="curtain-shape-btn curtain-shape-none" id="cshape-none" onclick="setCurtainShape('none')">Clear / None</button>
+
+            <div class="room-section-label" style="margin-top:12px">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg>
+              Fabric
+            </div>
+            <div class="curtain-fabric-row" id="curtain-fabric-row"></div>
+            <div style="margin-top:10px">
+              <span class="curtain-color-label">Color</span>
+              <div class="curtain-color-presets" id="curtain-color-presets"></div>
+            </div>
+            <div style="margin-top:10px">
+              <span class="curtain-color-label">Size</span>
+              <div class="curtain-size-row">
+                <label class="curtain-size-label" for="curtain-width">Width</label>
+                <input type="range" id="curtain-width" class="curtain-size-slider"
+                       min="0.7" max="1.4" step="0.02" value="1"
+                       oninput="setCurtainSize('width', this.value)">
+                <span class="curtain-size-val" id="curtain-width-val">100%</span>
+              </div>
+              <div class="curtain-size-row">
+                <label class="curtain-size-label" for="curtain-length">Length</label>
+                <input type="range" id="curtain-length" class="curtain-size-slider"
+                       min="0.7" max="1.4" step="0.02" value="1"
+                       oninput="setCurtainSize('length', this.value)">
+                <span class="curtain-size-val" id="curtain-length-val">100%</span>
+              </div>
+            </div>
+          </div>
 
           <!-- ── Shared room blocks (always visible in room mode) ── -->
           <div class="room-section-block">
@@ -1634,44 +1670,101 @@ let tcMode = 'translate';
 
 // Curtain mesh entries (added to meshEntries when room loads)
 let curtainMeshEntries = [];
-let bedroomCurtainsVisible = true;
+let _curtainNodes = []; // top-level curtain GLB nodes — scaled for sizing
+let _blindsGroup = null;     // procedural venetian-blinds group (shape==='blinds')
+let _curtainBaseBox = null;  // {center,size} of curtains at base scale — anchors blinds
+let _curtainFace = null;     // room-facing normal — orients blinds slats
+let curtainsVisible = true;  // shared visibility flag for whichever room's curtains are active
 
 // ── Curtain configurator data ─────────────────────────────────────────────
 const CURTAIN_FABRICS = [
-  { id:'linen',  label:'Linen',  roughness:0.90, opacity:1.00, swatch:'linear-gradient(135deg,#efe9dc,#d9d2c2)',
+  { id:'linen',  label:'Linen',  roughness:0.90, opacity:1.00, normalScale:1.0, envMapIntensity:0.3, swatch:'linear-gradient(135deg,#efe9dc,#d9d2c2)',
     polyId:'rough_linen',
     normFallback: [SB+'cotton_fabric/Normal.jpg', SB+'cotton_fabric/Normal.webp'],
-    roughFallback:[SB+'cotton_fabric/Roughness.jpg',SB+'cotton_fabric/Roughness.webp'] },
-  { id:'cotton', label:'Cotton', roughness:0.85, opacity:1.00, swatch:'linear-gradient(135deg,#f2f0ea,#dcdad2)',
-    polyId:'fabric_pattern_05',
+    roughFallback:[SB+'cotton_fabric/Roughness.jpg',SB+'cotton_fabric/Roughness.webp'], recommend:['#EDE6D8','#D9CFC0','#B9C4A6','#D9B38C','#A89F90'] },
+  { id:'cotton', label:'Cotton', roughness:0.85, opacity:1.00, normalScale:0.85, envMapIntensity:0.3, swatch:'linear-gradient(135deg,#f2f0ea,#dcdad2)',
+    polyId:'cotton_jersey',
     normFallback: [SB+'cotton_fabric/Normal.jpg', SB+'cotton_fabric/Normal.webp'],
-    roughFallback:[SB+'cotton_fabric/Roughness.jpg',SB+'cotton_fabric/Roughness.webp'] },
-  { id:'velvet', label:'Velvet', roughness:0.55, opacity:1.00, swatch:'linear-gradient(135deg,#55585f,#2b2d31)',
-    polyId:null,
+    roughFallback:[SB+'cotton_fabric/Roughness.jpg',SB+'cotton_fabric/Roughness.webp'], recommend:['#EDE6D8','#D9CFC0','#9AA9B0','#BFC9CE','#A89F90'] },
+  { id:'velvet', label:'Velvet', roughness:0.85, opacity:1.00, normalScale:0.55, envMapIntensity:0.4, swatch:'linear-gradient(135deg,#55585f,#2b2d31)',
+    polyId:'velour_velvet', desaturateDiffuse:true, physical:true,
     normFallback: [SB+'cotton_fabric/Normal.jpg', SB+'cotton_fabric/Normal.webp'],
-    roughFallback:[SB+'cotton_fabric/Roughness.jpg',SB+'cotton_fabric/Roughness.webp'] },
-  { id:'silk',   label:'Silk',   roughness:0.35, opacity:1.00, swatch:'linear-gradient(135deg,#f6efe0,#e2d7bf)',
-    polyId:null,
+    roughFallback:[SB+'cotton_fabric/Roughness.jpg',SB+'cotton_fabric/Roughness.webp'], recommend:['#1F4E5F','#6A1B3A','#1C2733','#10403B','#402233'] },
+  { id:'silk',   label:'Silk',   roughness:0.80, opacity:1.00, normalScale:0.45, envMapIntensity:0.5, swatch:'linear-gradient(135deg,#f6efe0,#e2d7bf)',
+    polyId:'crepe_satin', desaturateDiffuse:true,
     normFallback: [SB+'leather_fabric/Normal.jpg', SB+'leather_fabric/Normal.webp'],
-    roughFallback:[SB+'leather_fabric/Roughness.jpg',SB+'leather_fabric/Roughness.webp'] },
-  { id:'voile',  label:'Voile',  roughness:0.95, opacity:0.72, swatch:'linear-gradient(135deg,#faf9f4,#e8e6de)',
-    polyId:'rough_linen',
+    roughFallback:[SB+'leather_fabric/Roughness.jpg',SB+'leather_fabric/Roughness.webp'], recommend:['#8C6A1F','#3B2A6B','#1F4E5F','#244B7A','#6A1B3A'] },
+  { id:'voile',  label:'Voile',  roughness:0.95, opacity:0.72, normalScale:0.55, envMapIntensity:0.3, swatch:'linear-gradient(135deg,#faf9f4,#e8e6de)',
+    polyId:'crepe_georgette',
     normFallback: [SB+'cotton_fabric/Normal.jpg', SB+'cotton_fabric/Normal.webp'],
-    roughFallback:[SB+'cotton_fabric/Roughness.jpg',SB+'cotton_fabric/Roughness.webp'] },
+    roughFallback:[SB+'cotton_fabric/Roughness.jpg',SB+'cotton_fabric/Roughness.webp'], recommend:['#FFFFFF','#F5F2EC','#DDE3E6','#EDE6D8'] },
+  { id:'cotton-blend', label:'Cotton-blend', roughness:0.78, opacity:1.00, normalScale:0.85, envMapIntensity:0.32, swatch:'linear-gradient(135deg,#f0ece2,#d6d0c4)',
+    polyId:'stretch_poplin',
+    normFallback: [SB+'cotton_fabric/Normal.jpg', SB+'cotton_fabric/Normal.webp'],
+    roughFallback:[SB+'cotton_fabric/Roughness.jpg',SB+'cotton_fabric/Roughness.webp'], recommend:['#EDE6D8','#D9CFC0','#9AA9B0','#A89F90'] },
+  { id:'wool', label:'Wool', roughness:0.92, opacity:1.00, normalScale:1.20, envMapIntensity:0.28, swatch:'linear-gradient(135deg,#cbbfa8,#9c8e74)',
+    polyId:'poly_wool_herringbone',
+    normFallback: [SB+'cotton_fabric/Normal.jpg', SB+'cotton_fabric/Normal.webp'],
+    roughFallback:[SB+'cotton_fabric/Roughness.jpg',SB+'cotton_fabric/Roughness.webp'], recommend:['#6E6960','#3A2C2A','#6B7B53','#7C4A21','#36454F'] },
+  { id:'jacquard', label:'Jacquard', roughness:0.80, opacity:1.00, normalScale:1.40, envMapIntensity:0.42, swatch:'linear-gradient(135deg,#cdb98f,#9a7d4f)',
+    polyId:'floral_jacquard',
+    normFallback: [SB+'cotton_fabric/Normal.jpg', SB+'cotton_fabric/Normal.webp'],
+    roughFallback:[SB+'cotton_fabric/Roughness.jpg',SB+'cotton_fabric/Roughness.webp'], recommend:['#D9CFC0','#1F4E5F','#8C6A1F','#A89F90'] },
+  { id:'blackout', label:'Blackout', roughness:0.86, opacity:1.00, normalScale:0.50, envMapIntensity:0.25, swatch:'linear-gradient(135deg,#3a3733,#23211e)',
+    polyId:'denim_fabric_05',
+    normFallback: [SB+'cotton_fabric/Normal.jpg', SB+'cotton_fabric/Normal.webp'],
+    roughFallback:[SB+'cotton_fabric/Roughness.jpg',SB+'cotton_fabric/Roughness.webp'], recommend:['#1C2733','#2B2B2B','#36454F','#3A2C2A'] },
 ];
-let curtainState = { shape:'drape', fabric:'linen', color:'#c8b89a' };
+let curtainState = { shape:'drape', fabric:'linen', color:'#EDE6D8', widthFactor:1, lengthFactor:1 };
+// Persists curtain customization across in-session room navigation (buildRoom/buildBedroomRoom
+// otherwise hard-resets curtainState to defaults). Null until the user changes anything.
+let _savedCurtainState = null;
+function _saveCurtainState() { _savedCurtainState = { ...curtainState }; }
 let _curtainNormTex = null, _curtainRoughTex = null;
 
 const CURTAIN_COLORS = [
-  { hex:'#f5f2ee', label:'White'   },
-  { hex:'#c8b89a', label:'Cream'   },
-  { hex:'#a89880', label:'Sand'    },
-  { hex:'#8c9ba8', label:'Grey'    },
-  { hex:'#1e3a5f', label:'Navy'    },
-  { hex:'#4a6741', label:'Sage'    },
-  { hex:'#7a3535', label:'Rust'    },
-  { hex:'#2d2420', label:'Dark'    },
+  { hex:'#EDE6D8', label:'Cream'   },
+  { hex:'#D9CFC0', label:'Greige'  },
+  { hex:'#A89F90', label:'Taupe'   },
+  { hex:'#B9C4A6', label:'Sage'    },
+  { hex:'#9AA9B0', label:'Steel'   },
+  { hex:'#1F4E5F', label:'Teal'    },
+  { hex:'#1C2733', label:'Navy'    },
+  { hex:'#2B2B2B', label:'Charcoal'},
 ];
+
+// Curated palettes for the side panel (the flat CURTAIN_COLORS above stays for the bottom bar).
+const CURTAIN_COLOR_GROUPS = [
+  { group:'Neutrals', colors:[
+    {hex:'#F5F2EC',label:'Ivory'},{hex:'#EDE6D8',label:'Cream'},{hex:'#D9CFC0',label:'Greige'},
+    {hex:'#C2B6A3',label:'Oatmeal'},{hex:'#A89F90',label:'Taupe'},{hex:'#8C8377',label:'Mushroom'},
+    {hex:'#6E6960',label:'Slate Grey'},{hex:'#FFFFFF',label:'White'} ]},
+  { group:'Warm / Earth', colors:[
+    {hex:'#E7D3B5',label:'Sand'},{hex:'#D9B38C',label:'Camel'},{hex:'#C68A5E',label:'Terracotta'},
+    {hex:'#A9602F',label:'Rust'},{hex:'#7C4A21',label:'Cognac'},{hex:'#B08D57',label:'Ochre'},{hex:'#8A5A3B',label:'Clay'} ]},
+  { group:'Cool / Blue-Grey', colors:[
+    {hex:'#DDE3E6',label:'Mist'},{hex:'#BFC9CE',label:'Fog Blue'},{hex:'#9AA9B0',label:'Steel'},
+    {hex:'#6F7E87',label:'Slate Blue'},{hex:'#4F606B',label:'Denim'},{hex:'#36454F',label:'Charcoal Blue'},{hex:'#283845',label:'Deep Slate'} ]},
+  { group:'Greens', colors:[
+    {hex:'#DCE3D2',label:'Pale Sage'},{hex:'#B9C4A6',label:'Sage'},{hex:'#8FA079',label:'Moss'},
+    {hex:'#6B7B53',label:'Olive'},{hex:'#46583C',label:'Fern'},{hex:'#2E4034',label:'Forest'},{hex:'#7A8B6F',label:'Eucalyptus'} ]},
+  { group:'Jewel', colors:[
+    {hex:'#1F4E5F',label:'Teal'},{hex:'#10403B',label:'Emerald'},{hex:'#3B2A6B',label:'Amethyst'},
+    {hex:'#6A1B3A',label:'Garnet'},{hex:'#7A2E2E',label:'Ruby'},{hex:'#8C6A1F',label:'Antique Gold'},{hex:'#244B7A',label:'Sapphire'} ]},
+  { group:'Deep / Dark', colors:[
+    {hex:'#2B2B2B',label:'Near Black'},{hex:'#1C2733',label:'Midnight Navy'},{hex:'#3A2C2A',label:'Espresso'},
+    {hex:'#402233',label:'Aubergine'},{hex:'#28332B',label:'Deep Forest'},{hex:'#4A1F22',label:'Oxblood'},{hex:'#23252A',label:'Graphite'} ]},
+];
+
+// Curtain chip colours are sRGB hex. With renderer.outputEncoding = sRGBEncoding the shader
+// treats a material's .color as LINEAR, so an sRGB hex assigned raw is gamma-encoded TWICE on
+// output → the fabric renders pale and desaturated. Convert sRGB→linear here so the rendered
+// colour round-trips to the true chip hue. `scalar` optionally darkens (rails/pleat/sheen).
+function _curtainLinColor(hex, scalar) {
+  const c = new THREE.Color(hex).convertSRGBToLinear();
+  if (scalar !== undefined) c.multiplyScalar(scalar);
+  return c;
+}
 
 // Piece system (room mode per-mesh fabric targeting)
 let selectedPieceId = null; // which meshEntry.id is targeted in room mode
@@ -1752,6 +1845,9 @@ function pickPolyUrl(files, keys) {
   }
   return null;
 }
+// 'col_01'/'col_02'/'col_03' cover PolyHaven patterned fabrics that ship color
+// variants instead of a single 'Diffuse' map — used by the curtain diffuse lookup.
+const POLY_DIFF_KEYS = ['diff','Diffuse','diffuse','Diff','albedo','Albedo','col_01','col_02','col_03','col','Color'];
 async function getPolyMaps(polyId) {
   if(polyCache[polyId]) return polyCache[polyId];
   try {
@@ -1760,10 +1856,11 @@ async function getPolyMaps(polyId) {
     const files = await res.json();
     const normUrl  = pickPolyUrl(files, POLY_NORM_KEYS);
     const roughUrl = pickPolyUrl(files, POLY_ROUGH_KEYS);
-    polyCache[polyId] = { normUrl, roughUrl };
+    const diffUrl  = pickPolyUrl(files, POLY_DIFF_KEYS);
+    polyCache[polyId] = { normUrl, roughUrl, diffUrl };
     return polyCache[polyId];
   } catch(e) {
-    polyCache[polyId] = { normUrl:null, roughUrl:null };
+    polyCache[polyId] = { normUrl:null, roughUrl:null, diffUrl:null };
     return polyCache[polyId];
   }
 }
@@ -3297,6 +3394,20 @@ function buildRoom(onReadyCallback) {
     if (curtainMeshEntries.length > 0) {
       meshEntries = meshEntries.filter(e => !e._isCurtain);
       meshEntries.push(curtainMeshEntries[0]); // show single "Curtains" entry
+
+      // Restore prior in-session customization if any; otherwise defaults. Without
+      // this the living-room curtains reset to a flat placeholder grey on every
+      // rebuild (toggling Room View, or navigating bedroom→living) even though
+      // curtainState/the fabric bar still show the user's last selection as active.
+      curtainState = _savedCurtainState
+        ? { ...{ shape:'drape', fabric:'linen', color:'#EDE6D8', widthFactor:1, lengthFactor:1 }, ..._savedCurtainState }
+        : { shape:'drape', fabric:'linen', color:'#EDE6D8', widthFactor:1, lengthFactor:1 };
+      curtainsVisible = true;
+      const _ccl = document.getElementById('chip-curtains-living');
+      if (_ccl) _ccl.classList.add('on');
+      _initCurtainFabricSwatches();
+      _showCurtainConfigPanel(true);
+      _applyCurtainMaterial();
     }
 
     _placeFurnitureInRoom();
@@ -3376,10 +3487,13 @@ function buildBedroomRoom(onReadyCallback) {
       meshEntries = meshEntries.filter(e => !e._isCurtain);
       meshEntries.push(curtainMeshEntries[0]);
     }
-    bedroomCurtainsVisible = true;
-    curtainState = { shape:'drape', fabric:'linen', color:'#c8b89a' };
-    const _cc = document.getElementById('chip-bedroom-curtains');
-    if (_cc) _cc.classList.add('on');
+    curtainsVisible = true;
+    // Restore prior in-session customization if any; otherwise defaults.
+    curtainState = _savedCurtainState
+      ? { ...{ shape:'drape', fabric:'linen', color:'#EDE6D8', widthFactor:1, lengthFactor:1 }, ..._savedCurtainState }
+      : { shape:'drape', fabric:'linen', color:'#EDE6D8', widthFactor:1, lengthFactor:1 };
+    const _ccb = document.getElementById('chip-curtains-bedroom');
+    if (_ccb) _ccb.classList.add('on');
     _initCurtainFabricSwatches();
     _showCurtainConfigPanel(true);
     if (curtainMeshEntries.length > 0) _applyCurtainMaterial();
@@ -3427,67 +3541,97 @@ function _initCurtainFabricSwatches() {
   const row = document.getElementById('curtain-fabric-row');
   if (row) {
     row.innerHTML = '';
+    const FAB_DESC = { linen:'natural slub', cotton:'soft matte', velvet:'luxe pile', silk:'lustrous',
+      voile:'sheer airy', 'cotton-blend':'easy care', wool:'warm dense', jacquard:'woven pattern', blackout:'room-darkening' };
     CURTAIN_FABRICS.forEach(f => {
-      const wrap = document.createElement('div');
-      wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px';
-      const btn = document.createElement('button');
-      btn.className = 'curtain-swatch' + (f.id === curtainState.fabric ? ' active' : '');
-      btn.id = 'cfab-' + f.id;
-      btn.title = f.label;
-      btn.style.background = f.swatch;
-      btn.onclick = () => setCurtainFabric(f.id);
-      const lbl = document.createElement('span');
-      lbl.className = 'curtain-swatch-label';
-      lbl.textContent = f.label;
-      wrap.appendChild(btn);
-      wrap.appendChild(lbl);
-      row.appendChild(wrap);
+      const card = document.createElement('button');
+      card.className = 'curtain-fab-card' + (f.id === curtainState.fabric ? ' active' : '');
+      card.id = 'cfab-' + f.id;
+      card.title = f.label;
+      card.onclick = () => setCurtainFabric(f.id);
+      const dot = document.createElement('span');
+      dot.className = 'curtain-fab-dot';
+      dot.style.background = f.swatch;
+      const txt = document.createElement('span');
+      txt.className = 'curtain-fab-text';
+      const nm = document.createElement('span');
+      nm.className = 'curtain-fab-name';
+      nm.textContent = f.label;
+      const ds = document.createElement('span');
+      ds.className = 'curtain-fab-desc';
+      ds.textContent = FAB_DESC[f.id] || '';
+      txt.appendChild(nm); txt.appendChild(ds);
+      card.appendChild(dot); card.appendChild(txt);
+      row.appendChild(card);
     });
   }
-  const colorRow = document.getElementById('curtain-color-presets');
-  if (colorRow) {
-    colorRow.innerHTML = '';
-    CURTAIN_COLORS.forEach(c => {
-      const btn = document.createElement('button');
-      btn.className = 'curtain-color-chip' + (c.hex === curtainState.color ? ' active' : '');
-      btn.id = 'cclr-' + c.hex.replace('#','');
-      btn.title = c.label;
-      btn.style.background = c.hex;
-      btn.onclick = () => setCurtainColor(c.hex);
-      colorRow.appendChild(btn);
-    });
-  }
+  renderCurtainColorGroups();
+  // Sync active shape button to current/restored state
+  document.querySelectorAll('.curtain-shape-btn').forEach(b => b.classList.remove('active'));
+  const shapeBtn = document.getElementById('cshape-' + curtainState.shape);
+  if (shapeBtn) shapeBtn.classList.add('active');
+  // Sync size sliders to current/restored state
+  const wf = curtainState.widthFactor || 1, lf = curtainState.lengthFactor || 1;
+  const wEl = document.getElementById('curtain-width'),  wVal = document.getElementById('curtain-width-val');
+  const lEl = document.getElementById('curtain-length'), lVal = document.getElementById('curtain-length-val');
+  if (wEl)  wEl.value = wf;
+  if (wVal) wVal.textContent = Math.round(wf * 100) + '%';
+  if (lEl)  lEl.value = lf;
+  if (lVal) lVal.textContent = Math.round(lf * 100) + '%';
 }
 
-function _buildCurtainMat(normTex, roughTex) {
+// Renders the grouped colour palettes into the side panel. Highlights the active
+// fabric's recommended colours.
+function renderCurtainColorGroups() {
+  const host = document.getElementById('curtain-color-presets');
+  if (!host) return;
+  host.innerHTML = '';
+  const preset = CURTAIN_FABRICS.find(f => f.id === curtainState.fabric);
+  const rec = new Set((preset && preset.recommend) ? preset.recommend.map(h => h.toUpperCase()) : []);
+  CURTAIN_COLOR_GROUPS.forEach(g => {
+    const lbl = document.createElement('div');
+    lbl.className = 'curtain-color-group-label';
+    lbl.textContent = g.group;
+    host.appendChild(lbl);
+    const rowEl = document.createElement('div');
+    rowEl.className = 'curtain-color-group-row';
+    g.colors.forEach(c => {
+      const btn = document.createElement('button');
+      const isRec = rec.has(c.hex.toUpperCase());
+      btn.className = 'curtain-color-chip'
+        + (c.hex.toLowerCase() === (curtainState.color || '').toLowerCase() ? ' active' : '')
+        + (isRec ? ' recommended' : '');
+      btn.id = 'cclr-' + c.hex.replace('#','');
+      btn.title = c.label + (isRec ? ' · recommended' : '');
+      btn.style.background = c.hex;
+      btn.onclick = () => setCurtainColor(c.hex);
+      rowEl.appendChild(btn);
+    });
+    host.appendChild(rowEl);
+  });
+}
+
+function _buildCurtainMat(normTex, roughTex, diffTex) {
   const preset = CURTAIN_FABRICS.find(f => f.id === curtainState.fabric) || CURTAIN_FABRICS[0];
   const shape  = curtainState.shape;
 
-  if (shape === 'blinds') {
-    return new THREE.MeshStandardMaterial({
-      color: new THREE.Color(curtainState.color),
-      roughness: 0.25,
-      metalness: 0.55,
-      side: THREE.DoubleSide,
-    });
-  }
-
   let roughness  = preset.roughness;
   let opacity    = preset.opacity;
-  const baseCol  = new THREE.Color(curtainState.color);
+  const baseCol  = _curtainLinColor(curtainState.color);
 
   if (shape === 'sheer') {
     roughness = Math.min(preset.roughness + 0.04, 1.0);
     opacity   = 0.42;
-  } else if (shape === 'roman') {
-    roughness = Math.max(preset.roughness - 0.12, 0.10);
-    baseCol.multiplyScalar(1.18);
+  } else if (shape === 'blinds') {
+    // Vertical fabric blinds read off the pleat geometry. Matte woven fabric with
+    // the full texture set — not shiny metal, which looked like wet plastic.
+    roughness = 0.7;
   } else if (shape === 'pleated') {
     roughness = Math.min(preset.roughness + 0.10, 1.0);
     baseCol.multiplyScalar(0.78);
   }
 
-  const mat = new THREE.MeshStandardMaterial({
+  const matOpts = {
     color: baseCol,
     roughness,
     metalness: 0,
@@ -3495,71 +3639,115 @@ function _buildCurtainMat(normTex, roughTex) {
     opacity,
     side: THREE.DoubleSide,
     depthWrite: opacity >= 1,
-  });
+  };
+  // Velvet uses MeshPhysicalMaterial for its retroreflective sheen rim.
+  // r128: sheen is a THREE.Color (null disables it) — not a float, and there is
+  // no sheenColor/sheenRoughness (those are r133+).
+  const mat = preset.physical
+    ? new THREE.MeshPhysicalMaterial(matOpts)
+    : new THREE.MeshStandardMaterial(matOpts);
+  if (preset.physical) {
+    mat.sheen = _curtainLinColor(curtainState.color, 0.7);
+  }
 
+  // Texture repeat scales with curtain size so the weave density stays constant.
+  const repX = 4 * (curtainState.widthFactor  || 1);
+  const repY = 4 * (curtainState.lengthFactor || 1);
+
+  if (diffTex) {
+    // Desaturate the diffuse to a luminance-only weave so the colour chip stays the
+    // true hue — a PolyHaven diffuse tint would otherwise fight the chosen colour.
+    const src = makeGreyscaleTex(diffTex) || diffTex;
+    const dt = src.clone();
+    dt.wrapS = dt.wrapT = THREE.RepeatWrapping;
+    dt.repeat.set(repX, repY);
+    dt.needsUpdate = true;
+    mat.map = dt;
+  }
   if (normTex) {
     const nt = normTex.clone();
     nt.wrapS = nt.wrapT = THREE.RepeatWrapping;
-    nt.repeat.set(8, 8);
+    nt.repeat.set(repX, repY);
     nt.needsUpdate = true;
     mat.normalMap = nt;
-    mat.normalScale = new THREE.Vector2(0.8, 0.8);
+    const ns = preset.normalScale ?? 0.8;
+    mat.normalScale = new THREE.Vector2(ns, ns);
   }
   if (roughTex) {
     const rt = roughTex.clone();
     rt.wrapS = rt.wrapT = THREE.RepeatWrapping;
-    rt.repeat.set(8, 8);
+    rt.repeat.set(repX, repY);
     rt.needsUpdate = true;
     mat.roughnessMap = rt;
   }
+
+  // Fabric should barely reflect the RoomEnvironment — full intensity made it look
+  // like satin/vinyl (the blue interior HDRI reflecting as bright specular streaks).
+  mat.envMapIntensity = (preset.envMapIntensity ?? 1.0) * 0.25;
 
   return mat;
 }
 
 async function _applyCurtainMaterial() {
   if (!curtainMeshEntries.length) return;
+  if (_blindsGroup) _blindsGroup.visible = false; // default hidden; blinds branch re-shows
   if (curtainState.shape === 'none') {
     curtainMeshEntries.forEach(e => { e.mesh.visible = false; });
     markDirty();
     return;
   }
-  curtainMeshEntries.forEach(e => { e.mesh.visible = bedroomCurtainsVisible; });
+  if (curtainState.shape === 'blinds') {
+    // Procedural slats replace the drape mesh entirely.
+    curtainMeshEntries.forEach(e => { e.mesh.visible = false; });
+    _applyBlinds();
+    return;
+  }
+  curtainMeshEntries.forEach(e => { e.mesh.visible = curtainsVisible; });
 
   const _gen = _roomLoadGen;
   const preset = CURTAIN_FABRICS.find(f => f.id === curtainState.fabric) || CURTAIN_FABRICS[0];
-  let normTex = null, roughTex = null;
+  let normTex = null, roughTex = null, diffTex = null;
   try {
     if (preset.polyId) {
       const maps = await getPolyMaps(preset.polyId);
-      [normTex, roughTex] = await Promise.all([
+      [normTex, roughTex, diffTex] = await Promise.all([
         maps.normUrl  ? tryLoadTex(maps.normUrl,  false).catch(() => null) : Promise.resolve(null),
         maps.roughUrl ? tryLoadTex(maps.roughUrl, false).catch(() => null) : Promise.resolve(null),
+        maps.diffUrl  ? tryLoadTex(maps.diffUrl,  true ).catch(() => null) : Promise.resolve(null),
       ]);
     }
     if (!normTex  && preset.normFallback)  normTex  = await loadTexFirstSuccess(preset.normFallback,  false).catch(() => null);
     if (!roughTex && preset.roughFallback) roughTex = await loadTexFirstSuccess(preset.roughFallback, false).catch(() => null);
+    // No diffuse fallback — if PolyHaven diffuse is unavailable we fall back to flat color.
   } catch (_) {}
 
   if (_roomLoadGen !== _gen) return; // room was switched while textures loaded
   _curtainNormTex  = normTex;
   _curtainRoughTex = roughTex;
 
-  const mat = _buildCurtainMat(normTex, roughTex);
+  const mat = _buildCurtainMat(normTex, roughTex, diffTex);
   curtainMeshEntries.forEach(e => { e.mesh.material = mat; });
-  markDirty();
+  _applyCurtainSize(); // re-apply node scale + UV repeat (fresh meshes after room load)
 }
 
 function _applyCurtainColor() {
   if (!curtainMeshEntries.length) return;
   if (curtainState.shape === 'none') return;
+  if (curtainState.shape === 'blinds') {
+    if (_blindsGroup) {
+      _blindsGroup.userData.slatMat.color.copy(_curtainLinColor(curtainState.color));
+      _blindsGroup.userData.railMat.color.copy(_curtainLinColor(curtainState.color, 0.7));
+      _blindsGroup.userData.slatMat.needsUpdate = true;
+    }
+    markDirty();
+    return;
+  }
   const preset  = CURTAIN_FABRICS.find(f => f.id === curtainState.fabric) || CURTAIN_FABRICS[0];
   const shape   = curtainState.shape;
-  const baseCol = new THREE.Color(curtainState.color);
+  const baseCol = _curtainLinColor(curtainState.color);
   let opacity   = preset.opacity;
   if (shape === 'sheer') {
     opacity = 0.42;
-  } else if (shape === 'roman') {
-    baseCol.multiplyScalar(1.18);
   } else if (shape === 'pleated') {
     baseCol.multiplyScalar(0.78);
   }
@@ -3571,6 +3759,8 @@ function _applyCurtainColor() {
       m.color.set(baseCol);
       m.opacity = opacity;
       m.transparent = opacity < 1;
+      // Velvet (MeshPhysicalMaterial): keep the r128 sheen Color tracking the chip color
+      if (m.sheen instanceof THREE.Color) m.sheen.copy(baseCol).multiplyScalar(0.7);
       m.needsUpdate = true;
     });
   });
@@ -3579,6 +3769,7 @@ function _applyCurtainColor() {
 
 function setCurtainShape(id) {
   curtainState.shape = id;
+  _saveCurtainState();
   document.querySelectorAll('.curtain-shape-btn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('cshape-' + id);
   if (btn) btn.classList.add('active');
@@ -3587,16 +3778,19 @@ function setCurtainShape(id) {
 
 function setCurtainFabric(id) {
   curtainState.fabric = id;
-  document.querySelectorAll('.curtain-swatch').forEach(b => b.classList.remove('active'));
+  _saveCurtainState();
+  document.querySelectorAll('.curtain-fab-card').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('cfab-' + id);
   if (btn) btn.classList.add('active');
   // Sync bar swatches
   document.querySelectorAll('[data-cfab]').forEach(b => b.classList.toggle('active', b.dataset.cfab === id));
+  renderCurtainColorGroups(); // refresh recommended-colour highlight for the new fabric
   _applyCurtainMaterial();
 }
 
 function setCurtainColor(hex) {
   curtainState.color = hex;
+  _saveCurtainState();
   document.querySelectorAll('.curtain-color-chip').forEach(b => b.classList.remove('active'));
   const chip = document.getElementById('cclr-' + hex.replace('#',''));
   if (chip) chip.classList.add('active');
@@ -3605,12 +3799,255 @@ function setCurtainColor(hex) {
   _applyCurtainColor();
 }
 
+// Scales curtain nodes (width=X, length=Y) and rescales texture repeat so the
+// fabric weave keeps its density instead of stretching. Folds are baked into the
+// GLB geometry, so large factors still distort folds — hence the 0.7–1.4 clamp.
+function _applyCurtainSize() {
+  const wf = curtainState.widthFactor  || 1;
+  const lf = curtainState.lengthFactor || 1;
+  if (curtainState.shape === 'blinds') { _applyBlinds(); return; } // slats rebuild to new dims
+  _curtainNodes.forEach(n => {
+    const base = n.userData._curtainBaseScale;
+    if (!base) return;
+    n.scale.set(base.x * wf, base.y * lf, base.z);
+    n.updateMatrixWorld(true);
+  });
+  curtainMeshEntries.forEach(e => {
+    if (!e.mesh.material) return;
+    const mats = Array.isArray(e.mesh.material) ? e.mesh.material : [e.mesh.material];
+    mats.forEach(m => {
+      if (!m) return;
+      [m.map, m.normalMap, m.roughnessMap].forEach(tex => {
+        if (tex) { tex.repeat.set(4 * wf, 4 * lf); tex.needsUpdate = true; }
+      });
+    });
+  });
+  markDirty();
+}
+
+function setCurtainSize(dim, value) {
+  const v = Math.max(0.7, Math.min(1.4, parseFloat(value) || 1));
+  if (dim === 'width') curtainState.widthFactor = v; else curtainState.lengthFactor = v;
+  _saveCurtainState();
+  const valEl = document.getElementById('curtain-' + dim + '-val');
+  if (valEl) valEl.textContent = Math.round(v * 100) + '%';
+  _applyCurtainSize();
+}
+
+// Compute a node's average world-space normal by sampling its meshes' normals.
+function _avgWorldNormal(node) {
+  const acc = new THREE.Vector3();
+  node.updateWorldMatrix(true, true);
+  node.traverse(c => {
+    if (!c.isMesh || !c.geometry || !c.geometry.attributes.normal) return;
+    const na = c.geometry.attributes.normal;
+    const nm = new THREE.Matrix3().getNormalMatrix(c.matrixWorld);
+    const step = Math.max(1, (na.count / 200) | 0);
+    const v = new THREE.Vector3();
+    for (let k = 0; k < na.count; k += step) {
+      v.set(na.getX(k), na.getY(k), na.getZ(k)).applyMatrix3(nm);
+      acc.add(v);
+    }
+  });
+  return acc.lengthSq() ? acc.normalize() : acc.set(0, 0, 1);
+}
+
+// Detect & repair mirror-flipped panel normals (e.g. one bedroom curtain panel is a
+// mirror of the other, so its baked vertex normals point INTO the wall instead of
+// toward the room — it then lights as if from behind, reading a different colour
+// than its twin even though they share one material). Only acts when panels genuinely
+// OPPOSE each other, then flips whichever faces away from the room interior — a no-op
+// on correct GLBs (including the living room's single-node case, where this is skipped).
+function _fixCurtainNormals(curtainNodes, roomScene) {
+  if (curtainNodes.length < 2) return;
+  const n0 = _avgWorldNormal(curtainNodes[0]);
+  const n1 = _avgWorldNormal(curtainNodes[1]);
+  if (n0.dot(n1) >= -0.3) return; // panels already face the same way → nothing to fix
+
+  const curtainBox = new THREE.Box3();
+  curtainNodes.forEach(n => curtainBox.expandByObject(n));
+  const curtainCenter = curtainBox.getCenter(new THREE.Vector3());
+  const roomCenter = new THREE.Box3().setFromObject(roomScene).getCenter(new THREE.Vector3());
+  const toRoom = roomCenter.clone().sub(curtainCenter); toRoom.y = 0;
+  if (!toRoom.lengthSq()) return;
+  toRoom.normalize();
+
+  const flippedGeoms = new Set();
+  curtainNodes.forEach(node => {
+    if (_avgWorldNormal(node).dot(toRoom) >= 0) return; // faces the room → correct
+    node.traverse(c => {
+      if (!c.isMesh || !c.geometry || !c.geometry.attributes.normal) return;
+      if (flippedGeoms.has(c.geometry.uuid)) return; // don't double-flip shared geometry
+      const na = c.geometry.attributes.normal;
+      for (let k = 0; k < na.count; k++) na.setXYZ(k, -na.getX(k), -na.getY(k), -na.getZ(k));
+      na.needsUpdate = true;
+      flippedGeoms.add(c.geometry.uuid);
+    });
+    console.log(`[Curtains] fixed inverted normals on ${node.name}`);
+  });
+}
+
+// ── Procedural Venetian blinds ────────────────────────────────────────────
+// The "Blinds" style swaps the drape mesh for real horizontal slat geometry.
+const BLINDS_TILT = THREE.MathUtils.degToRad(32); // half-open venetian angle
+
+// Blinds mount AT the window, but the only anchor is the drape footprint
+// (_curtainBaseBox), which spans the full floor-to-rod drape — the rod sits well
+// above the window head and the panels puddle to the floor. Reusing it raw makes
+// the shade ride up the bare wall above the window (and overshoot the sill below).
+// Confine the shade to the window band: cover ~72% of the drape height, biased
+// slightly upward so the top drops below the rod and the bottom lifts off the floor.
+const SHADE_VCOVER = 0.72; // shade height as a fraction of the drape footprint height
+const SHADE_VRISE  = 0.04; // shade centre lifted above the drape-box centre (× footprint height)
+
+function _disposeBlinds() {
+  if (!_blindsGroup) return;
+  _blindsGroup.traverse(o => {
+    if (o.geometry) o.geometry.dispose();
+    if (o.material) { (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m.dispose()); }
+  });
+  if (_blindsGroup.parent) _blindsGroup.parent.remove(_blindsGroup);
+  _blindsGroup = null;
+}
+
+// Shared orientation + position for the rigid blind panel. The drape's averaged
+// normal (_curtainFace) is noisy because the drape is wavy; feeding that straight in
+// skews the flat panel a few degrees, swinging its far edge back through the window
+// glass → z-fighting. Snap the facing axis to the nearest world cardinal so the panel
+// stays parallel to the glass, then stand it off toward the room.
+function _curtainPanelFrame(offset) {
+  const zAxis = _curtainFace.clone(); zAxis.y = 0;
+  if (zAxis.lengthSq() < 1e-6) zAxis.set(-1, 0, 0);
+  zAxis.normalize();
+  if (Math.abs(zAxis.x) >= Math.abs(zAxis.z)) zAxis.set(Math.sign(zAxis.x) || -1, 0, 0);
+  else                                        zAxis.set(0, 0, Math.sign(zAxis.z) || 1);
+  const up = new THREE.Vector3(0, 1, 0);
+  const xAxis = new THREE.Vector3().crossVectors(up, zAxis).normalize();
+  const yAxis = new THREE.Vector3().crossVectors(zAxis, xAxis).normalize();
+  const basis = new THREE.Matrix4().makeBasis(xAxis, yAxis, zAxis);
+  const position = _curtainBaseBox.center.clone().add(zAxis.clone().multiplyScalar(offset));
+  const quaternion = new THREE.Quaternion().setFromRotationMatrix(basis);
+  return { position, quaternion };
+}
+
+function _buildBlindsGeometry() {
+  _disposeBlinds();
+  if (!_curtainBaseBox || !_curtainFace || !scene) return;
+  const wf = curtainState.widthFactor || 1;
+  const lf = curtainState.lengthFactor || 1;
+  const sz = _curtainBaseBox.size;
+  const fullH  = sz.y * lf;                          // full drape footprint height
+  const width  = Math.max(sz.x, sz.z) * wf * 0.98;
+  const height = fullH * SHADE_VCOVER * 0.98;        // confined to the window band
+  if (width <= 0 || height <= 0) return;
+
+  const grp = new THREE.Group();
+  const frame = _curtainPanelFrame(0.05); // stand off the glass; snapped square to it
+  grp.position.copy(frame.position);
+  grp.position.y += fullH * SHADE_VRISE;             // lift off the floor / below the rod
+  grp.quaternion.copy(frame.quaternion);
+
+  // Faux-wood louvers: solid boxes (real thickness) so edges catch light.
+  const slatMat = new THREE.MeshStandardMaterial({
+    color: _curtainLinColor(curtainState.color), roughness: 0.62, metalness: 0,
+  });
+  const railMat = new THREE.MeshStandardMaterial({
+    color: _curtainLinColor(curtainState.color, 0.7), roughness: 0.7, metalness: 0,
+  });
+
+  const tilt      = BLINDS_TILT;
+  const slatDepth = 0.05;                         // 2" louver (front-to-back when flat)
+  const thickness = 0.004;                        // ~3-4 mm
+  const projPitch = Math.max(0.02, slatDepth * Math.cos(tilt)); // visible vertical pitch when tilted
+  const count     = Math.min(60, Math.max(16, Math.round(height / projPitch)));
+  const pitch     = height / count;
+
+  // Box local axes: X = louver length (window width), Y = thickness, Z = louver depth.
+  const slatGeo = new THREE.BoxGeometry(width, thickness, slatDepth);
+  for (let i = 0; i < count; i++) {
+    const slat = new THREE.Mesh(slatGeo, slatMat);
+    slat.position.y = height / 2 - pitch * (i + 0.5);
+    slat.rotation.x = tilt;                        // tilt about the louver's long axis
+    slat.castShadow = true; slat.receiveShadow = true;
+    grp.add(slat);
+  }
+
+  // Slim headrail (top) + heavier bottom rail — both solid boxes, depth kept small to stay clear of glass.
+  const headrail = new THREE.Mesh(new THREE.BoxGeometry(width * 1.02, 0.05, 0.06), railMat);
+  headrail.position.y = height / 2 + 0.03;
+  headrail.castShadow = true; headrail.receiveShadow = true;
+  grp.add(headrail);
+
+  const bottomrail = new THREE.Mesh(new THREE.BoxGeometry(width * 1.02, 0.03, slatDepth * 0.7), railMat);
+  bottomrail.position.y = -height / 2 - 0.015;
+  bottomrail.castShadow = true; bottomrail.receiveShadow = true;
+  grp.add(bottomrail);
+
+  // Ladder cords down the face (toward the room) — the detail that sells "real blinds".
+  const cordMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xeae6dc), roughness: 0.8, metalness: 0 });
+  const cordLen = height + 0.06;
+  const cordGeo = new THREE.CylinderGeometry(0.004, 0.004, cordLen, 6); // axis = local Y (vertical)
+  for (const xf of [-0.28, 0.28]) {
+    const cord = new THREE.Mesh(cordGeo, cordMat);
+    cord.position.set(width * xf, 0, slatDepth * 0.5 + 0.005); // +Z = toward room, in front of louvers
+    grp.add(cord);
+  }
+  grp.userData.cordMat = cordMat;
+
+  grp.userData.slatMat = slatMat;
+  grp.userData.railMat = railMat;
+  _blindsGroup = grp;
+  scene.add(grp);
+}
+
+// Show blinds (rebuilds with current colour + size), hiding the drape meshes.
+function _applyBlinds() {
+  _buildBlindsGeometry();
+  if (_blindsGroup) _blindsGroup.visible = curtainsVisible;
+  markDirty();
+}
+
+function toggleCurtains() {
+  curtainsVisible = !curtainsVisible;
+  ['chip-curtains-living', 'chip-curtains-bedroom'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.classList.toggle('on', curtainsVisible);
+  });
+  if (curtainsVisible) {
+    _applyCurtainMaterial(); // respects shape='none'/'blinds' internally
+  } else {
+    curtainMeshEntries.forEach(e => { e.mesh.visible = false; });
+    if (_blindsGroup) _blindsGroup.visible = false;
+    markDirty();
+  }
+  _showCurtainConfigPanel(curtainsVisible);
+}
+
 function _buildBedroomCurtainEntries(roomScene) {
   const curtainNodes = [];
   roomScene.traverse(c => {
     if (c.name === 'curtains_1' || c.name === 'curtains_2') curtainNodes.push(c);
   });
   if (!curtainNodes.length) { console.log('[Bedroom] no curtain nodes found'); return; }
+
+  // Keep the top-level curtain nodes and their base scale for sizing (scaling the
+  // node about its own pivot keeps the curtain anchored, unlike scaling child meshes).
+  _curtainNodes = curtainNodes;
+  curtainNodes.forEach(n => { n.userData._curtainBaseScale = n.scale.clone(); });
+
+  // Fix inverted panel normals — see _fixCurtainNormals for why this can happen.
+  _fixCurtainNormals(curtainNodes, roomScene);
+
+  // Capture the curtain footprint at BASE scale (nodes un-sized here) — anchors the
+  // procedural blinds geometry independently of drape scaling.
+  {
+    const bb = new THREE.Box3();
+    curtainNodes.forEach(n => bb.expandByObject(n));
+    if (!bb.isEmpty()) {
+      _curtainBaseBox = { center: bb.getCenter(new THREE.Vector3()), size: bb.getSize(new THREE.Vector3()) };
+      _curtainFace = _avgWorldNormal(curtainNodes[0]).clone();
+    }
+  }
 
   const sharedGreyMat = new THREE.MeshStandardMaterial({
     color: 0xd4c8b8, roughness: 0.8, metalness: 0, side: THREE.DoubleSide,
@@ -3640,19 +4077,6 @@ function _buildBedroomCurtainEntries(roomScene) {
     curtainMeshEntries[0].name = 'Curtains';
     console.log(`[Bedroom] built ${curtainMeshEntries.length} curtain entries`);
   }
-}
-
-function toggleBedroomCurtains() {
-  bedroomCurtainsVisible = !bedroomCurtainsVisible;
-  const btn = document.getElementById('chip-bedroom-curtains');
-  if (btn) btn.classList.toggle('on', bedroomCurtainsVisible);
-  if (bedroomCurtainsVisible) {
-    _applyCurtainMaterial(); // respects shape='none' internally
-  } else {
-    curtainMeshEntries.forEach(e => { e.mesh.visible = false; });
-    markDirty();
-  }
-  _showCurtainConfigPanel(bedroomCurtainsVisible);
 }
 
 // ── Furniture placement ──────────────────────────────────────────────────
@@ -3960,6 +4384,21 @@ function _buildCurtainEntries(roomScene) {
   });
   if (!meshes.length) return;
 
+  // Keep the group as the sizeable node + base scale (mirrors bedroom's two-panel
+  // setup, just a single group here) so width/length sliders work in living room too.
+  _curtainNodes = [curtainGroup];
+  curtainGroup.userData._curtainBaseScale = curtainGroup.scale.clone();
+  // Single node → _fixCurtainNormals is a no-op (needs 2+ to compare), called
+  // defensively for consistency with the bedroom path.
+  _fixCurtainNormals(_curtainNodes, roomScene);
+  {
+    const bb = new THREE.Box3().setFromObject(curtainGroup);
+    if (!bb.isEmpty()) {
+      _curtainBaseBox = { center: bb.getCenter(new THREE.Vector3()), size: bb.getSize(new THREE.Vector3()) };
+      _curtainFace = _avgWorldNormal(curtainGroup).clone();
+    }
+  }
+
   // All curtain panels share a SINGLE greyMat so fabric applies uniformly to all
   const firstMat = Array.isArray(meshes[0].material) ? meshes[0].material[0] : meshes[0].material;
   const sharedGreyMat = new THREE.MeshStandardMaterial({
@@ -4005,6 +4444,8 @@ function _removeCurtainEntries() {
     e.mesh.material = arr;
   });
   curtainMeshEntries = [];
+  _curtainNodes = [];
+  _disposeBlinds(); _curtainBaseBox = null; _curtainFace = null;
   // Remove curtain entries from meshEntries
   meshEntries = meshEntries.filter(e => !e._isCurtain);
   _showCurtainConfigPanel(false);
@@ -4204,11 +4645,40 @@ function _vimrIsSingleAsset() {
   return !roomMode || activeRoomSection === 'bedroom';
 }
 
+// Whether the currently configured curtains should be pulled into a "View in My
+// Room" capture alongside the furniture.
+function _vimrCurtainsIncluded() {
+  return curtainsVisible && curtainMeshEntries.length > 0 && curtainState.shape !== 'none';
+}
+
+// Hides everything under roomGroup EXCEPT curtain meshes, so captures exclude room
+// decor (walls, plants, bookcase) but keep the user's configured curtains visible.
+// _blindsGroup lives directly on `scene` (not roomGroup) so it's untouched either way.
+// Returns a restore function.
+function _vimrHideRoomExceptCurtains() {
+  if (!roomGroup) return () => {};
+  if (!_vimrCurtainsIncluded()) {
+    const wasVisible = roomGroup.visible;
+    roomGroup.visible = false;
+    return () => { roomGroup.visible = wasVisible; };
+  }
+  const curtainMeshSet = new Set(curtainMeshEntries.map(e => e.mesh));
+  const hidden = [];
+  roomGroup.traverse(child => {
+    if (child.isMesh && !curtainMeshSet.has(child) && child.visible) {
+      hidden.push(child);
+      child.visible = false;
+    }
+  });
+  return () => { hidden.forEach(c => { c.visible = true; }); };
+}
+
 // Capture ONLY the currently active model (chair, sofa, or bed) on a clean
 // neutral background, auto-framed to its own bounding box so it fills the
 // shot facing the camera — same hero-angle style as the product Render button.
 // Used for per-asset "View in My Room" from the simulator, and for bedroom
-// room-view where there is no companion piece.
+// room-view where there is no companion piece. If curtains are configured and
+// visible (bedroom), they're included in both the visibility pass and the frame.
 async function captureSingleAssetScene() {
   if (!currentModel) return null;
 
@@ -4216,18 +4686,21 @@ async function captureSingleAssetScene() {
   const savedTgt   = tgt.clone();
   const savedBg    = scene.background;
   const savedClear = renderer.getClearColor(new THREE.Color()).clone();
-  const savedClearAlpha  = renderer.getClearAlpha();
-  const savedRoomVisible = roomGroup ? roomGroup.visible : null;
+  const savedClearAlpha = renderer.getClearAlpha();
 
-  if (roomGroup) roomGroup.visible = false; // hide room backdrop/props if present
+  const restoreRoom = _vimrHideRoomExceptCurtains();
 
   const bg = new THREE.Color(0xf5f2ee);
   scene.background = bg;
   renderer.setClearColor(bg, 1);
 
-  // Auto-fit camera to the model's actual bounding box, using the same
-  // relative viewing angle as the proven product hero shot (theta 0.6, phi 1.05).
+  // Auto-fit camera to the model's (+ curtains', if included) bounding box, using
+  // the same relative viewing angle as the proven product hero shot.
   const box = new THREE.Box3().setFromObject(currentModel);
+  if (_vimrCurtainsIncluded()) {
+    curtainMeshEntries.forEach(e => { if (e.mesh.visible) box.expandByObject(e.mesh); });
+    if (_blindsGroup && _blindsGroup.visible) box.expandByObject(_blindsGroup);
+  }
   const center = box.getCenter(new THREE.Vector3());
   const size = box.getSize(new THREE.Vector3());
   const maxDim = Math.max(size.x, size.y, size.z, 0.001);
@@ -4242,7 +4715,7 @@ async function captureSingleAssetScene() {
 
   const dataUrl = renderer.domElement.toDataURL('image/jpeg', 0.92);
 
-  if (roomGroup) roomGroup.visible = savedRoomVisible;
+  restoreRoom();
   scene.background = savedBg;
   renderer.setClearColor(savedClear, savedClearAlpha);
   sph = savedSph;
@@ -4253,8 +4726,9 @@ async function captureSingleAssetScene() {
   return dataUrl;
 }
 
-// Capture sofa + chair on a clean neutral background (no room GLB decorations)
-// so Gemini sees only the configured furniture, not the virtual room props.
+// Capture sofa + chair (+ configured curtains, if visible) on a clean neutral
+// background (no room GLB decorations) so Gemini sees only the configured pieces,
+// not the virtual room props.
 async function captureDesignedScene() {
   await _ensureCompanionLoaded();
 
@@ -4265,8 +4739,7 @@ async function captureDesignedScene() {
   const savedClear = renderer.getClearColor(new THREE.Color()).clone();
   const savedClearAlpha = renderer.getClearAlpha();
 
-  // Hide room GLB (contains baked-in plants, bookcase, etc.)
-  if (roomGroup) roomGroup.visible = false;
+  const restoreRoom = _vimrHideRoomExceptCurtains();
 
   // Neutral warm-white background
   const bg = new THREE.Color(0xf5f2ee);
@@ -4286,7 +4759,7 @@ async function captureDesignedScene() {
   const dataUrl = renderer.domElement.toDataURL('image/jpeg', 0.92);
 
   // Restore everything
-  if (roomGroup) roomGroup.visible = true;
+  restoreRoom();
   scene.background = savedBg;
   renderer.setClearColor(savedClear, savedClearAlpha);
   sph = savedSph;
@@ -4378,6 +4851,60 @@ function openViewInMyRoom() {
   previewChange.onclick = () => { document.getElementById('vimr-file-input').click(); };
   preview.appendChild(previewImg); preview.appendChild(previewChange);
 
+  // Curtains (optional) — free text and/or a reference photo. Independent of the
+  // 3D curtain configurator: this lets the user steer Gemini's curtain choice for
+  // the composited room even when just rendering a sofa/chair.
+  _vimrCurtainImageDataUrl = null;
+  const curtainSection = document.createElement('div');
+  curtainSection.style.cssText = 'border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px';
+  curtainSection.innerHTML = `
+    <div style="font-size:12px;font-weight:700;color:#374151">Curtains <span style="font-weight:400;color:#9ca3af">(optional)</span></div>
+    <div style="font-size:10.5px;color:#9ca3af;line-height:1.5">Have an idea for the curtains? Describe it and/or add a reference photo — we'll match your room's existing curtains to it, or add new ones if there are none.</div>
+    <textarea id="vimr-curtain-text" placeholder="e.g. navy blue velvet drapes, floor length" style="resize:vertical;min-height:44px;padding:8px 10px;border:1px solid #d1d5db;border-radius:7px;font-size:12px;font-family:var(--font-b);color:#111"></textarea>
+  `;
+  const curtainImgRow = document.createElement('div');
+  curtainImgRow.style.cssText = 'display:flex;align-items:center;gap:8px';
+  const curtainImgBtn = document.createElement('button');
+  curtainImgBtn.type = 'button';
+  curtainImgBtn.textContent = '+ Add reference photo';
+  curtainImgBtn.style.cssText = 'padding:7px 12px;border:1.5px dashed #d1d5db;background:#fff;color:#6b7280;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font-b)';
+  const curtainImgThumb = document.createElement('img');
+  curtainImgThumb.style.cssText = 'display:none;width:36px;height:36px;object-fit:cover;border-radius:6px;border:1px solid #e5e7eb';
+  const curtainImgRemove = document.createElement('button');
+  curtainImgRemove.type = 'button';
+  curtainImgRemove.textContent = 'Remove';
+  curtainImgRemove.style.cssText = 'display:none;background:none;border:none;color:#ef4444;font-size:11px;cursor:pointer;font-family:var(--font-b)';
+  const curtainImgInput = document.createElement('input');
+  curtainImgInput.type = 'file';
+  curtainImgInput.accept = 'image/*';
+  curtainImgInput.style.display = 'none';
+  curtainImgInput.addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      _vimrCurtainImageDataUrl = e.target.result;
+      curtainImgThumb.src = _vimrCurtainImageDataUrl;
+      curtainImgThumb.style.display = 'block';
+      curtainImgRemove.style.display = 'inline';
+      curtainImgBtn.textContent = 'Change photo';
+    };
+    reader.readAsDataURL(file);
+  });
+  curtainImgBtn.onclick = () => curtainImgInput.click();
+  curtainImgRemove.onclick = () => {
+    _vimrCurtainImageDataUrl = null;
+    curtainImgThumb.style.display = 'none';
+    curtainImgRemove.style.display = 'none';
+    curtainImgBtn.textContent = '+ Add reference photo';
+    curtainImgInput.value = '';
+  };
+  curtainImgRow.appendChild(curtainImgBtn);
+  curtainImgRow.appendChild(curtainImgThumb);
+  curtainImgRow.appendChild(curtainImgRemove);
+  curtainImgRow.appendChild(curtainImgInput);
+  curtainSection.appendChild(curtainImgRow);
+
   // Generate button
   const genBtn = document.createElement('button');
   genBtn.id = 'vimr-gen-btn';
@@ -4388,6 +4915,7 @@ function openViewInMyRoom() {
   body.appendChild(tip);
   body.appendChild(uploadZone);
   body.appendChild(preview);
+  body.appendChild(curtainSection);
   body.appendChild(genBtn);
   md.appendChild(hd); md.appendChild(body);
   ov.appendChild(md);
@@ -4400,6 +4928,7 @@ function openViewInMyRoom() {
 }
 
 let _vimrRoomPhotoDataUrl = null;
+let _vimrCurtainImageDataUrl = null;
 
 function _vimrHandleFile(file) {
   const reader = new FileReader();
@@ -4417,6 +4946,11 @@ function _vimrHandleFile(file) {
 
 async function _vimrGenerate(ov, body, genBtn) {
   if (!_vimrRoomPhotoDataUrl) return;
+
+  // Read optional curtain inputs before wiping the body for the loading state
+  const curtainTextEl = document.getElementById('vimr-curtain-text');
+  const curtainText = curtainTextEl ? curtainTextEl.value.trim() : '';
+  const curtainImageDataUrl = _vimrCurtainImageDataUrl;
 
   // Replace body content with loading state
   body.innerHTML = '';
@@ -4473,6 +5007,9 @@ async function _vimrGenerate(ov, body, genBtn) {
   loadSub.textContent = 'Compositing your furniture into the real room photo';
 
   const compressedRoom = await _vimrCompressImage(_vimrRoomPhotoDataUrl, 1280, 0.82);
+  const compressedCurtainImage = curtainImageDataUrl
+    ? await _vimrCompressImage(curtainImageDataUrl, 900, 0.85)
+    : null;
 
   try {
     const resp = await fetch('/api/gemini-room', {
@@ -4483,6 +5020,8 @@ async function _vimrGenerate(ov, body, genBtn) {
         furnitureRender,
         assetLabel,
         singleAsset: isSingleAsset,
+        curtainText: curtainText || undefined,
+        curtainImage: compressedCurtainImage || undefined,
       }),
       signal: AbortSignal.timeout(90000),
     });
