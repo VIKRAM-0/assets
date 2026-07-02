@@ -624,7 +624,7 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;b
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
           Render
         </button>
-        <button class="btn-topbar-label" id="btn-view-in-my-room" onclick="openViewInMyRoom()" title="View in My Room" style="display:none">
+        <button class="btn-topbar-label" id="btn-view-in-my-room" onclick="openViewInMyRoom()" title="View in My Room">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           View in My Room
         </button>
@@ -3149,8 +3149,7 @@ function toggleRoomView() {
   roomMode = !roomMode;
   const btn = document.getElementById('btn-room-view');
   if(btn){ btn.classList.toggle('active-view', roomMode); btn.textContent = roomMode ? '× Exit Room' : '🏠 Room View'; }
-  const vimrBtn = document.getElementById('btn-view-in-my-room');
-  if (vimrBtn) vimrBtn.style.display = roomMode ? '' : 'none';
+  // "View in My Room" stays visible in both product and room views
   // Sidebar nav state
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const activeNav = document.getElementById(roomMode ? 'nav-room' : 'nav-simulator');
@@ -4189,6 +4188,71 @@ function _ensureCompanionLoaded() {
   });
 }
 
+function _vimrAssetLabel(key) {
+  return {
+    chair: 'accent chair',
+    sofa: 'sofa',
+    bed_wooden: 'wooden-frame bed',
+    bed_fabric: 'fabric-frame bed',
+  }[key] || 'furniture piece';
+}
+
+// Whether the current "View in My Room" request should touch only the single
+// active asset (product/simulator view, or bedroom room view — no companion
+// piece), vs. the full living-room duo (sofa + chair together).
+function _vimrIsSingleAsset() {
+  return !roomMode || activeRoomSection === 'bedroom';
+}
+
+// Capture ONLY the currently active model (chair, sofa, or bed) on a clean
+// neutral background, auto-framed to its own bounding box so it fills the
+// shot facing the camera — same hero-angle style as the product Render button.
+// Used for per-asset "View in My Room" from the simulator, and for bedroom
+// room-view where there is no companion piece.
+async function captureSingleAssetScene() {
+  if (!currentModel) return null;
+
+  const savedSph   = { ...sph };
+  const savedTgt   = tgt.clone();
+  const savedBg    = scene.background;
+  const savedClear = renderer.getClearColor(new THREE.Color()).clone();
+  const savedClearAlpha  = renderer.getClearAlpha();
+  const savedRoomVisible = roomGroup ? roomGroup.visible : null;
+
+  if (roomGroup) roomGroup.visible = false; // hide room backdrop/props if present
+
+  const bg = new THREE.Color(0xf5f2ee);
+  scene.background = bg;
+  renderer.setClearColor(bg, 1);
+
+  // Auto-fit camera to the model's actual bounding box, using the same
+  // relative viewing angle as the proven product hero shot (theta 0.6, phi 1.05).
+  const box = new THREE.Box3().setFromObject(currentModel);
+  const center = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z, 0.001);
+  tgt.set(center.x, center.y - size.y * 0.15, center.z);
+  sph = { theta: 0.6, phi: 1.05, r: maxDim * 2.1 };
+  camUpdate();
+
+  renderer.render(scene, camera);
+  await new Promise(r => setTimeout(r, 80));
+  renderer.render(scene, camera);
+  await new Promise(r => setTimeout(r, 40));
+
+  const dataUrl = renderer.domElement.toDataURL('image/jpeg', 0.92);
+
+  if (roomGroup) roomGroup.visible = savedRoomVisible;
+  scene.background = savedBg;
+  renderer.setClearColor(savedClear, savedClearAlpha);
+  sph = savedSph;
+  tgt.copy(savedTgt);
+  camUpdate();
+  markDirty();
+
+  return dataUrl;
+}
+
 // Capture sofa + chair on a clean neutral background (no room GLB decorations)
 // so Gemini sees only the configured furniture, not the virtual room props.
 async function captureDesignedScene() {
@@ -4252,8 +4316,10 @@ function _vimrCompressImage(dataUrl, maxPx, quality) {
 }
 
 function openViewInMyRoom() {
-  if (!roomMode) { showToast('Switch to Room View first'); return; }
   if (!currentModel) { showToast('Load a furniture piece first'); return; }
+
+  const isSingleAsset = _vimrIsSingleAsset();
+  const assetLabel = isSingleAsset ? _vimrAssetLabel(currentModelKey) : 'sofa and accent chair';
 
   // ── Overlay ──────────────────────────────────────────────────────────
   const ov = document.createElement('div');
@@ -4267,7 +4333,7 @@ function openViewInMyRoom() {
   const hd = document.createElement('div');
   hd.style.cssText = 'padding:18px 22px 14px;border-bottom:1px solid #ebebeb;display:flex;justify-content:space-between;align-items:center;flex-shrink:0';
   const ti = document.createElement('div');
-  ti.innerHTML = '<div style="font-size:15px;font-weight:800;color:#111;font-family:var(--font-d)">View in My Room</div><div style="font-size:11px;color:#9ca3af;margin-top:2px">Upload your room photo — we\'ll place your furniture inside it</div>';
+  ti.innerHTML = `<div style="font-size:15px;font-weight:800;color:#111;font-family:var(--font-d)">View in My Room</div><div style="font-size:11px;color:#9ca3af;margin-top:2px">Upload your room photo — we'll place your ${assetLabel} inside it</div>`;
   const cl = document.createElement('button');
   cl.textContent = '×';
   cl.style.cssText = 'background:none;border:none;font-size:26px;cursor:pointer;color:#aaa;padding:0;line-height:1;flex-shrink:0';
@@ -4281,7 +4347,9 @@ function openViewInMyRoom() {
   // Tip strip
   const tip = document.createElement('div');
   tip.style.cssText = 'background:#f0eeff;border:1px solid #c4b5fd;border-radius:8px;padding:10px 14px;font-size:11px;color:#5b21b6;line-height:1.6';
-  tip.innerHTML = '<strong>Tips for best results:</strong> Take a wide-angle photo showing as much of the room as possible. Good lighting helps. Existing furniture is OK — we\'ll remove it automatically.';
+  tip.innerHTML = isSingleAsset
+    ? `<strong>Tips for best results:</strong> Take a clear photo of your room. If it already has a similar ${assetLabel}, we'll swap in just that piece — everything else in your room stays untouched.`
+    : '<strong>Tips for best results:</strong> Take a wide-angle photo showing as much of the room as possible. Good lighting helps. Existing furniture is OK — we\'ll remove it automatically.';
 
   // Upload zone
   const uploadZone = document.createElement('div');
@@ -4365,10 +4433,13 @@ async function _vimrGenerate(ov, body, genBtn) {
   loadEl.appendChild(loadSub);
   body.appendChild(loadEl);
 
+  const isSingleAsset = _vimrIsSingleAsset();
+  const assetLabel = isSingleAsset ? _vimrAssetLabel(currentModelKey) : 'sofa and accent chair';
+
   // ── Step 1: Capture Three.js scene (furniture only, clean bg) ────────────
   let rawCapture = null;
   try {
-    const raw = await captureDesignedScene();
+    const raw = isSingleAsset ? await captureSingleAssetScene() : await captureDesignedScene();
     rawCapture = await _vimrCompressImage(raw, 1200, 0.88);
   } catch (e) {
     console.error('Scene capture failed:', e);
@@ -4410,6 +4481,8 @@ async function _vimrGenerate(ov, body, genBtn) {
       body: JSON.stringify({
         roomPhoto: compressedRoom,
         furnitureRender,
+        assetLabel,
+        singleAsset: isSingleAsset,
       }),
       signal: AbortSignal.timeout(90000),
     });
