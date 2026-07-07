@@ -157,9 +157,7 @@ function buildRoom(onReadyCallback) {
       // this the living-room curtains reset to a flat placeholder grey on every
       // rebuild (toggling Room View, or navigating bedroom→living) even though
       // curtainState/the fabric bar still show the user's last selection as active.
-      curtainState = _savedCurtainState
-        ? { ...{ shape:'drape', fabric:'linen', color:'#EDE6D8', widthFactor:1, lengthFactor:1 }, ..._savedCurtainState }
-        : { shape:'drape', fabric:'linen', color:'#EDE6D8', widthFactor:1, lengthFactor:1 };
+      restoreCurtainState();
       curtainsVisible = true;
       const _ccl = document.getElementById('chip-curtains-living');
       if (_ccl) _ccl.classList.add('on');
@@ -247,9 +245,7 @@ function buildBedroomRoom(onReadyCallback) {
     }
     curtainsVisible = true;
     // Restore prior in-session customization if any; otherwise defaults.
-    curtainState = _savedCurtainState
-      ? { ...{ shape:'drape', fabric:'linen', color:'#EDE6D8', widthFactor:1, lengthFactor:1 }, ..._savedCurtainState }
-      : { shape:'drape', fabric:'linen', color:'#EDE6D8', widthFactor:1, lengthFactor:1 };
+    restoreCurtainState();
     const _ccb = document.getElementById('chip-curtains-bedroom');
     if (_ccb) _ccb.classList.add('on');
     _initCurtainFabricSwatches();
@@ -303,7 +299,7 @@ function _initCurtainFabricSwatches() {
       voile:'sheer airy', 'cotton-blend':'easy care', wool:'warm dense', jacquard:'woven pattern', blackout:'room-darkening' };
     CURTAIN_FABRICS.forEach(f => {
       const card = document.createElement('button');
-      card.className = 'curtain-fab-card' + (f.id === curtainState.fabric ? ' active' : '');
+      card.className = 'curtain-fab-card' + (f.id === appStore.getState().curtainState.fabric ? ' active' : '');
       card.id = 'cfab-' + f.id;
       card.title = f.label;
       card.onclick = () => setCurtainFabric(f.id);
@@ -326,10 +322,10 @@ function _initCurtainFabricSwatches() {
   renderCurtainColorGroups();
   // Sync active shape button to current/restored state
   document.querySelectorAll('.curtain-shape-btn').forEach(b => b.classList.remove('active'));
-  const shapeBtn = document.getElementById('cshape-' + curtainState.shape);
+  const shapeBtn = document.getElementById('cshape-' + appStore.getState().curtainState.shape);
   if (shapeBtn) shapeBtn.classList.add('active');
   // Sync size sliders to current/restored state
-  const wf = curtainState.widthFactor || 1, lf = curtainState.lengthFactor || 1;
+  const wf = appStore.getState().curtainState.widthFactor || 1, lf = appStore.getState().curtainState.lengthFactor || 1;
   const wEl = document.getElementById('curtain-width'),  wVal = document.getElementById('curtain-width-val');
   const lEl = document.getElementById('curtain-length'), lVal = document.getElementById('curtain-length-val');
   if (wEl)  wEl.value = wf;
@@ -344,7 +340,7 @@ function renderCurtainColorGroups() {
   const host = document.getElementById('curtain-color-presets');
   if (!host) return;
   host.innerHTML = '';
-  const preset = CURTAIN_FABRICS.find(f => f.id === curtainState.fabric);
+  const preset = CURTAIN_FABRICS.find(f => f.id === appStore.getState().curtainState.fabric);
   const rec = new Set((preset && preset.recommend) ? preset.recommend.map(h => h.toUpperCase()) : []);
   CURTAIN_COLOR_GROUPS.forEach(g => {
     const lbl = document.createElement('div');
@@ -357,7 +353,7 @@ function renderCurtainColorGroups() {
       const btn = document.createElement('button');
       const isRec = rec.has(c.hex.toUpperCase());
       btn.className = 'curtain-color-chip'
-        + (c.hex.toLowerCase() === (curtainState.color || '').toLowerCase() ? ' active' : '')
+        + (c.hex.toLowerCase() === (appStore.getState().curtainState.color || '').toLowerCase() ? ' active' : '')
         + (isRec ? ' recommended' : '');
       btn.id = 'cclr-' + c.hex.replace('#','');
       btn.title = c.label + (isRec ? ' · recommended' : '');
@@ -370,12 +366,12 @@ function renderCurtainColorGroups() {
 }
 
 function _buildCurtainMat(normTex, roughTex, diffTex) {
-  const preset = CURTAIN_FABRICS.find(f => f.id === curtainState.fabric) || CURTAIN_FABRICS[0];
-  const shape  = curtainState.shape;
+  const preset = CURTAIN_FABRICS.find(f => f.id === appStore.getState().curtainState.fabric) || CURTAIN_FABRICS[0];
+  const shape  = appStore.getState().curtainState.shape;
 
   let roughness  = preset.roughness;
   let opacity    = preset.opacity;
-  const baseCol  = _curtainLinColor(curtainState.color);
+  const baseCol  = _curtainLinColor(appStore.getState().curtainState.color);
 
   if (shape === 'sheer') {
     roughness = Math.min(preset.roughness + 0.04, 1.0);
@@ -405,12 +401,12 @@ function _buildCurtainMat(normTex, roughTex, diffTex) {
     ? new THREE.MeshPhysicalMaterial(matOpts)
     : new THREE.MeshStandardMaterial(matOpts);
   if (preset.physical) {
-    mat.sheen = _curtainLinColor(curtainState.color, 0.7);
+    mat.sheen = _curtainLinColor(appStore.getState().curtainState.color, 0.7);
   }
 
   // Texture repeat scales with curtain size so the weave density stays constant.
-  const repX = 4 * (curtainState.widthFactor  || 1);
-  const repY = 4 * (curtainState.lengthFactor || 1);
+  const repX = 4 * (appStore.getState().curtainState.widthFactor  || 1);
+  const repY = 4 * (appStore.getState().curtainState.lengthFactor || 1);
 
   if (diffTex) {
     // Desaturate the diffuse to a luminance-only weave so the colour chip stays the
@@ -449,12 +445,12 @@ function _buildCurtainMat(normTex, roughTex, diffTex) {
 async function _applyCurtainMaterial() {
   if (!curtainMeshEntries.length) return;
   if (_blindsGroup) _blindsGroup.visible = false; // default hidden; blinds branch re-shows
-  if (curtainState.shape === 'none') {
+  if (appStore.getState().curtainState.shape === 'none') {
     curtainMeshEntries.forEach(e => { e.mesh.visible = false; });
     markDirty();
     return;
   }
-  if (curtainState.shape === 'blinds') {
+  if (appStore.getState().curtainState.shape === 'blinds') {
     // Procedural slats replace the drape mesh entirely.
     curtainMeshEntries.forEach(e => { e.mesh.visible = false; });
     _applyBlinds();
@@ -463,7 +459,7 @@ async function _applyCurtainMaterial() {
   curtainMeshEntries.forEach(e => { e.mesh.visible = curtainsVisible; });
 
   const _gen = _roomLoadGen;
-  const preset = CURTAIN_FABRICS.find(f => f.id === curtainState.fabric) || CURTAIN_FABRICS[0];
+  const preset = CURTAIN_FABRICS.find(f => f.id === appStore.getState().curtainState.fabric) || CURTAIN_FABRICS[0];
   let normTex = null, roughTex = null, diffTex = null;
   try {
     if (preset.polyId) {
@@ -490,19 +486,19 @@ async function _applyCurtainMaterial() {
 
 function _applyCurtainColor() {
   if (!curtainMeshEntries.length) return;
-  if (curtainState.shape === 'none') return;
-  if (curtainState.shape === 'blinds') {
+  if (appStore.getState().curtainState.shape === 'none') return;
+  if (appStore.getState().curtainState.shape === 'blinds') {
     if (_blindsGroup) {
-      _blindsGroup.userData.slatMat.color.copy(_curtainLinColor(curtainState.color));
-      _blindsGroup.userData.railMat.color.copy(_curtainLinColor(curtainState.color, 0.7));
+      _blindsGroup.userData.slatMat.color.copy(_curtainLinColor(appStore.getState().curtainState.color));
+      _blindsGroup.userData.railMat.color.copy(_curtainLinColor(appStore.getState().curtainState.color, 0.7));
       _blindsGroup.userData.slatMat.needsUpdate = true;
     }
     markDirty();
     return;
   }
-  const preset  = CURTAIN_FABRICS.find(f => f.id === curtainState.fabric) || CURTAIN_FABRICS[0];
-  const shape   = curtainState.shape;
-  const baseCol = _curtainLinColor(curtainState.color);
+  const preset  = CURTAIN_FABRICS.find(f => f.id === appStore.getState().curtainState.fabric) || CURTAIN_FABRICS[0];
+  const shape   = appStore.getState().curtainState.shape;
+  const baseCol = _curtainLinColor(appStore.getState().curtainState.color);
   let opacity   = preset.opacity;
   if (shape === 'sheer') {
     opacity = 0.42;
@@ -526,8 +522,8 @@ function _applyCurtainColor() {
 }
 
 function setCurtainShape(id) {
-  curtainState.shape = id;
-  _saveCurtainState();
+  setCurtain({ shape: id });
+  saveCurtainState();
   document.querySelectorAll('.curtain-shape-btn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('cshape-' + id);
   if (btn) btn.classList.add('active');
@@ -535,8 +531,8 @@ function setCurtainShape(id) {
 }
 
 function setCurtainFabric(id) {
-  curtainState.fabric = id;
-  _saveCurtainState();
+  setCurtain({ fabric: id });
+  saveCurtainState();
   document.querySelectorAll('.curtain-fab-card').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('cfab-' + id);
   if (btn) btn.classList.add('active');
@@ -547,8 +543,8 @@ function setCurtainFabric(id) {
 }
 
 function setCurtainColor(hex) {
-  curtainState.color = hex;
-  _saveCurtainState();
+  setCurtain({ color: hex });
+  saveCurtainState();
   document.querySelectorAll('.curtain-color-chip').forEach(b => b.classList.remove('active'));
   const chip = document.getElementById('cclr-' + hex.replace('#',''));
   if (chip) chip.classList.add('active');
@@ -561,9 +557,9 @@ function setCurtainColor(hex) {
 // fabric weave keeps its density instead of stretching. Folds are baked into the
 // GLB geometry, so large factors still distort folds — hence the 0.7–1.4 clamp.
 function _applyCurtainSize() {
-  const wf = curtainState.widthFactor  || 1;
-  const lf = curtainState.lengthFactor || 1;
-  if (curtainState.shape === 'blinds') { _applyBlinds(); return; } // slats rebuild to new dims
+  const wf = appStore.getState().curtainState.widthFactor  || 1;
+  const lf = appStore.getState().curtainState.lengthFactor || 1;
+  if (appStore.getState().curtainState.shape === 'blinds') { _applyBlinds(); return; } // slats rebuild to new dims
   _curtainNodes.forEach(n => {
     const base = n.userData._curtainBaseScale;
     if (!base) return;
@@ -585,8 +581,8 @@ function _applyCurtainSize() {
 
 function setCurtainSize(dim, value) {
   const v = Math.max(0.7, Math.min(1.4, parseFloat(value) || 1));
-  if (dim === 'width') curtainState.widthFactor = v; else curtainState.lengthFactor = v;
-  _saveCurtainState();
+  setCurtain(dim === 'width' ? { widthFactor: v } : { lengthFactor: v });
+  saveCurtainState();
   const valEl = document.getElementById('curtain-' + dim + '-val');
   if (valEl) valEl.textContent = Math.round(v * 100) + '%';
   _applyCurtainSize();
@@ -691,8 +687,8 @@ function _curtainPanelFrame(offset) {
 function _buildBlindsGeometry() {
   _disposeBlinds();
   if (!_curtainBaseBox || !_curtainFace || !scene) return;
-  const wf = curtainState.widthFactor || 1;
-  const lf = curtainState.lengthFactor || 1;
+  const wf = appStore.getState().curtainState.widthFactor || 1;
+  const lf = appStore.getState().curtainState.lengthFactor || 1;
   const sz = _curtainBaseBox.size;
   const fullH  = sz.y * lf;                          // full drape footprint height
   const width  = Math.max(sz.x, sz.z) * wf * 0.98;
@@ -707,10 +703,10 @@ function _buildBlindsGeometry() {
 
   // Faux-wood louvers: solid boxes (real thickness) so edges catch light.
   const slatMat = new THREE.MeshStandardMaterial({
-    color: _curtainLinColor(curtainState.color), roughness: 0.62, metalness: 0,
+    color: _curtainLinColor(appStore.getState().curtainState.color), roughness: 0.62, metalness: 0,
   });
   const railMat = new THREE.MeshStandardMaterial({
-    color: _curtainLinColor(curtainState.color, 0.7), roughness: 0.7, metalness: 0,
+    color: _curtainLinColor(appStore.getState().curtainState.color, 0.7), roughness: 0.7, metalness: 0,
   });
 
   const tilt      = BLINDS_TILT;

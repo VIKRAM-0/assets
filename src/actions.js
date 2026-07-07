@@ -31,3 +31,25 @@ function setRoomMode(on) {
 function setRoomSectionState(section) {
   appStore.setState(() => ({ activeRoomSection: section }));
 }
+
+const CURTAIN_STATE_DEFAULTS = { shape:'drape', fabric:'linen', color:'#EDE6D8', widthFactor:1, lengthFactor:1 };
+
+function setCurtain(patch) {
+  appStore.setState(s => ({ curtainState: { ...s.curtainState, ...patch } }));
+}
+
+// Persists curtain customization across in-session room navigation — room
+// rebuilds hard-reset curtainState to defaults. Null until the user changes
+// anything.
+function saveCurtainState() {
+  appStore.setState(s => ({ savedCurtainState: { ...s.curtainState } }));
+}
+
+// Room-rebuild reset: defaults overlaid with any saved customization.
+function restoreCurtainState() {
+  appStore.setState(s => ({
+    curtainState: s.savedCurtainState
+      ? { ...CURTAIN_STATE_DEFAULTS, ...s.savedCurtainState }
+      : { ...CURTAIN_STATE_DEFAULTS },
+  }));
+}

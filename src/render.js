@@ -145,7 +145,7 @@ function _vimrIsSingleAsset() {
 // Whether the currently configured curtains should be pulled into a "View in My
 // Room" capture alongside the furniture.
 function _vimrCurtainsIncluded() {
-  return curtainsVisible && curtainMeshEntries.length > 0 && curtainState.shape !== 'none';
+  return curtainsVisible && curtainMeshEntries.length > 0 && appStore.getState().curtainState.shape !== 'none';
 }
 
 // Hides everything under roomGroup EXCEPT curtain meshes, so captures exclude room

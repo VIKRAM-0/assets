@@ -35,4 +35,7 @@ const appStore = createStore({
   currentModelKey: 'chair',
   roomMode: false,
   activeRoomSection: 'living',
+  curtainState: { shape: 'drape', fabric: 'linen', color: '#EDE6D8', widthFactor: 1, lengthFactor: 1 },
+  // User's in-session curtain customization; survives room rebuilds. Null until first change.
+  savedCurtainState: null,
 });

@@ -171,7 +171,7 @@ function buildCurtainLibrary() {
 
   CURTAIN_FABRICS.forEach(f => {
     const sw = document.createElement('div');
-    sw.className = 'bar-sw' + (f.id === curtainState.fabric ? ' active' : '');
+    sw.className = 'bar-sw' + (f.id === appStore.getState().curtainState.fabric ? ' active' : '');
     sw.dataset.cfab = f.id;
     sw.title = f.label;
 
@@ -212,7 +212,7 @@ function buildCurtainLibrary() {
 
   CURTAIN_COLORS.forEach(c => {
     const chip = document.createElement('button');
-    chip.className = 'curtain-color-chip' + (c.hex === curtainState.color ? ' active' : '');
+    chip.className = 'curtain-color-chip' + (c.hex === appStore.getState().curtainState.color ? ' active' : '');
     chip.dataset.cclr = c.hex;
     chip.style.cssText = 'flex-shrink:0;align-self:center;background:' + c.hex;
     chip.title = c.label;

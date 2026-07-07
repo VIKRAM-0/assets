@@ -90,11 +90,7 @@ const CURTAIN_FABRICS = [
     normFallback: [SB+'cotton_fabric/Normal.jpg', SB+'cotton_fabric/Normal.webp'],
     roughFallback:[SB+'cotton_fabric/Roughness.jpg',SB+'cotton_fabric/Roughness.webp'], recommend:['#1C2733','#2B2B2B','#36454F','#3A2C2A'] },
 ];
-let curtainState = { shape:'drape', fabric:'linen', color:'#EDE6D8', widthFactor:1, lengthFactor:1 };
-// Persists curtain customization across in-session room navigation (buildRoom/buildBedroomRoom
-// otherwise hard-resets curtainState to defaults). Null until the user changes anything.
-let _savedCurtainState = null;
-function _saveCurtainState() { _savedCurtainState = { ...curtainState }; }
+// curtainState / savedCurtainState live in appStore — see src/store.js.
 let _curtainNormTex = null, _curtainRoughTex = null;
 
 const CURTAIN_COLORS = [
