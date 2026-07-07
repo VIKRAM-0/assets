@@ -10,6 +10,7 @@
 
 ## Global Constraints
 
+- **ZERO FEATURE LOSS.** Every feature in FEATURES.md (18: model switching, library browse/search/filter, part selection, click-apply, drag-drop apply, sliders, texture replace, fabric finder search + AI analysis, my-fabrics, GLB upload, room view, room element toggles, curtains/blinds config, explode view, AI render, view-in-my-room, export GLB, viewport nav + move mode, onboarding tour) must work identically after every task. Refactors move code; they never remove behavior. Deletions are allowed ONLY for code proven unreachable (grep shows zero callers AND markup hidden with undefined handlers).
 - No bundler, no TypeScript on frontend, no framework (spec §2).
 - App must boot and pass the smoke test after every task; commit after every task.
 - Branch: `refactor/architecture`. NEVER push. No Co-Authored-By trailer in commits.
