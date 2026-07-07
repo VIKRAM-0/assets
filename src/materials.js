@@ -37,6 +37,31 @@ async function enhanceTexture(dataUrl, cacheKey) {
 // Same pattern as _roomLoadGen for room loads.
 let _applyGen = 0;
 
+// Clone a loaded (shared, cached) texture with per-entry tiling — every mesh
+// entry needs its own repeat, so the cached texture is never mutated directly.
+function _tiledClone(tex, physRepeat) {
+  const t = tex.clone();
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(physRepeat, physRepeat);
+  t.needsUpdate = true;
+  return t;
+}
+
+// Swap the assembled material onto the entry's mesh (array-aware) and, when the
+// entry is the curtain representative, propagate it to every curtain panel.
+function _commitEntryMaterial(entry, mat) {
+  if (Array.isArray(entry.mesh.material)) {
+    const arr = [...entry.mesh.material];
+    arr[entry.matIndex] = mat;
+    entry.mesh.material = arr;
+  } else {
+    entry.mesh.material = mat;
+  }
+  if (entry._isCurtain) {
+    curtainMeshEntries.forEach(ce => { if (ce !== entry) ce.mesh.material = mat; });
+  }
+}
+
 async function applySwatchToEntries(item, targetEntries) {
   if(!targetEntries || !targetEntries.length) { showToast('Select a part →'); return; }
   const _gen = ++_applyGen;
@@ -107,14 +132,12 @@ async function applySwatchToEntries(item, targetEntries) {
       targetEntries.forEach(entry => {
         const mat = entry.greyMat;
         const physRepeat = S.scale*(entry.uvScaleFactor/BASE_TILE);
-        if(diffTex){const dt=diffTex.clone();dt.wrapS=dt.wrapT=THREE.RepeatWrapping;dt.repeat.set(physRepeat,physRepeat);dt.needsUpdate=true;mat.map=dt;mat.color.setRGB(Math.max(0.01,S.brightness),Math.max(0.01,S.brightness),Math.max(0.01,S.brightness));}
+        if(diffTex){mat.map=_tiledClone(diffTex,physRepeat);mat.color.setRGB(Math.max(0.01,S.brightness),Math.max(0.01,S.brightness),Math.max(0.01,S.brightness));}
         else{mat.map=null;mat.color.copy(new THREE.Color(item.hex)).multiplyScalar(Math.max(0.01,S.brightness));}
-        if(normTex){const nt=normTex.clone();nt.wrapS=nt.wrapT=THREE.RepeatWrapping;nt.repeat.set(physRepeat,physRepeat);nt.needsUpdate=true;mat.normalMap=nt;mat.normalScale.set(S.norm,S.norm);}else{mat.normalMap=null;}
-        if(roughTex){const rt=roughTex.clone();rt.wrapS=rt.wrapT=THREE.RepeatWrapping;rt.repeat.set(physRepeat,physRepeat);rt.needsUpdate=true;mat.roughnessMap=rt;}else{mat.roughnessMap=null;}
+        if(normTex){mat.normalMap=_tiledClone(normTex,physRepeat);mat.normalScale.set(S.norm,S.norm);}else{mat.normalMap=null;}
+        if(roughTex){mat.roughnessMap=_tiledClone(roughTex,physRepeat);}else{mat.roughnessMap=null;}
         mat.roughness=S.roughness;mat.metalness=S.metalness;mat.sheen=S.sheen;mat.needsUpdate=true;
-        if(Array.isArray(entry.mesh.material)){const arr=[...entry.mesh.material];arr[entry.matIndex]=mat;entry.mesh.material=arr;}else{entry.mesh.material=mat;}
-        // Propagate to all curtain panels when applying to curtain representative
-        if(entry._isCurtain){curtainMeshEntries.forEach(ce=>{if(ce===entry)return;ce.mesh.material=mat;});}
+        _commitEntryMaterial(entry, mat);
       });
       markDirty(); showToast(item.name+' applied!');
       // Auto-save material snapshot so room view retains changes
@@ -201,22 +224,14 @@ async function applySwatchToEntries(item, targetEntries) {
       const uvSF = _isBedSmooth ? Math.min(Math.max(entry.uvScaleFactor, 0.65), 0.85) : entry.uvScaleFactor;
       const physRepeat = S.scale*(uvSF/BASE_TILE);
       mat.color.setRGB(1,1,1); mat.map=null;
-      if(diffTex){const dt=diffTex.clone();dt.wrapS=dt.wrapT=THREE.RepeatWrapping;dt.repeat.set(physRepeat,physRepeat);dt.needsUpdate=true;mat.map=dt;mat.color.setRGB(S.brightness,S.brightness,S.brightness);}
+      if(diffTex){mat.map=_tiledClone(diffTex,physRepeat);mat.color.setRGB(S.brightness,S.brightness,S.brightness);}
       else if(item.hex){mat.map=null;mat.color.copy(baseColor).multiplyScalar(Math.max(0.01,S.brightness));}
       else{mat.map=null;mat.color.setRGB(0.83*S.brightness,0.82*S.brightness,0.80*S.brightness);}
-      if(normTex){const nt=normTex.clone();nt.wrapS=nt.wrapT=THREE.RepeatWrapping;nt.repeat.set(physRepeat,physRepeat);nt.needsUpdate=true;mat.normalMap=nt;mat.normalScale.set(_bedNorm,_bedNorm);}else{mat.normalMap=null;}
-      if(roughTex){const rt=roughTex.clone();rt.wrapS=rt.wrapT=THREE.RepeatWrapping;rt.repeat.set(physRepeat,physRepeat);rt.needsUpdate=true;mat.roughnessMap=rt;}else{mat.roughnessMap=null;}
-      if(aoTex){const at=aoTex.clone();at.wrapS=at.wrapT=THREE.RepeatWrapping;at.repeat.set(physRepeat,physRepeat);at.needsUpdate=true;mat.aoMap=at;mat.aoMapIntensity=1.0;}else{mat.aoMap=null;}
+      if(normTex){mat.normalMap=_tiledClone(normTex,physRepeat);mat.normalScale.set(_bedNorm,_bedNorm);}else{mat.normalMap=null;}
+      if(roughTex){mat.roughnessMap=_tiledClone(roughTex,physRepeat);}else{mat.roughnessMap=null;}
+      if(aoTex){mat.aoMap=_tiledClone(aoTex,physRepeat);mat.aoMapIntensity=1.0;}else{mat.aoMap=null;}
       mat.roughness=S.roughness;mat.metalness=S.metalness;mat.sheen=S.sheen;mat.needsUpdate=true;
-      if(Array.isArray(entry.mesh.material)){const arr=[...entry.mesh.material];arr[entry.matIndex]=mat;entry.mesh.material=arr;}else{entry.mesh.material=mat;}
-
-      // If this is the curtain representative, propagate fabric to all curtain panels
-      if (entry._isCurtain) {
-        curtainMeshEntries.forEach(ce => {
-          if (ce === entry) return;
-          ce.mesh.material = mat;
-        });
-      }
+      _commitEntryMaterial(entry, mat);
     });
     markDirty(); showToast(item.name+' applied!');
     // Auto-save material snapshot so room view retains changes
@@ -375,11 +390,7 @@ async function handleDiffuseUpload(file) {
   entries.forEach(entry => {
     const mat = entry.greyMat;
     const physRepeat = S.scale * (entry.uvScaleFactor / BASE_TILE);
-    const dt = tex.clone();
-    dt.wrapS = dt.wrapT = THREE.RepeatWrapping;
-    dt.repeat.set(physRepeat, physRepeat);
-    dt.needsUpdate = true;
-    mat.map = dt;
+    mat.map = _tiledClone(tex, physRepeat);
     mat.color.setRGB(Math.max(0.01, S.brightness), Math.max(0.01, S.brightness), Math.max(0.01, S.brightness));
     mat.needsUpdate = true;
     if (Array.isArray(entry.mesh.material)) {
