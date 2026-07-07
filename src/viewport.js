@@ -9,7 +9,7 @@ function updateProductInfo() {
     bed_fabric: { name: 'Fabric Bed',          dims: 'Queen · Fabric Frame' },
     bed_wooden: { name: 'Wooden Frame Bed',    dims: 'Queen · Wood Frame'   },
   };
-  const info = MODELS[currentModelKey] || MODELS.sofa;
+  const info = MODELS[appStore.getState().currentModelKey] || MODELS.sofa;
   const nameEl = document.getElementById('cp-product-name');
   const dimsEl = document.getElementById('cp-product-dims');
   if(nameEl) nameEl.textContent = info.name;
@@ -170,7 +170,7 @@ function initThree() {
       const ndc=screenToNDC(e,rect);
       mouse.set(ndc.x,ndc.y);
       raycaster.setFromCamera(mouse,camera);
-      const model=roomFurnitureModels[currentModelKey];
+      const model=roomFurnitureModels[appStore.getState().currentModelKey];
       if(model){
         const hits=raycaster.intersectObject(model,true);
         if(hits.length){
@@ -195,7 +195,7 @@ function initThree() {
       mouse.set(ndc.x,ndc.y);
       raycaster.setFromCamera(mouse,camera);
       if(raycaster.ray.intersectPlane(_floorPlane,_floorHit)){
-        const model=roomFurnitureModels[currentModelKey];
+        const model=roomFurnitureModels[appStore.getState().currentModelKey];
         if(model){
           model.position.x=_floorHit.x+_floorOffset.x;
           model.position.z=_floorHit.z+_floorOffset.z;
@@ -225,7 +225,7 @@ function initThree() {
 
   // Double-click on furniture to enter/exit move mode
   canvas.addEventListener('dblclick', e => {
-    if (!roomMode) return;
+    if (!appStore.getState().roomMode) return;
     const rect = canvas.getBoundingClientRect();
     const ndc = screenToNDC(e, rect);
     mouse.set(ndc.x, ndc.y);
@@ -245,7 +245,7 @@ function initThree() {
     }
 
     // Find which furniture model was hit — only consider models for the active section
-    const _validKeys = activeRoomSection === 'bedroom' ? ['bed_wooden','bed_fabric'] : ['chair','sofa'];
+    const _validKeys = appStore.getState().activeRoomSection === 'bedroom' ? ['bed_wooden','bed_fabric'] : ['chair','sofa'];
     const furnitureModels = _validKeys.map(k => roomFurnitureModels[k]).filter(Boolean);
     const hits = raycaster.intersectObjects(furnitureModels, true);
     if (!hits.length) return;
@@ -263,7 +263,7 @@ function initThree() {
     if (!hitKey) return;
 
     // Switch to the hit furniture if it's not already active
-    if (hitKey !== currentModelKey) switchModel(hitKey);
+    if (hitKey !== appStore.getState().currentModelKey) switchModel(hitKey);
 
     // Enter move mode — use custom HUD, no TC gizmo
     furnitureMoveMode = true;
@@ -323,7 +323,7 @@ function handleGLBUpload(input) {
     const el = document.getElementById(id);
     if (el) el.querySelectorAll('.custom-model-tag').forEach(t => t.remove());
   });
-  const activeTab = document.getElementById('tab-' + currentModelKey);
+  const activeTab = document.getElementById('tab-' + appStore.getState().currentModelKey);
   if (activeTab) {
     const tag = document.createElement('span');
     tag.className = 'custom-model-tag';

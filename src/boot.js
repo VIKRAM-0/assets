@@ -25,7 +25,7 @@ loadScripts([
     // Constrain translation to XZ plane (floor plane only)
     transformControls.addEventListener('objectChange', () => {
       if (tcMode === 'translate') {
-        const model = roomFurnitureModels[currentModelKey];
+        const model = roomFurnitureModels[appStore.getState().currentModelKey];
         if (model) {
           // Keep Y pinned to floor (furniture shouldn't float)
           const box = new THREE.Box3().setFromObject(model);

@@ -17,3 +17,17 @@ function resetSliders() {
 function setBaseColor(hex) {
   appStore.setState(() => ({ baseColorHex: hex }));
 }
+
+function setModelKey(key) {
+  appStore.setState(() => ({ currentModelKey: key }));
+}
+
+function setRoomMode(on) {
+  appStore.setState(() => ({ roomMode: on }));
+}
+
+// Named -State to avoid shadowing room.js's setRoomSection(section) UI handler,
+// which is the store-consuming orchestrator (DOM sync + room rebuild).
+function setRoomSectionState(section) {
+  appStore.setState(() => ({ activeRoomSection: section }));
+}

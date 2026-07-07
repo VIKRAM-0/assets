@@ -3,34 +3,34 @@
 // global scope across all src/*.js files, preserving original semantics.
 // ── Room View ─────────────────────────────────────────────────────────────
 function toggleRoomView() {
-  roomMode = !roomMode;
+  setRoomMode(!appStore.getState().roomMode);
   const btn = document.getElementById('btn-room-view');
-  if(btn){ btn.classList.toggle('active-view', roomMode); btn.textContent = roomMode ? '× Exit Room' : '🏠 Room View'; }
+  if(btn){ btn.classList.toggle('active-view', appStore.getState().roomMode); btn.textContent = appStore.getState().roomMode ? '× Exit Room' : '🏠 Room View'; }
   // "View in My Room" stays visible in both product and room views
   // Sidebar nav state
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const activeNav = document.getElementById(roomMode ? 'nav-room' : 'nav-simulator');
+  const activeNav = document.getElementById(appStore.getState().roomMode ? 'nav-room' : 'nav-simulator');
   if(activeNav) activeNav.classList.add('active');
   // Zone overlay visibility
   const zoneOverlay = document.getElementById('zone-overlay');
-  if(zoneOverlay) zoneOverlay.style.display = roomMode ? 'none' : '';
+  if(zoneOverlay) zoneOverlay.style.display = appStore.getState().roomMode ? 'none' : '';
 
-  document.getElementById('panel-product').style.display = roomMode ? 'none' : 'block';
-  document.getElementById('panel-room').style.display    = roomMode ? 'block' : 'none';
+  document.getElementById('panel-product').style.display = appStore.getState().roomMode ? 'none' : 'block';
+  document.getElementById('panel-room').style.display    = appStore.getState().roomMode ? 'block' : 'none';
 
-  if(roomMode) {
+  if(appStore.getState().roomMode) {
     // Save snapshot of current model's fabric state before entering room
     if (meshEntries.length > 0) {
       saveMaterialSnapshot();
     }
     // Auto-select room section based on furniture type
-    const _enterBed = currentModelKey === 'bed_wooden' || currentModelKey === 'bed_fabric';
-    activeRoomSection = _enterBed ? 'bedroom' : 'living';
+    const _enterBed = appStore.getState().currentModelKey === 'bed_wooden' || appStore.getState().currentModelKey === 'bed_fabric';
+    setRoomSectionState(_enterBed ? 'bedroom' : 'living');
     ['living','bedroom'].forEach(s => {
       const _rb = document.getElementById('rsec-'+s);
       const _rc = document.getElementById('rsec-'+s+'-content');
-      if (_rb) _rb.classList.toggle('active', s === activeRoomSection);
-      if (_rc) _rc.classList.toggle('active', s === activeRoomSection);
+      if (_rb) _rb.classList.toggle('active', s === appStore.getState().activeRoomSection);
+      if (_rc) _rc.classList.toggle('active', s === appStore.getState().activeRoomSection);
     });
     _syncRoomSectionLock();
     _syncProductTabLock();
@@ -55,7 +55,7 @@ function toggleRoomView() {
       const b = document.getElementById(id);
       if (b) b.classList.remove('room-sec-btn--locked');
     });
-    _syncProductTabLock(); // clears all prod-tab--locked since roomMode is now false
+    _syncProductTabLock(); // clears all prod-tab--locked since appStore.getState().roomMode is now false
     removeRoom();
     // Restore the active model to clean centered product-view position
     if (currentModel) {
@@ -259,18 +259,18 @@ function buildBedroomRoom(onReadyCallback) {
     // Sync bed-style chips
     ['bed_wooden', 'bed_fabric'].forEach(bk => {
       const c = document.getElementById('chip-bed-' + bk.replace('bed_', ''));
-      if (c) c.classList.toggle('on', bk === currentModelKey);
+      if (c) c.classList.toggle('on', bk === appStore.getState().currentModelKey);
     });
 
     // Place bed using calibrated slot, then restore fabric state from product view
     if (currentModel) {
-      const bs = BEDROOM_SLOTS[currentModelKey];
+      const bs = BEDROOM_SLOTS[appStore.getState().currentModelKey];
       _seatOnFloor(currentModel, bs.x, bs.z, bs.rotY, bs.scale);
-      roomFurnitureModels[currentModelKey] = currentModel;
+      roomFurnitureModels[appStore.getState().currentModelKey] = currentModel;
       if (!scene.getObjectById(currentModel.id)) scene.add(currentModel);
       // _rebuildMeshEntries reuses origMat._livinitGrey (set in product view) so
       // fabric selections carry through automatically — no snapshot apply needed.
-      _rebuildMeshEntries(currentModel, currentModelKey);
+      _rebuildMeshEntries(currentModel, appStore.getState().currentModelKey);
     }
 
     document.getElementById('loading').classList.remove('on');
@@ -896,19 +896,19 @@ function _seatOnFloor(model, slotX, slotZ, rotY, slotScale) {
 function _placeFurnitureInRoom() {
   // ── Active model ────────────────────────────────────────────────────────
   if (currentModel) {
-    const _fs = (activeRoomSection === 'bedroom' && BEDROOM_SLOTS[currentModelKey])
+    const _fs = (appStore.getState().activeRoomSection === 'bedroom' && BEDROOM_SLOTS[appStore.getState().currentModelKey])
       ? BEDROOM_SLOTS : FURNITURE_SLOTS;
-    const s = _fs[currentModelKey];
+    const s = _fs[appStore.getState().currentModelKey];
     if (s) _seatOnFloor(currentModel, s.x, s.z, s.rotY, s.scale || 1.0);
-    roomFurnitureModels[currentModelKey] = currentModel;
+    roomFurnitureModels[appStore.getState().currentModelKey] = currentModel;
     if (!scene.getObjectById(currentModel.id)) scene.add(currentModel);
   }
 
   // No companion in bedroom mode — only one bed shown at a time
-  if (activeRoomSection === 'bedroom') return;
+  if (appStore.getState().activeRoomSection === 'bedroom') return;
 
   // ── Companion model (living room only) ─────────────────────────────────
-  const otherKey = currentModelKey === 'chair' ? 'sofa' : 'chair';
+  const otherKey = appStore.getState().currentModelKey === 'chair' ? 'sofa' : 'chair';
   const otherUrl = getGLBUrl(otherKey);
   const os = FURNITURE_SLOTS[otherKey];
 
@@ -984,7 +984,7 @@ function removeRoom() {
   // Remove companion furniture from scene but KEEP currentModel so product-view
   // can still use it. Keep all refs in roomFurnitureModels for fast re-entry.
   Object.keys(roomFurnitureModels).forEach(k => {
-    if (k !== currentModelKey && roomFurnitureModels[k]) {
+    if (k !== appStore.getState().currentModelKey && roomFurnitureModels[k]) {
       scene.remove(roomFurnitureModels[k]);
     }
   });
@@ -1003,7 +1003,7 @@ function toggleRoomEl(key) {
 
 // ── Room section lock — prevent switching to incompatible section ─────────
 function _syncRoomSectionLock() {
-  const isBed = currentModelKey === 'bed_wooden' || currentModelKey === 'bed_fabric';
+  const isBed = appStore.getState().currentModelKey === 'bed_wooden' || appStore.getState().currentModelKey === 'bed_fabric';
   const btnLiving  = document.getElementById('rsec-living');
   const btnBedroom = document.getElementById('rsec-bedroom');
   if (btnLiving)  btnLiving.classList.toggle('room-sec-btn--locked',  isBed);
@@ -1012,7 +1012,7 @@ function _syncRoomSectionLock() {
 
 // ── Product tab lock — grey out incompatible tabs while in room mode ──────
 function _syncProductTabLock() {
-  if (!roomMode) {
+  if (!appStore.getState().roomMode) {
     // Unlock all when not in room mode
     ['tab-chair','tab-sofa','tab-bed_fabric'].forEach(id => {
       const el = document.getElementById(id);
@@ -1020,7 +1020,7 @@ function _syncProductTabLock() {
     });
     return;
   }
-  const inBedroom = activeRoomSection === 'bedroom';
+  const inBedroom = appStore.getState().activeRoomSection === 'bedroom';
   // In bedroom → lock chair + sofa. In living → lock fabric bed tab.
   const livingIds = ['tab-chair','tab-sofa'];
   const bedIds    = ['tab-bed_fabric'];
@@ -1036,8 +1036,8 @@ function _syncProductTabLock() {
 
 // ── Room Sections ────────────────────────────────────────────────────────
 function setRoomSection(section) {
-  if (activeRoomSection === section && roomMode) return;
-  activeRoomSection = section;
+  if (appStore.getState().activeRoomSection === section && appStore.getState().roomMode) return;
+  setRoomSectionState(section);
   ['living','bedroom'].forEach(s => {
     document.getElementById('rsec-'+s).classList.toggle('active', s===section);
     document.getElementById('rsec-'+s+'-content').classList.toggle('active', s===section);
@@ -1046,15 +1046,15 @@ function setRoomSection(section) {
   const lbl = document.getElementById('piece-list-label');
   if (lbl) lbl.textContent = section === 'bedroom' ? 'Bed Parts' : 'Furniture Parts';
 
-  if (!roomMode) return;
+  if (!appStore.getState().roomMode) return;
   _syncRoomSectionLock();
   _syncProductTabLock();
 
   if (section === 'bedroom') {
     ['chair','sofa'].forEach(k => { if(roomFurnitureModels[k]) scene.remove(roomFurnitureModels[k]); });
-    const bedKey = (currentModelKey==='bed_wooden'||currentModelKey==='bed_fabric') ? currentModelKey : 'bed_wooden';
-    if (currentModelKey !== bedKey) {
-      currentModelKey = bedKey;
+    const bedKey = (appStore.getState().currentModelKey==='bed_wooden'||appStore.getState().currentModelKey==='bed_fabric') ? appStore.getState().currentModelKey : 'bed_wooden';
+    if (appStore.getState().currentModelKey !== bedKey) {
+      setModelKey(bedKey);
       buildLibrary(); updateProductInfo();
       document.getElementById('tab-chair').classList.remove('active');
       document.getElementById('tab-sofa').classList.remove('active');
@@ -1068,9 +1068,9 @@ function setRoomSection(section) {
     });
   } else {
     ['bed_wooden','bed_fabric'].forEach(k => { if(roomFurnitureModels[k]) scene.remove(roomFurnitureModels[k]); });
-    const livingKey = (currentModelKey==='chair'||currentModelKey==='sofa') ? currentModelKey : 'chair';
-    if (currentModelKey !== livingKey) {
-      currentModelKey = livingKey;
+    const livingKey = (appStore.getState().currentModelKey==='chair'||appStore.getState().currentModelKey==='sofa') ? appStore.getState().currentModelKey : 'chair';
+    if (appStore.getState().currentModelKey !== livingKey) {
+      setModelKey(livingKey);
       buildLibrary(); updateProductInfo();
     }
     buildRoom(() => {
@@ -1104,7 +1104,7 @@ function setMoveMode(mode) {
 
 // ── Furniture nudge / rotate helpers (used by Move HUD buttons) ───────────
 function nudgeFurniture(dx, dz) {
-  const model = roomFurnitureModels[currentModelKey];
+  const model = roomFurnitureModels[appStore.getState().currentModelKey];
   if (!model) return;
   model.position.x += dx;
   model.position.z += dz;
@@ -1112,7 +1112,7 @@ function nudgeFurniture(dx, dz) {
   markDirty();
 }
 function rotateFurnitureY(deg) {
-  const model = roomFurnitureModels[currentModelKey];
+  const model = roomFurnitureModels[appStore.getState().currentModelKey];
   if (!model) return;
   model.rotation.y += deg * Math.PI / 180;
   model.updateMatrixWorld(true);

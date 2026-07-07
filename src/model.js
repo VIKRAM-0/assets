@@ -106,7 +106,7 @@ function deselectAll() {
 function processGLTF(gltf) {
   try {
     // Guard: room mode caller manages scene membership
-    if (!roomMode && currentModel) scene.remove(currentModel);
+    if (!appStore.getState().roomMode && currentModel) scene.remove(currentModel);
     currentModel = gltf.scene;
     const box = new THREE.Box3().setFromObject(currentModel);
     const sz = box.getSize(new THREE.Vector3());
@@ -181,7 +181,7 @@ function processGLTF(gltf) {
         const flatness=dims[2]>0?dims[0]/dims[2]:1;
         const meshVol=ms.x*ms.y*ms.z,worldVol=ws.x*ws.y*ws.z,volRatio=worldVol>0?meshVol/worldVol:0;
 
-        const isBed = currentModelKey==='bed_wooden'||currentModelKey==='bed_fabric';
+        const isBed = appStore.getState().currentModelKey==='bed_wooden'||appStore.getState().currentModelKey==='bed_fabric';
         if(!cleanName){
           if(isBed){
             if(volRatio<0.03&&relY>0.0) cleanName='Pillow';
@@ -222,7 +222,7 @@ function processGLTF(gltf) {
       bed_wooden:{'Frame 1':'Frame','Frame 2':'Frame','Mattress 1':'Mattress','Pillow 1':'Pillow','Pillow 2':'Pillow'},
       bed_fabric:{'Frame 1':'Frame','Frame 2':'Frame','Mattress 1':'Mattress','Pillow 1':'Pillow','Pillow 2':'Pillow'},
     };
-    const remap=RENAME[currentModelKey]||{};
+    const remap=RENAME[appStore.getState().currentModelKey]||{};
     newEntries.forEach(e=>{if(remap[e.name])e.name=remap[e.name];});
 
     meshEntries = newEntries;
@@ -231,12 +231,12 @@ function processGLTF(gltf) {
     rebuildZoneOverlay();
     updateProductInfo();
 
-    if(!roomMode){
+    if(!appStore.getState().roomMode){
       sph={theta:0.4,phi:1.15,r:2.2}; tgt.set(0,0,0); camUpdate();
     }
     // Room mode: camera stays, _placeFurnitureInRoom sets positions
     // Restore previously saved material snapshot for this model key
-    const snap = modelMaterialSnapshots[currentModelKey];
+    const snap = modelMaterialSnapshots[appStore.getState().currentModelKey];
     if(snap && snap.length > 0) {
       snap.forEach((s, si) => {
         if(si < meshEntries.length) {
@@ -290,7 +290,7 @@ function loadModel(url) {
   if (_gltfSceneCache[url]) {
     // Cache hit — clone so processGLTF gets a fresh unmodified hierarchy
     processGLTF({ scene: _gltfSceneCache[url].clone(true) });
-    roomFurnitureModels[currentModelKey] = currentModel;
+    roomFurnitureModels[appStore.getState().currentModelKey] = currentModel;
     return;
   }
 
@@ -298,7 +298,7 @@ function loadModel(url) {
     // Store a pre-process clone so subsequent loads skip the download + re-parse
     _gltfSceneCache[url] = gltf.scene.clone(true);
     processGLTF(gltf);
-    roomFurnitureModels[currentModelKey] = currentModel;
+    roomFurnitureModels[appStore.getState().currentModelKey] = currentModel;
   }, undefined, err=>{
     console.error(err);
     document.getElementById('loading').classList.remove('on');
@@ -312,8 +312,8 @@ function switchModel(key) {
     saveMaterialSnapshot();
   }
 
-  const prevKey = currentModelKey;
-  currentModelKey = key;
+  const prevKey = appStore.getState().currentModelKey;
+  setModelKey(key);
   document.getElementById('tab-chair').classList.toggle('active', key === 'chair');
   document.getElementById('tab-sofa').classList.toggle('active',  key === 'sofa');
   const _bedFabTab = document.getElementById('tab-bed_fabric');
@@ -327,9 +327,9 @@ function switchModel(key) {
   });
   buildLibrary();
   updateProductInfo();
-  if (roomMode) _syncRoomSectionLock();
+  if (appStore.getState().roomMode) _syncRoomSectionLock();
 
-  if (roomMode) {
+  if (appStore.getState().roomMode) {
     // ── Room mode: both models stay in scene, just swap which is "active" ──
     const cached = roomFurnitureModels[key];
     if (cached) {
@@ -339,14 +339,14 @@ function switchModel(key) {
       // produce different object instances, causing the cached ref to be orphaned.
       if (!scene.getObjectById(currentModel.id)) {
         scene.add(currentModel);
-        const _ks = (activeRoomSection === 'bedroom' && BEDROOM_SLOTS[key]) ? BEDROOM_SLOTS : FURNITURE_SLOTS;
+        const _ks = (appStore.getState().activeRoomSection === 'bedroom' && BEDROOM_SLOTS[key]) ? BEDROOM_SLOTS : FURNITURE_SLOTS;
         const s = _ks[key];
         if (s) _seatOnFloor(currentModel, s.x, s.z, s.rotY, s.scale || 1.0);
       }
       // Companion behaviour: living room keeps both pieces visible; bedroom shows only the active bed
       if (prevKey && roomFurnitureModels[prevKey]) {
         const prevModel = roomFurnitureModels[prevKey];
-        if (activeRoomSection === 'bedroom') {
+        if (appStore.getState().activeRoomSection === 'bedroom') {
           scene.remove(prevModel);
         } else if (!scene.getObjectById(prevModel.id)) {
           scene.add(prevModel);
@@ -375,7 +375,7 @@ function switchModel(key) {
         if (currentModel) {
           roomFurnitureModels[prevKey] = currentModel;
           // In bedroom mode only one bed is shown — remove the old one before adding new
-          if (activeRoomSection === 'bedroom') scene.remove(currentModel);
+          if (appStore.getState().activeRoomSection === 'bedroom') scene.remove(currentModel);
         }
         currentModel = gltf.scene;
         // Normalise scale the same way processGLTF does
@@ -515,8 +515,8 @@ function resetAll() {
   document.getElementById('app-sw').style.background='var(--border)';
   const _rbr=document.getElementById('app-replace-btn');if(_rbr)_rbr.style.display='none';
   // If in room mode, reload companion model fresh (living room only)
-  if(roomMode && roomFurnitureModels && activeRoomSection === 'living') {
-    const otherKey = currentModelKey === 'chair' ? 'sofa' : 'chair';
+  if(appStore.getState().roomMode && roomFurnitureModels && appStore.getState().activeRoomSection === 'living') {
+    const otherKey = appStore.getState().currentModelKey === 'chair' ? 'sofa' : 'chair';
     if(roomFurnitureModels[otherKey]) {
       scene.remove(roomFurnitureModels[otherKey]);
       roomFurnitureModels[otherKey] = null;

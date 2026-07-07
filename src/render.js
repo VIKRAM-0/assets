@@ -5,7 +5,7 @@
 async function renderScene() {
   if(!currentModel) { showToast('Load a model first!'); return; }
   document.getElementById('loading').classList.add('on');
-  document.getElementById('load-txt').textContent = roomMode ? 'Capturing Room…' : 'Capturing Scene…';
+  document.getElementById('load-txt').textContent = appStore.getState().roomMode ? 'Capturing Room…' : 'Capturing Scene…';
 
   // Save current camera state
   const savedSph = {...sph};
@@ -14,7 +14,7 @@ async function renderScene() {
   const savedClear = renderer.getClearColor(new THREE.Color()).clone();
   const savedClearAlpha = renderer.getClearAlpha();
 
-  if (roomMode) {
+  if (appStore.getState().roomMode) {
     // Match the default room-view camera so the render matches what the user sees.
     sph = { theta: 0.05 + Math.PI, phi: 1.15, r: 9.0 };
     tgt.set(0, -0.3, 0);
@@ -46,12 +46,12 @@ async function renderScene() {
 
     if (!apiAvailable) {
       // No API — just show the captured screenshot as a high-quality preview
-      showToast(roomMode ? 'Room scene captured!' : 'Deploy to Vercel for AI Rendering');
+      showToast(appStore.getState().roomMode ? 'Room scene captured!' : 'Deploy to Vercel for AI Rendering');
       showRenderedImage(dataUrl, true);
       return;
     }
 
-    document.getElementById('load-txt').textContent = roomMode
+    document.getElementById('load-txt').textContent = appStore.getState().roomMode
       ? 'Rendering Room Scene…'
       : 'Rendering in Living Room…';
 
@@ -60,7 +60,7 @@ async function renderScene() {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         imageData: dataUrl.split(',')[1],
-        mode: roomMode ? 'room' : 'product',
+        mode: appStore.getState().roomMode ? 'room' : 'product',
       }),
       signal: AbortSignal.timeout(60000),
     });
@@ -89,8 +89,8 @@ async function renderScene() {
 // in scene before we capture. Chair is not preloaded so it can still be loading
 // when the user clicks "View in My Room".
 function _ensureCompanionLoaded() {
-  if (!roomMode || activeRoomSection === 'bedroom') return Promise.resolve();
-  const otherKey = currentModelKey === 'chair' ? 'sofa' : 'chair';
+  if (!appStore.getState().roomMode || appStore.getState().activeRoomSection === 'bedroom') return Promise.resolve();
+  const otherKey = appStore.getState().currentModelKey === 'chair' ? 'sofa' : 'chair';
   const other = roomFurnitureModels[otherKey];
   if (other && scene.getObjectById(other.id)) return Promise.resolve(); // already visible
   if (other) {
@@ -139,7 +139,7 @@ function _vimrAssetLabel(key) {
 // active asset (product/simulator view, or bedroom room view — no companion
 // piece), vs. the full living-room duo (sofa + chair together).
 function _vimrIsSingleAsset() {
-  return !roomMode || activeRoomSection === 'bedroom';
+  return !appStore.getState().roomMode || appStore.getState().activeRoomSection === 'bedroom';
 }
 
 // Whether the currently configured curtains should be pulled into a "View in My
@@ -289,7 +289,7 @@ function openViewInMyRoom() {
   if (!currentModel) { showToast('Load a furniture piece first'); return; }
 
   const isSingleAsset = _vimrIsSingleAsset();
-  const assetLabel = isSingleAsset ? _vimrAssetLabel(currentModelKey) : 'sofa and accent chair';
+  const assetLabel = isSingleAsset ? _vimrAssetLabel(appStore.getState().currentModelKey) : 'sofa and accent chair';
 
   // ── Overlay ──────────────────────────────────────────────────────────
   const ov = document.createElement('div');
@@ -465,7 +465,7 @@ async function _vimrGenerate(ov, body, genBtn) {
   body.appendChild(loadEl);
 
   const isSingleAsset = _vimrIsSingleAsset();
-  const assetLabel = isSingleAsset ? _vimrAssetLabel(currentModelKey) : 'sofa and accent chair';
+  const assetLabel = isSingleAsset ? _vimrAssetLabel(appStore.getState().currentModelKey) : 'sofa and accent chair';
 
   // ── Step 1: Capture Three.js scene (furniture only, clean bg) ────────────
   let rawCapture = null;
@@ -608,7 +608,7 @@ async function exportGLB() {
     const exporter=new THREE.GLTFExporter();
     exporter.parse(currentModel,result=>{
       const blob=new Blob([result],{type:'application/octet-stream'});
-      const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=currentModelKey+'_custom.glb';link.click();
+      const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=appStore.getState().currentModelKey+'_custom.glb';link.click();
       showToast('Exported!');
     },{binary:true});
   } catch(e){showToast('Export failed: '+e.message);}

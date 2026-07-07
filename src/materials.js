@@ -192,7 +192,7 @@ async function applySwatchToEntries(item, targetEntries) {
     // 1. Clamp uvScaleFactor tightly so pillows/headboard/mattress all tile at similar density
     // 2. Lower normal map intensity — grain direction varies per UV island on the bed, causing
     //    visible patchiness at high norm values. At 0.2 the grain reads as texture not direction.
-    const _isBedSmooth = currentModelKey && currentModelKey.startsWith('bed') &&
+    const _isBedSmooth = appStore.getState().currentModelKey && appStore.getState().currentModelKey.startsWith('bed') &&
       (item.type === 'leather' || item.type === 'pu' || item.type === 'vinyl');
     const _bedNorm = _isBedSmooth ? 0.2 : S.norm;
 
@@ -231,8 +231,8 @@ async function applySwatchToEntries(item, targetEntries) {
 
 // Click apply — in room mode uses the piece-list-selected entry; in product mode uses checked entries
 async function applySwatch(gi, ii, btnEl) {
-  const item = LIBRARY[currentModelKey][gi].items[ii];
-  if (roomMode) {
+  const item = LIBRARY[appStore.getState().currentModelKey][gi].items[ii];
+  if (appStore.getState().roomMode) {
     const selected = meshEntries.find(e => e.pieceSelected);
     if (!selected) { showToast('Select a part in the list first'); return; }
     if (activeBtnEl) activeBtnEl.classList.remove('active');
@@ -476,7 +476,7 @@ function getHitEntry(e, rect) {
   raycaster.setFromCamera(mouse, camera);
 
   // Build target mesh list: furniture + all curtain meshes in room mode
-  const allEntries = roomMode
+  const allEntries = appStore.getState().roomMode
     ? [...meshEntries, ...curtainMeshEntries.filter(c => !meshEntries.includes(c))]
     : meshEntries;
   const meshes = allEntries.map(en=>en.mesh).filter(Boolean);
@@ -523,7 +523,7 @@ function clearMeshHighlight() {
 async function dropFabricOnCanvas(e, rect) {
   if(!dragItem) return;
 
-  if(roomMode) {
+  if(appStore.getState().roomMode) {
     // In room mode: prefer the piece the user explicitly selected in the piece list.
     // Fall back to raycast hit so direct-drop-on-mesh still works.
     const selectedEntry = meshEntries.find(en => en.pieceSelected);
@@ -546,7 +546,7 @@ async function dropFabricOnCanvas(e, rect) {
 }
 
 function startDrag(e, gi, ii) {
-  const item = LIBRARY[currentModelKey][gi].items[ii];
+  const item = LIBRARY[appStore.getState().currentModelKey][gi].items[ii];
   dragItem = {gi, ii, item};
   dragActive = true;
   ghost.style.display = 'block';

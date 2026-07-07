@@ -32,4 +32,7 @@ const appStore = createStore({
   // Populated domain-by-domain as state migrates out of src/state.js.
   sliders: { brightness: 1.0, roughness: 0.72, metalness: 0, sheen: 0, scale: 10.0, norm: 1.0 },
   baseColorHex: '#ffffff',
+  currentModelKey: 'chair',
+  roomMode: false,
+  activeRoomSection: 'living',
 });

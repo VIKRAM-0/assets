@@ -3,14 +3,14 @@
 // global scope across all src/*.js files, preserving original semantics.
 // ── Build fabric library UI ───────────────────────────────────────────────
 function buildLibrary() {
-  if (roomMode && meshEntries.find(e => e._isCurtain && e.pieceSelected)) {
+  if (appStore.getState().roomMode && meshEntries.find(e => e._isCurtain && e.pieceSelected)) {
     buildCurtainLibrary();
     return;
   }
 
   const lt = document.getElementById('lib-title');
   const _ltMap={chair:'Chair Fabrics',sofa:'Sofa Fabrics',bed_wooden:'Bed — Wooden Frame',bed_fabric:'Bed — Fabric Frame'};
-  if(lt) lt.textContent = _ltMap[currentModelKey] || 'Fabrics';
+  if(lt) lt.textContent = _ltMap[appStore.getState().currentModelKey] || 'Fabrics';
 
   const tabsEl = document.getElementById('fabric-tabs');
   const swatchesEl = document.getElementById('fabric-swatches-row');
@@ -24,7 +24,7 @@ function buildLibrary() {
   const searchInput = document.getElementById('fab-search-input');
   if(searchInput) searchInput.value = '';
 
-  const groups = LIBRARY[currentModelKey];
+  const groups = LIBRARY[appStore.getState().currentModelKey];
 
   // Flatten all items with their group indices (for startDrag compat)
   const allSwatches = [];
@@ -126,7 +126,7 @@ function buildLibrary() {
     sw.appendChild(seriesEl);
 
     sw.addEventListener('click', () => {
-      if (roomMode) {
+      if (appStore.getState().roomMode) {
         const selected = meshEntries.filter(e => e.pieceSelected);
         if (!selected.length) { showToast('Click a piece in the list →'); return; }
         if (activeBtnEl) activeBtnEl.classList.remove('active');

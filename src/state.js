@@ -2,7 +2,7 @@
 // Classic script (not a module): top-level let/const/function share the
 // global scope across all src/*.js files, preserving original semantics.
 // ── App State ─────────────────────────────────────────────────────────────
-let currentModelKey = 'chair';
+// currentModelKey / roomMode / activeRoomSection live in appStore — see src/store.js.
 let meshEntries = [];
 let currentModel = null;
 // Pre-parsed GLB scenes keyed by URL — cloned on each use so processGLTF gets a fresh hierarchy
@@ -13,7 +13,6 @@ let roomFurnitureModels = { chair: null, sofa: null, bed_wooden: null, bed_fabri
 let modelMaterialSnapshots = { chair: null, sofa: null, bed_wooden: null, bed_fabric: null };
 let activeBtnEl = null;
 let lastAppliedItem = null;
-let roomMode = false;
 
 // Slider state lives in appStore (sliders.*, baseColorHex) — see src/store.js.
 const BASE_TILE = 0.3;
@@ -38,8 +37,6 @@ let roomVisible = {walls:true, floor:true, windows:true, doors:true, rug:true, c
 let explodeVal = 0;
 let explodeAnim = null;
 
-// Room section state
-let activeRoomSection = 'living';
 
 // TransformControls (furniture move mode)
 let transformControls = null;
@@ -252,7 +249,7 @@ async function getPolyMaps(polyId) {
 // Save the current model's materials so room view / model switching restores them.
 // Single implementation — was copy-pasted at five call sites.
 function saveMaterialSnapshot() {
-  modelMaterialSnapshots[currentModelKey] = meshEntries.map(e => ({
+  modelMaterialSnapshots[appStore.getState().currentModelKey] = meshEntries.map(e => ({
     id: e.id, name: e.name, matClone: e.greyMat.clone(),
   }));
 }
