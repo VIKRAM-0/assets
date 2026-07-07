@@ -19,6 +19,19 @@ function check(name, ok, detail = '') {
   results.push({ name, ok });
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? ' — ' + detail : ''}`);
 }
+function skip(name, why) {
+  console.log(`SKIP  ${name} — ${why}`);
+}
+
+// Is the asset pipeline reachable (upstream or disk cache)?
+async function assetsAvailable() {
+  try {
+    const r = await fetch(`http://localhost:${PORT}/api/s3proxy?key=custom_assets/chair_split.glb`, {
+      method: 'GET', headers: { range: 'bytes=0-10' }, signal: AbortSignal.timeout(15000),
+    });
+    return r.ok;
+  } catch { return false; }
+}
 
 // Errors we tolerate: local /api/* endpoints don't exist, and external
 // CDNs/texture hosts can be flaky. Anything else is a real defect.
@@ -59,6 +72,9 @@ try {
     }
   });
 
+  const hasAssets = await assetsAvailable();
+  if (!hasAssets) console.log('WARN  asset upstream unreachable — model-dependent checks will be SKIPPED');
+
   await page.goto(URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
   check('page loads', true);
 
@@ -66,41 +82,61 @@ try {
   await sleep(3000);
   await page.evaluate(() => window._tourSkip?.()).catch(() => {});
 
+  // Network-independent UI checks: library bar built from in-memory catalog,
+  // finder modal opens/closes, product tabs wired.
+  const uiOk = await page.evaluate(() => {
+    const out = {};
+    out.swatches = document.querySelectorAll('.bar-sw').length;
+    window.openFabricFinder();
+    out.finderOpen = getComputedStyle(document.getElementById('finder-overlay')).display !== 'none';
+    window.closeFabricFinder();
+    out.finderClosed = getComputedStyle(document.getElementById('finder-overlay')).display === 'none';
+    return out;
+  }).catch((e) => ({ error: e.message }));
+  check('fabric library builds (>=50 swatches)', (uiOk.swatches || 0) >= 50, `got ${uiOk.swatches}`);
+  check('fabric finder opens and closes', !!(uiOk.finderOpen && uiOk.finderClosed), uiOk.error || '');
+
   // Model load signal: loading overlay off AND mesh/zone list populated.
   // (`let` globals aren't on window, so DOM is the observable surface.)
   let modelLoaded = false;
-  try {
-    await page.waitForFunction(
-      () => {
-        const loading = document.getElementById('loading');
-        const zones = document.querySelectorAll('#mesh-list .mesh-item, #mesh-list [data-eid], #mesh-list > *').length;
-        return loading && !loading.classList.contains('on') && zones > 0;
-      },
-      { timeout: 60000, polling: 500 }
-    );
-    modelLoaded = true;
-  } catch { /* fallthrough */ }
-  check('model loads (loading clears, zone list populated)', modelLoaded);
+  if (hasAssets) {
+    try {
+      await page.waitForFunction(
+        () => {
+          const loading = document.getElementById('loading');
+          const zones = document.querySelectorAll('#mesh-list .mesh-item, #mesh-list [data-eid], #mesh-list > *').length;
+          return loading && !loading.classList.contains('on') && zones > 0;
+        },
+        { timeout: 60000, polling: 500 }
+      );
+      modelLoaded = true;
+    } catch { /* fallthrough */ }
+    check('model loads (loading clears, zone list populated)', modelLoaded);
+  } else {
+    skip('model loads', 'asset upstream down');
+  }
 
   // Swatch apply: click the first fabric swatch in the bar.
-  let swatchOk = false;
   if (modelLoaded) {
+    let swatchOk = false;
     try {
       await page.waitForSelector('.bar-sw', { timeout: 10000 });
       await page.evaluate(() => document.querySelector('.bar-sw')?.click());
       await sleep(2500);
       swatchOk = true;
     } catch { /* fallthrough */ }
+    check('first swatch click executes', swatchOk);
+  } else {
+    skip('swatch apply', 'requires loaded model');
   }
-  check('first swatch click executes', swatchOk);
 
   // Room view round-trip. Observable: config panel swaps product<->room pane.
   const roomPaneVisible = () => {
     const room = document.getElementById('panel-room');
     return !!room && room.style.display !== 'none';
   };
-  let roomOk = false;
   if (modelLoaded) {
+    let roomOk = false;
     try {
       await page.evaluate(() => window.toggleRoomView());
       await page.waitForFunction(roomPaneVisible, { timeout: 45000, polling: 500 });
@@ -112,8 +148,10 @@ try {
       );
       roomOk = true;
     } catch { /* fallthrough */ }
+    check('room view enter/exit', roomOk);
+  } else {
+    skip('room view enter/exit', 'requires loaded model');
   }
-  check('room view enter/exit', roomOk);
 
   const realErrors = pageErrors.filter((e) => !tolerated(e));
   check('no uncaught page errors', realErrors.length === 0, realErrors.slice(0, 3).join(' | '));

@@ -2,12 +2,16 @@
 // production Vercel deployment (serverless functions don't run locally).
 // Usage: node test/serve.mjs [port]
 import http from 'node:http';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { extname, join, normalize } from 'node:path';
 
 const PORT = Number(process.argv[2]) || 8123;
 const ROOT = new URL('..', import.meta.url).pathname;
 const UPSTREAM = 'https://asset-designer-dev.vercel.app';
+const CACHE = join(ROOT, 'test', '.asset-cache');
+await mkdir(CACHE, { recursive: true });
+const cachePath = (u) => join(CACHE, createHash('sha1').update(u).digest('hex'));
 
 const MIME = {
   '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript',
@@ -20,15 +24,33 @@ http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://localhost:${PORT}`);
     if (url.pathname.startsWith('/api/')) {
+      // GET asset requests are disk-cached so each asset hits upstream at most
+      // once across all test runs (and tests survive upstream outages).
+      const cacheable = req.method === 'GET' && url.pathname === '/api/s3proxy';
+      const cp = cachePath(req.url);
+      if (cacheable) {
+        try {
+          const meta = JSON.parse(await readFile(cp + '.json', 'utf8'));
+          const body = await readFile(cp);
+          res.writeHead(200, { 'content-type': meta.type });
+          return res.end(body);
+        } catch { /* cache miss */ }
+      }
       const upstream = await fetch(UPSTREAM + req.url, {
         method: req.method,
         headers: { 'content-type': req.headers['content-type'] || '' },
         body: ['GET', 'HEAD'].includes(req.method) ? undefined : req,
         duplex: 'half',
       });
-      res.writeHead(upstream.status, {
-        'content-type': upstream.headers.get('content-type') || 'application/octet-stream',
-      });
+      const type = upstream.headers.get('content-type') || 'application/octet-stream';
+      if (cacheable && upstream.ok) {
+        const buf = Buffer.from(await upstream.arrayBuffer());
+        await writeFile(cp, buf);
+        await writeFile(cp + '.json', JSON.stringify({ type, url: req.url }));
+        res.writeHead(200, { 'content-type': type });
+        return res.end(buf);
+      }
+      res.writeHead(upstream.status, { 'content-type': type });
       if (upstream.body) {
         for await (const chunk of upstream.body) res.write(chunk);
       }
