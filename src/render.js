@@ -2,17 +2,60 @@
 // Classic script (not a module): top-level let/const/function share the
 // global scope across all src/*.js files, preserving original semantics.
 // ── AI Render ─────────────────────────────────────────────────────────────
+// Snapshot camera + background/clear-color state around an offscreen capture.
+// Returns split restorers because renderScene and the capture paths restore in
+// different orders (each preserved verbatim from the original inline blocks).
+function _saveCaptureState() {
+  const savedSph = { ...sph };
+  const savedTgt = tgt.clone();
+  const savedBg = scene.background;
+  const savedClear = renderer.getClearColor(new THREE.Color()).clone();
+  const savedClearAlpha = renderer.getClearAlpha();
+  return {
+    restoreCamera() { sph = savedSph; tgt.copy(savedTgt); camUpdate(); },
+    restoreBackground() { scene.background = savedBg; renderer.setClearColor(savedClear, savedClearAlpha); },
+  };
+}
+
+// Force two fresh frames (dirty-flag loop flushed) and grab the canvas.
+async function _captureFrame(waitA, waitB, quality) {
+  renderer.render(scene, camera);
+  await new Promise(r => setTimeout(r, waitA));
+  renderer.render(scene, camera);
+  await new Promise(r => setTimeout(r, waitB));
+  return renderer.domElement.toDataURL('image/jpeg', quality);
+}
+
+// Shared skeleton for the two "clean scene" captures: hide room props (keeping
+// configured curtains), neutral warm-white background, position camera via
+// `frame()`, capture, then restore everything.
+async function _captureCleanScene(frame) {
+  const saved = _saveCaptureState();
+  const restoreRoom = _vimrHideRoomExceptCurtains();
+
+  const bg = new THREE.Color(0xf5f2ee);
+  scene.background = bg;
+  renderer.setClearColor(bg, 1);
+
+  frame();
+  camUpdate();
+
+  const dataUrl = await _captureFrame(80, 40, 0.92);
+
+  restoreRoom();
+  saved.restoreBackground();
+  saved.restoreCamera();
+  markDirty();
+
+  return dataUrl;
+}
+
 async function renderScene() {
   if(!currentModel) { showToast('Load a model first!'); return; }
   document.getElementById('loading').classList.add('on');
   document.getElementById('load-txt').textContent = appStore.getState().roomMode ? 'Capturing Room…' : 'Capturing Scene…';
 
-  // Save current camera state
-  const savedSph = {...sph};
-  const savedTgt = tgt.clone();
-  const savedBg = scene.background;
-  const savedClear = renderer.getClearColor(new THREE.Color()).clone();
-  const savedClearAlpha = renderer.getClearAlpha();
+  const saved = _saveCaptureState();
 
   if (appStore.getState().roomMode) {
     // Match the default room-view camera so the render matches what the user sees.
@@ -30,13 +73,7 @@ async function renderScene() {
   camUpdate();
 
   try {
-    // Force 2 fresh frames so dirty-flag loop has flushed
-    renderer.render(scene, camera);
-    await new Promise(r => setTimeout(r, 100));
-    renderer.render(scene, camera);
-    await new Promise(r => setTimeout(r, 60));
-
-    const dataUrl = renderer.domElement.toDataURL('image/jpeg', 0.95);
+    const dataUrl = await _captureFrame(100, 60, 0.95);
 
     let apiAvailable = false;
     try {
@@ -73,12 +110,11 @@ async function renderScene() {
     console.error('Render error:', e);
     showToast('Error generating render.');
   } finally {
-    // Restore camera + background to where the user left off
-    sph = savedSph;
-    tgt.copy(savedTgt);
-    camUpdate();
-    scene.background = savedBg;
-    renderer.setClearColor(savedClear, savedClearAlpha);
+    // Restore camera + background to where the user left off. Deliberately in
+    // finally, AFTER the API round-trip — the hero angle stays on screen while
+    // the render generates (original behavior).
+    saved.restoreCamera();
+    saved.restoreBackground();
     markDirty();
     document.getElementById('loading').classList.remove('on');
   }
@@ -178,49 +214,20 @@ function _vimrHideRoomExceptCurtains() {
 // visible (bedroom), they're included in both the visibility pass and the frame.
 async function captureSingleAssetScene() {
   if (!currentModel) return null;
-
-  const savedSph   = { ...sph };
-  const savedTgt   = tgt.clone();
-  const savedBg    = scene.background;
-  const savedClear = renderer.getClearColor(new THREE.Color()).clone();
-  const savedClearAlpha = renderer.getClearAlpha();
-
-  const restoreRoom = _vimrHideRoomExceptCurtains();
-
-  const bg = new THREE.Color(0xf5f2ee);
-  scene.background = bg;
-  renderer.setClearColor(bg, 1);
-
-  // Auto-fit camera to the model's (+ curtains', if included) bounding box, using
-  // the same relative viewing angle as the proven product hero shot.
-  const box = new THREE.Box3().setFromObject(currentModel);
-  if (_vimrCurtainsIncluded()) {
-    curtainMeshEntries.forEach(e => { if (e.mesh.visible) box.expandByObject(e.mesh); });
-    if (_blindsGroup && _blindsGroup.visible) box.expandByObject(_blindsGroup);
-  }
-  const center = box.getCenter(new THREE.Vector3());
-  const size = box.getSize(new THREE.Vector3());
-  const maxDim = Math.max(size.x, size.y, size.z, 0.001);
-  tgt.set(center.x, center.y - size.y * 0.15, center.z);
-  sph = { theta: 0.6, phi: 1.05, r: maxDim * 2.1 };
-  camUpdate();
-
-  renderer.render(scene, camera);
-  await new Promise(r => setTimeout(r, 80));
-  renderer.render(scene, camera);
-  await new Promise(r => setTimeout(r, 40));
-
-  const dataUrl = renderer.domElement.toDataURL('image/jpeg', 0.92);
-
-  restoreRoom();
-  scene.background = savedBg;
-  renderer.setClearColor(savedClear, savedClearAlpha);
-  sph = savedSph;
-  tgt.copy(savedTgt);
-  camUpdate();
-  markDirty();
-
-  return dataUrl;
+  return _captureCleanScene(() => {
+    // Auto-fit camera to the model's (+ curtains', if included) bounding box, using
+    // the same relative viewing angle as the proven product hero shot.
+    const box = new THREE.Box3().setFromObject(currentModel);
+    if (_vimrCurtainsIncluded()) {
+      curtainMeshEntries.forEach(e => { if (e.mesh.visible) box.expandByObject(e.mesh); });
+      if (_blindsGroup && _blindsGroup.visible) box.expandByObject(_blindsGroup);
+    }
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z, 0.001);
+    tgt.set(center.x, center.y - size.y * 0.15, center.z);
+    sph = { theta: 0.6, phi: 1.05, r: maxDim * 2.1 };
+  });
 }
 
 // Capture sofa + chair (+ configured curtains, if visible) on a clean neutral
@@ -228,43 +235,11 @@ async function captureSingleAssetScene() {
 // not the virtual room props.
 async function captureDesignedScene() {
   await _ensureCompanionLoaded();
-
-  // Save state
-  const savedSph   = { ...sph };
-  const savedTgt   = tgt.clone();
-  const savedBg    = scene.background;
-  const savedClear = renderer.getClearColor(new THREE.Color()).clone();
-  const savedClearAlpha = renderer.getClearAlpha();
-
-  const restoreRoom = _vimrHideRoomExceptCurtains();
-
-  // Neutral warm-white background
-  const bg = new THREE.Color(0xf5f2ee);
-  scene.background = bg;
-  renderer.setClearColor(bg, 1);
-
-  // Frame both sofa (x≈0.2, z≈1.0) and chair (x≈2.2, z≈0.89) together
-  tgt.set(1.0, 0.0, 0.8);
-  sph = { theta: Math.PI, phi: 1.1, r: 5.5 };
-  camUpdate();
-
-  renderer.render(scene, camera);
-  await new Promise(r => setTimeout(r, 80));
-  renderer.render(scene, camera);
-  await new Promise(r => setTimeout(r, 40));
-
-  const dataUrl = renderer.domElement.toDataURL('image/jpeg', 0.92);
-
-  // Restore everything
-  restoreRoom();
-  scene.background = savedBg;
-  renderer.setClearColor(savedClear, savedClearAlpha);
-  sph = savedSph;
-  tgt.copy(savedTgt);
-  camUpdate();
-  markDirty();
-
-  return dataUrl;
+  return _captureCleanScene(() => {
+    // Frame both sofa (x≈0.2, z≈1.0) and chair (x≈2.2, z≈0.89) together
+    tgt.set(1.0, 0.0, 0.8);
+    sph = { theta: Math.PI, phi: 1.1, r: 5.5 };
+  });
 }
 
 // Resize + compress an image dataUrl so payload stays within Vercel's 4.5 MB limit
