@@ -147,7 +147,15 @@ function buildRoom(onReadyCallback) {
     });
 
     // ── Detect curtain meshes and add to piece system ────────────────────
-    _buildCurtainEntries(roomScene);
+    buildCurtainEntries(roomScene, {
+      // Living room: single curtain group (New6.002); panels share its pivot.
+      findNodes: (s) => { let g = null; s.traverse(c => { if (c.name === 'New6.002') g = c; }); return g ? [g] : []; },
+      missMsg: '[Room] curtain group New6.002 not found, skipping curtain entries',
+      builtMsg: (n) => `[Room] built ${n} curtain mesh entries`,
+      uvScaleFactor: 1,
+      inheritRoughness: true,
+      bailIfNoMeshes: true,
+    });
     // Inject curtain representative entry into meshEntries so piece list + fabric drop works
     if (curtainMeshEntries.length > 0) {
       meshEntries = meshEntries.filter(e => !e._isCurtain);
@@ -238,7 +246,15 @@ function buildBedroomRoom(onReadyCallback) {
     });
 
     // Build curtain entries — traverse fullScene so curtain nodes outside roomArch are found
-    _buildBedroomCurtainEntries(fullScene);
+    buildCurtainEntries(fullScene, {
+      // Bedroom: two independent curtain panels, each its own sizeable node.
+      findNodes: (s) => { const nodes = []; s.traverse(c => { if (c.name === 'curtains_1' || c.name === 'curtains_2') nodes.push(c); }); return nodes; },
+      missMsg: '[Bedroom] no curtain nodes found',
+      builtMsg: (n) => `[Bedroom] built ${n} curtain entries`,
+      uvScaleFactor: 0.3,
+      inheritRoughness: false,
+      bailIfNoMeshes: false,
+    });
     if (curtainMeshEntries.length > 0) {
       meshEntries = meshEntries.filter(e => !e._isCurtain);
       meshEntries.push(curtainMeshEntries[0]);
@@ -777,12 +793,27 @@ function toggleCurtains() {
   _showCurtainConfigPanel(curtainsVisible);
 }
 
-function _buildBedroomCurtainEntries(roomScene) {
-  const curtainNodes = [];
-  roomScene.traverse(c => {
-    if (c.name === 'curtains_1' || c.name === 'curtains_2') curtainNodes.push(c);
+// Unified curtain entry builder for both room sections. The per-room deltas
+// ride in opts; everything else (shared grey material so fabric applies to all
+// panels at once, base-scale capture for the size sliders, base-box capture
+// anchoring procedural blinds, entry shape) is common.
+//   findNodes(roomScene) → top-level curtain nodes ([] when absent)
+//   missMsg / builtMsg(n)  → the section's log strings (kept verbatim)
+//   uvScaleFactor          → fabric tiling for the section's curtain UVs
+//   inheritRoughness       → copy first panel material's roughness (living room)
+//   bailIfNoMeshes         → living room returns before touching curtain state
+//                            when the group exists but holds no meshes
+function buildCurtainEntries(roomScene, opts) {
+  const curtainNodes = opts.findNodes(roomScene);
+  if (!curtainNodes.length) { console.log(opts.missMsg); return; }
+
+  const meshes = [];
+  curtainNodes.forEach(node => {
+    node.traverse(child => {
+      if (child.isMesh && child.material) meshes.push(child);
+    });
   });
-  if (!curtainNodes.length) { console.log('[Bedroom] no curtain nodes found'); return; }
+  if (opts.bailIfNoMeshes && !meshes.length) return;
 
   // Keep the top-level curtain nodes and their base scale for sizing (scaling the
   // node about its own pivot keeps the curtain anchored, unlike scaling child meshes).
@@ -806,30 +837,34 @@ function _buildBedroomCurtainEntries(roomScene) {
   const sharedGreyMat = new THREE.MeshStandardMaterial({
     color: 0xd4c8b8, roughness: 0.8, metalness: 0, side: THREE.DoubleSide,
   });
+  if (opts.inheritRoughness) {
+    const firstMat = meshes.length ? (Array.isArray(meshes[0].material) ? meshes[0].material[0] : meshes[0].material) : null;
+    if (firstMat) sharedGreyMat.roughness = firstMat.roughness ?? 0.8;
+    sharedGreyMat.needsUpdate = true;
+  }
+
   let idx = 0;
-  curtainNodes.forEach(node => {
-    node.traverse(child => {
-      if (!child.isMesh || !child.material) return;
-      const origMat = Array.isArray(child.material) ? child.material[0] : child.material;
-      child.material = sharedGreyMat;
-      curtainMeshEntries.push({
-        id: `curtain-${idx++}`,
-        name: idx === 1 ? 'Curtains' : null,
-        mesh: child,
-        matIndex: 0,
-        origMat: origMat || sharedGreyMat,
-        greyMat: sharedGreyMat,
-        origGreyscaleMap: null,
-        checked: false,
-        pieceSelected: false,
-        uvScaleFactor: 0.3,
-        _isCurtain: true,
-      });
+  meshes.forEach(child => {
+    const origMat = Array.isArray(child.material) ? child.material[0] : child.material;
+    // Apply sharedGreyMat to the mesh NOW so highlights and drag feedback are visible
+    child.material = sharedGreyMat;
+    curtainMeshEntries.push({
+      id: `curtain-${idx++}`,
+      name: idx === 1 ? 'Curtains' : null,
+      mesh: child,
+      matIndex: 0,
+      origMat: origMat || sharedGreyMat,
+      greyMat: sharedGreyMat,   // shared — mutating this updates all panels
+      origGreyscaleMap: null,
+      checked: false,
+      pieceSelected: false,
+      uvScaleFactor: opts.uvScaleFactor,
+      _isCurtain: true,
     });
   });
   if (curtainMeshEntries.length > 0) {
     curtainMeshEntries[0].name = 'Curtains';
-    console.log(`[Bedroom] built ${curtainMeshEntries.length} curtain entries`);
+    console.log(opts.builtMsg(curtainMeshEntries.length));
   }
 }
 
@@ -1122,74 +1157,6 @@ function scrollSwatches(amount) {
 }
 
 // ── Curtain mesh helpers ─────────────────────────────────────────────────
-function _buildCurtainEntries(roomScene) {
-  // Find the curtain group (New6.002) by object name
-  let curtainGroup = null;
-  roomScene.traverse(c => { if (c.name === 'New6.002') curtainGroup = c; });
-  if (!curtainGroup) {
-    console.log('[Room] curtain group New6.002 not found, skipping curtain entries');
-    return;
-  }
-
-  // Collect all mesh children from curtain group
-  const meshes = [];
-  curtainGroup.traverse(child => {
-    if (child.isMesh && child.material) meshes.push(child);
-  });
-  if (!meshes.length) return;
-
-  // Keep the group as the sizeable node + base scale (mirrors bedroom's two-panel
-  // setup, just a single group here) so width/length sliders work in living room too.
-  _curtainNodes = [curtainGroup];
-  curtainGroup.userData._curtainBaseScale = curtainGroup.scale.clone();
-  // Single node → _fixCurtainNormals is a no-op (needs 2+ to compare), called
-  // defensively for consistency with the bedroom path.
-  _fixCurtainNormals(_curtainNodes, roomScene);
-  {
-    const bb = new THREE.Box3().setFromObject(curtainGroup);
-    if (!bb.isEmpty()) {
-      _curtainBaseBox = { center: bb.getCenter(new THREE.Vector3()), size: bb.getSize(new THREE.Vector3()) };
-      _curtainFace = _avgWorldNormal(curtainGroup).clone();
-    }
-  }
-
-  // All curtain panels share a SINGLE greyMat so fabric applies uniformly to all
-  const firstMat = Array.isArray(meshes[0].material) ? meshes[0].material[0] : meshes[0].material;
-  const sharedGreyMat = new THREE.MeshStandardMaterial({
-    color: 0xd4c8b8, roughness: 0.8, metalness: 0, side: THREE.DoubleSide,
-  });
-  if (firstMat) {
-    sharedGreyMat.roughness = firstMat.roughness ?? 0.8;
-  }
-  sharedGreyMat.needsUpdate = true;
-
-  let idx = 0;
-  meshes.forEach(child => {
-    const origMat = Array.isArray(child.material) ? child.material[0] : child.material;
-    // Apply sharedGreyMat to the mesh NOW so highlights and drag feedback are visible
-    child.material = sharedGreyMat;
-    const entry = {
-      id: `curtain-${idx++}`,
-      name: idx === 1 ? 'Curtains' : null,
-      mesh: child,
-      matIndex: 0,
-      origMat: origMat || sharedGreyMat,
-      greyMat: sharedGreyMat,   // shared — mutating this updates all panels
-      origGreyscaleMap: null,
-      checked: false,
-      pieceSelected: false,
-      uvScaleFactor: 1,
-      _isCurtain: true,
-    };
-    curtainMeshEntries.push(entry);
-  });
-
-  if (curtainMeshEntries.length > 0) {
-    curtainMeshEntries[0].name = 'Curtains';
-    console.log(`[Room] built ${curtainMeshEntries.length} curtain mesh entries`);
-  }
-}
-
 function _removeCurtainEntries() {
   // Restore original materials on curtain meshes
   curtainMeshEntries.forEach(e => {
