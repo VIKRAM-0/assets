@@ -49,4 +49,8 @@ const appStore = createStore({
     pendingUploadPreview: null, // upload-tab preview pending confirm-bar decision
     searchCustomImg: null,    // data-URL custom image uploaded in search tab
   },
+  // Library swatch highlight: "<groupIndex>:<itemIndex>" into
+  // LIBRARY[currentModelKey], or null. Cleared on model load/reset, so a key
+  // never outlives the library it indexes into.
+  activeFabricKey: null,
 });

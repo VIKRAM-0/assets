@@ -11,8 +11,8 @@ const _gltfSceneCache = {};
 let roomFurnitureModels = { chair: null, sofa: null, bed_wooden: null, bed_fabric: null };
 // Snapshot of mesh materials per model key — survives model switching
 let modelMaterialSnapshots = { chair: null, sofa: null, bed_wooden: null, bed_fabric: null };
-let activeBtnEl = null;
-let lastAppliedItem = null;
+// activeBtnEl → appStore.activeFabricKey (see src/store.js); lastAppliedItem
+// was write-only (zero readers since the original upload) and was removed.
 
 // Slider state lives in appStore (sliders.*, baseColorHex) — see src/store.js.
 const BASE_TILE = 0.3;

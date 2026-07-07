@@ -91,6 +91,7 @@ function buildLibrary() {
     sw.dataset.type = typeKey;
     sw.dataset.series = seriesName.toLowerCase();
     sw.dataset.name = item.name.toLowerCase();
+    sw.dataset.fabricKey = gi + ':' + ii;
     sw.title = item.name + ' · ' + seriesName;
 
     const imgWrap = document.createElement('div');
@@ -129,15 +130,12 @@ function buildLibrary() {
       if (appStore.getState().roomMode) {
         const selected = meshEntries.filter(e => e.pieceSelected);
         if (!selected.length) { showToast('Click a piece in the list →'); return; }
-        if (activeBtnEl) activeBtnEl.classList.remove('active');
-        activeBtnEl = sw; sw.classList.add('active');
+        setActiveFabric(gi + ':' + ii); renderActiveSwatch();
         applySwatchToEntries(item, selected);
       } else {
         const checked = meshEntries.filter(e => e.checked);
         if (!checked.length) { showToast('Select a zone first →'); return; }
-        if (activeBtnEl) activeBtnEl.classList.remove('active');
-        activeBtnEl = sw; sw.classList.add('active');
-        lastAppliedItem = item;
+        setActiveFabric(gi + ':' + ii); renderActiveSwatch();
         applySwatchToEntries(item, checked);
       }
     });
@@ -147,6 +145,17 @@ function buildLibrary() {
   });
 
   _updateZoneCountBadge();
+}
+
+// Sync the .active highlight from appStore.activeFabricKey — the single source
+// of truth (replaces the old captured-element `activeBtnEl` tracking). Called
+// from the sites that change the active fabric, NOT from buildLibrary: a
+// rebuild has always dropped the highlight, and that behavior is preserved.
+function renderActiveSwatch() {
+  const key = appStore.getState().activeFabricKey;
+  document.querySelectorAll('.bar-sw').forEach(sw => {
+    sw.classList.toggle('active', key !== null && sw.dataset.fabricKey === key);
+  });
 }
 
 function buildCurtainLibrary() {

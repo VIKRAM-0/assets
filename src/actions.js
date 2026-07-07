@@ -54,6 +54,12 @@ function restoreCurtainState() {
   }));
 }
 
+// key is "<gi>:<ii>" into LIBRARY[currentModelKey], or null to clear.
+// renderActiveSwatch() (library.js) syncs the .active class from this.
+function setActiveFabric(key) {
+  appStore.setState(() => ({ activeFabricKey: key }));
+}
+
 function setFinder(patch) {
   appStore.setState(s => ({ finder: { ...s.finder, ...patch } }));
 }

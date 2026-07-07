@@ -280,7 +280,7 @@ function loadModel(url) {
   document.getElementById('load-txt').textContent = 'Loading…';
   document.getElementById('v-hint').style.display='none';
   meshEntries=[];
-  if(activeBtnEl){activeBtnEl.classList.remove('active');activeBtnEl=null;}
+  setActiveFabric(null); renderActiveSwatch();
   document.getElementById('app-name').textContent='— none —';
   document.getElementById('app-vend').textContent='';
   document.getElementById('app-sw').innerHTML='';
@@ -508,7 +508,7 @@ function resetAll() {
   deselectAll();
   // Clear ALL snapshots on reset — every model key, not just chair/sofa
   modelMaterialSnapshots = { chair: null, sofa: null, bed_wooden: null, bed_fabric: null };
-  if(activeBtnEl){activeBtnEl.classList.remove('active');activeBtnEl=null;}
+  setActiveFabric(null); renderActiveSwatch();
   document.getElementById('app-name').textContent='— none —';
   document.getElementById('app-vend').textContent='';
   document.getElementById('app-sw').innerHTML='';

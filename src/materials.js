@@ -229,27 +229,6 @@ async function applySwatchToEntries(item, targetEntries) {
   }
 }
 
-// Click apply — in room mode uses the piece-list-selected entry; in product mode uses checked entries
-async function applySwatch(gi, ii, btnEl) {
-  const item = LIBRARY[appStore.getState().currentModelKey][gi].items[ii];
-  if (appStore.getState().roomMode) {
-    const selected = meshEntries.find(e => e.pieceSelected);
-    if (!selected) { showToast('Select a part in the list first'); return; }
-    if (activeBtnEl) activeBtnEl.classList.remove('active');
-    activeBtnEl = btnEl; btnEl.classList.add('active');
-    lastAppliedItem = item;
-    await applySwatchToEntries(item, [selected]);
-    return;
-  }
-  const checked = meshEntries.filter(e=>e.checked);
-  const targets = checked.length ? checked : meshEntries.filter(e=>!e._isCurtain);
-  if(!targets.length) { showToast('Load a model first'); return; }
-  if(activeBtnEl) activeBtnEl.classList.remove('active');
-  activeBtnEl = btnEl; btnEl.classList.add('active');
-  lastAppliedItem = item;
-  await applySwatchToEntries(item, targets);
-}
-
 // ── Custom diffuse image upload ─────────────────────────────────────────────
 function openDiffuseUpload() {
   document.getElementById('diffuse-upload-input').click();
