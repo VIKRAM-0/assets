@@ -15,9 +15,7 @@ let activeBtnEl = null;
 let lastAppliedItem = null;
 let roomMode = false;
 
-// Slider state
-let sBrightness = 1.0, sRoughness = 0.72, sMetalness = 0, sSheen = 0, sScale = 10.0, sNorm = 1.0;
-let baseColorHex = '#ffffff';
+// Slider state lives in appStore (sliders.*, baseColorHex) — see src/store.js.
 const BASE_TILE = 0.3;
 const polyCache = {};
 const texCache = {};

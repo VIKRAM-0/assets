@@ -53,7 +53,8 @@ async function applySwatchToEntries(item, targetEntries) {
   };
   const defs = item._defaults || defaults[item.type] || defaults.fabric;
   _currentAppliedDiffUrl = (item._defaults && item._defaults.diffUrl) || item.img || null;
-  sRoughness=defs.roughness; sMetalness=defs.metalness; sSheen=defs.sheen; sScale=defs.scale; sNorm=defs.norm;
+  setSlider('roughness', defs.roughness); setSlider('metalness', defs.metalness);
+  setSlider('sheen', defs.sheen); setSlider('scale', defs.scale); setSlider('norm', defs.norm);
   ['brightness','roughness','metalness','sheen','scale','norm',
    'brightness-r','roughness-r','scale-r'].forEach(id=>{
     const el = document.getElementById('s-'+id);
@@ -101,15 +102,16 @@ async function applySwatchToEntries(item, targetEntries) {
       if(!normTex)  normTex  = await loadTexFirstSuccess(woodMaps.norm,  false);
       if(!roughTex) roughTex = await loadTexFirstSuccess(woodMaps.rough, false);
       if(_gen !== _applyGen) return; // superseded by a newer apply
-      baseColorHex = item.hex;
+      setBaseColor(item.hex);
+      const S = appStore.getState().sliders;
       targetEntries.forEach(entry => {
         const mat = entry.greyMat;
-        const physRepeat = sScale*(entry.uvScaleFactor/BASE_TILE);
-        if(diffTex){const dt=diffTex.clone();dt.wrapS=dt.wrapT=THREE.RepeatWrapping;dt.repeat.set(physRepeat,physRepeat);dt.needsUpdate=true;mat.map=dt;mat.color.setRGB(Math.max(0.01,sBrightness),Math.max(0.01,sBrightness),Math.max(0.01,sBrightness));}
-        else{mat.map=null;mat.color.copy(new THREE.Color(item.hex)).multiplyScalar(Math.max(0.01,sBrightness));}
-        if(normTex){const nt=normTex.clone();nt.wrapS=nt.wrapT=THREE.RepeatWrapping;nt.repeat.set(physRepeat,physRepeat);nt.needsUpdate=true;mat.normalMap=nt;mat.normalScale.set(sNorm,sNorm);}else{mat.normalMap=null;}
+        const physRepeat = S.scale*(entry.uvScaleFactor/BASE_TILE);
+        if(diffTex){const dt=diffTex.clone();dt.wrapS=dt.wrapT=THREE.RepeatWrapping;dt.repeat.set(physRepeat,physRepeat);dt.needsUpdate=true;mat.map=dt;mat.color.setRGB(Math.max(0.01,S.brightness),Math.max(0.01,S.brightness),Math.max(0.01,S.brightness));}
+        else{mat.map=null;mat.color.copy(new THREE.Color(item.hex)).multiplyScalar(Math.max(0.01,S.brightness));}
+        if(normTex){const nt=normTex.clone();nt.wrapS=nt.wrapT=THREE.RepeatWrapping;nt.repeat.set(physRepeat,physRepeat);nt.needsUpdate=true;mat.normalMap=nt;mat.normalScale.set(S.norm,S.norm);}else{mat.normalMap=null;}
         if(roughTex){const rt=roughTex.clone();rt.wrapS=rt.wrapT=THREE.RepeatWrapping;rt.repeat.set(physRepeat,physRepeat);rt.needsUpdate=true;mat.roughnessMap=rt;}else{mat.roughnessMap=null;}
-        mat.roughness=sRoughness;mat.metalness=sMetalness;mat.sheen=sSheen;mat.needsUpdate=true;
+        mat.roughness=S.roughness;mat.metalness=S.metalness;mat.sheen=S.sheen;mat.needsUpdate=true;
         if(Array.isArray(entry.mesh.material)){const arr=[...entry.mesh.material];arr[entry.matIndex]=mat;entry.mesh.material=arr;}else{entry.mesh.material=mat;}
         // Propagate to all curtain panels when applying to curtain representative
         if(entry._isCurtain){curtainMeshEntries.forEach(ce=>{if(ce===entry)return;ce.mesh.material=mat;});}
@@ -182,7 +184,8 @@ async function applySwatchToEntries(item, targetEntries) {
     if(!roughTex) roughTex = await loadTexFirstSuccess(matMaps.rough, false);
     if(_gen !== _applyGen) return; // superseded by a newer apply
 
-    baseColorHex = item.hex||'#ffffff';
+    setBaseColor(item.hex||'#ffffff');
+    const S = appStore.getState().sliders;
     const baseColor = new THREE.Color(item.hex||'#ffffff');
 
     // For bed models with smooth fabrics (leather/pu/vinyl):
@@ -191,20 +194,20 @@ async function applySwatchToEntries(item, targetEntries) {
     //    visible patchiness at high norm values. At 0.2 the grain reads as texture not direction.
     const _isBedSmooth = currentModelKey && currentModelKey.startsWith('bed') &&
       (item.type === 'leather' || item.type === 'pu' || item.type === 'vinyl');
-    const _bedNorm = _isBedSmooth ? 0.2 : sNorm;
+    const _bedNorm = _isBedSmooth ? 0.2 : S.norm;
 
     targetEntries.forEach(entry => {
       const mat = entry.greyMat;
       const uvSF = _isBedSmooth ? Math.min(Math.max(entry.uvScaleFactor, 0.65), 0.85) : entry.uvScaleFactor;
-      const physRepeat = sScale*(uvSF/BASE_TILE);
+      const physRepeat = S.scale*(uvSF/BASE_TILE);
       mat.color.setRGB(1,1,1); mat.map=null;
-      if(diffTex){const dt=diffTex.clone();dt.wrapS=dt.wrapT=THREE.RepeatWrapping;dt.repeat.set(physRepeat,physRepeat);dt.needsUpdate=true;mat.map=dt;mat.color.setRGB(sBrightness,sBrightness,sBrightness);}
-      else if(item.hex){mat.map=null;mat.color.copy(baseColor).multiplyScalar(Math.max(0.01,sBrightness));}
-      else{mat.map=null;mat.color.setRGB(0.83*sBrightness,0.82*sBrightness,0.80*sBrightness);}
+      if(diffTex){const dt=diffTex.clone();dt.wrapS=dt.wrapT=THREE.RepeatWrapping;dt.repeat.set(physRepeat,physRepeat);dt.needsUpdate=true;mat.map=dt;mat.color.setRGB(S.brightness,S.brightness,S.brightness);}
+      else if(item.hex){mat.map=null;mat.color.copy(baseColor).multiplyScalar(Math.max(0.01,S.brightness));}
+      else{mat.map=null;mat.color.setRGB(0.83*S.brightness,0.82*S.brightness,0.80*S.brightness);}
       if(normTex){const nt=normTex.clone();nt.wrapS=nt.wrapT=THREE.RepeatWrapping;nt.repeat.set(physRepeat,physRepeat);nt.needsUpdate=true;mat.normalMap=nt;mat.normalScale.set(_bedNorm,_bedNorm);}else{mat.normalMap=null;}
       if(roughTex){const rt=roughTex.clone();rt.wrapS=rt.wrapT=THREE.RepeatWrapping;rt.repeat.set(physRepeat,physRepeat);rt.needsUpdate=true;mat.roughnessMap=rt;}else{mat.roughnessMap=null;}
       if(aoTex){const at=aoTex.clone();at.wrapS=at.wrapT=THREE.RepeatWrapping;at.repeat.set(physRepeat,physRepeat);at.needsUpdate=true;mat.aoMap=at;mat.aoMapIntensity=1.0;}else{mat.aoMap=null;}
-      mat.roughness=sRoughness;mat.metalness=sMetalness;mat.sheen=sSheen;mat.needsUpdate=true;
+      mat.roughness=S.roughness;mat.metalness=S.metalness;mat.sheen=S.sheen;mat.needsUpdate=true;
       if(Array.isArray(entry.mesh.material)){const arr=[...entry.mesh.material];arr[entry.matIndex]=mat;entry.mesh.material=arr;}else{entry.mesh.material=mat;}
 
       // If this is the curtain representative, propagate fabric to all curtain panels
@@ -389,15 +392,16 @@ async function handleDiffuseUpload(file) {
   if (_gen !== _applyGen) return; // superseded by a newer apply
 
   // Replace diffuse only — keep existing normal/roughness maps intact
+  const S = appStore.getState().sliders;
   entries.forEach(entry => {
     const mat = entry.greyMat;
-    const physRepeat = sScale * (entry.uvScaleFactor / BASE_TILE);
+    const physRepeat = S.scale * (entry.uvScaleFactor / BASE_TILE);
     const dt = tex.clone();
     dt.wrapS = dt.wrapT = THREE.RepeatWrapping;
     dt.repeat.set(physRepeat, physRepeat);
     dt.needsUpdate = true;
     mat.map = dt;
-    mat.color.setRGB(Math.max(0.01, sBrightness), Math.max(0.01, sBrightness), Math.max(0.01, sBrightness));
+    mat.color.setRGB(Math.max(0.01, S.brightness), Math.max(0.01, S.brightness), Math.max(0.01, S.brightness));
     mat.needsUpdate = true;
     if (Array.isArray(entry.mesh.material)) {
       const arr = [...entry.mesh.material];
@@ -560,14 +564,14 @@ function startDrag(e, gi, ii) {
 
 // ── Slider handlers ───────────────────────────────────────────────────────
 function updateBrightness(val) {
-  sBrightness = val;
+  setSlider('brightness', val);
   ['v-brightness','v-brightness-r'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=val.toFixed(2); });
   meshEntries.forEach(entry => {
     if(!entry.checked && !entry.pieceSelected) return;
     const mat = entry.greyMat;
     const safeVal = Math.max(0.01, val);
     if(mat.map) mat.color.setRGB(safeVal,safeVal,safeVal);
-    else { const c=new THREE.Color(baseColorHex||'#ffffff'); mat.color.copy(c).multiplyScalar(safeVal); }
+    else { const c=new THREE.Color(appStore.getState().baseColorHex||'#ffffff'); mat.color.copy(c).multiplyScalar(safeVal); }
     mat.needsUpdate = true;
   });
   markDirty();
@@ -575,9 +579,7 @@ function updateBrightness(val) {
 function applyProp(prop, val) {
   const valEl = document.getElementById('v-'+prop);
   if(valEl) valEl.textContent = val.toFixed(2);
-  if(prop==='roughness') sRoughness=val;
-  if(prop==='metalness') sMetalness=val;
-  if(prop==='sheen')     sSheen=val;
+  setSlider(prop, val); // prop is only ever roughness/metalness/sheen (see oninput handlers)
   meshEntries.forEach(entry => {
     if(!entry.checked && !entry.pieceSelected) return;
     if(prop==='sheen') entry.greyMat.sheen=val;
@@ -587,7 +589,7 @@ function applyProp(prop, val) {
   markDirty();
 }
 function updateTexScale(val) {
-  sScale = val;
+  setSlider('scale', val);
   ['v-scale','v-scale-r'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=val.toFixed(1); });
   meshEntries.forEach(entry => {
     if(!entry.checked && !entry.pieceSelected) return;
@@ -602,7 +604,7 @@ function updateTexScale(val) {
   markDirty();
 }
 function updateNormScale(val) {
-  sNorm = val;
+  setSlider('norm', val);
   const el = document.getElementById('v-norm'); if(el) el.textContent=val.toFixed(1);
   meshEntries.forEach(entry => {
     if(!entry.checked && !entry.pieceSelected) return;

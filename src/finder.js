@@ -589,12 +589,13 @@ async function confirmAddFromBar() {
   const thumb = pr?.result?.thumb || finalDiffUrl;
 
   hideConfirmBar();
+  const S = appStore.getState().sliders;
   CUSTOM_FABRIC_ITEMS.push({
     name, img: thumb, type, hex: '#c8c0b8', vendor:'custom', series:'My Fabrics',
     _defaults: {
       // Save the CURRENT slider state — not the original fabric defaults
-      roughness: sRoughness, sheen: sSheen, metalness: sMetalness,
-      scale: sScale, norm: sNorm,
+      roughness: S.roughness, sheen: S.sheen, metalness: S.metalness,
+      scale: S.scale, norm: S.norm,
       diffUrl: finalDiffUrl, normUrl, roughUrl,
     },
   });
