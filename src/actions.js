@@ -53,3 +53,15 @@ function restoreCurtainState() {
       : { ...CURTAIN_STATE_DEFAULTS },
   }));
 }
+
+function setFinder(patch) {
+  appStore.setState(s => ({ finder: { ...s.finder, ...patch } }));
+}
+
+// Single mutation entry point for the user's My Fabrics collection. The array
+// itself stays in src/catalog.js (CUSTOM_FABRIC_ITEMS) because four LIBRARY
+// groups capture it by reference — replacing it immutably would strand them.
+// Callers re-render via buildLibrary() after adding.
+function addCustomFabric(item) {
+  CUSTOM_FABRIC_ITEMS.push(item);
+}

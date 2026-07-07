@@ -38,4 +38,15 @@ const appStore = createStore({
   curtainState: { shape: 'drape', fabric: 'linen', color: '#EDE6D8', widthFactor: 1, lengthFactor: 1 },
   // User's in-session curtain customization; survives room rebuilds. Null until first change.
   savedCurtainState: null,
+  // Fabric-finder modal state. pendingResult (search path) and
+  // pendingUploadPreview (upload path) feed the floating confirm bar.
+  finder: {
+    tab: 'upload',            // 'upload' | 'search'
+    imgData: null,            // base64 of the upload-tab image
+    analyzed: null,           // last AI analysis (before save)
+    selectedResult: null,     // search result awaiting add/try
+    pendingResult: null,      // search result pending confirm-bar decision
+    pendingUploadPreview: null, // upload-tab preview pending confirm-bar decision
+    searchCustomImg: null,    // data-URL custom image uploaded in search tab
+  },
 });
