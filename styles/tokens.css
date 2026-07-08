@@ -1,30 +1,88 @@
-/* Design tokens — single source of truth for color/type/spacing/radius.
-   Component CSS must consume var(--...) instead of raw values. */
-:root{
-  --bg:#F8F9FA; --surface:#FFFFFF; --panel:#FFFFFF;
-  --border:#E9ECEF; --border-strong:#CED4DA;
-  --text:#111827; --text-mid:#6B7280; --text-muted:#9CA3AF;
-  --accent:#7C3AED; --accent-hover:#6D28D9; --accent-light:#6D28D9;
-  --accent-pale:#EDE9FE;
-  --green:#10B981; --yellow:#F59E0B;
-  /* legacy compat */
-  --warm:#4361EE; --warm-light:#BAC8FF;
-  /* extended accent palette */
-  --accent-deep:#5B21B6; --accent-bright:#A855F7;
-  --purple-300:#C4B5FD; --purple-100:#F0EEFF; --purple-50:#FAF9FF;
-  /* ink tonal scale */
-  --ink-900:#0B0A18; --ink-600:#52516A; --ink-400:#6B6888;
-  --surface-tint:#F5F4F8; --border-soft:#F3F2F8; --border-dot:#E4E2F0;
-  /* info blue for tags/badges */
+/* Livinit design tokens — ported from web-pipeline lib/design-system (2026-07-07).
+   Color roles are space-separated RGB triples so alpha compositing works:
+   color: rgb(var(--md-primary) / 0.06). Do not add hex role tokens. */
+@font-face { font-family:'Eudoxus Sans'; src:url('../fonts/EudoxusSans-Regular.woff2') format('woff2'); font-weight:400; font-display:swap; }
+@font-face { font-family:'Eudoxus Sans'; src:url('../fonts/EudoxusSans-Medium.woff2') format('woff2'); font-weight:500; font-display:swap; }
+@font-face { font-family:'Eudoxus Sans'; src:url('../fonts/EudoxusSans-Bold.woff2') format('woff2'); font-weight:700; font-display:swap; }
+@font-face { font-family:'Eudoxus Sans'; src:url('../fonts/EudoxusSans-ExtraBold.woff2') format('woff2'); font-weight:800; font-display:swap; }
+
+:root {
+  /* type */
+  --font-sans: 'Eudoxus Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* primary (functional #5870D6; brand #7A91EE decorative only) */
+  --md-primary: 88 112 214;
+  --md-on-primary: 255 255 255;
+  --md-primary-container: 236 239 253;
+  --md-on-primary-container: 5 22 75;
+  --brand-periwinkle: #7A91EE;
+  /* surfaces / neutrals (brand navy #101C2D) */
+  --md-surface: 255 255 255;
+  --md-on-surface: 16 28 45;
+  --md-surface-variant: 241 244 249;
+  --md-on-surface-variant: 102 118 142;
+  --md-surface-dim: 249 250 251;
+  --md-surface-container-low: 249 250 251;
+  --md-surface-container: 241 244 249;
+  --md-surface-container-high: 234 238 245;
+  --md-surface-container-highest: 221 228 238;
+  --md-outline: 204 212 224;
+  --md-outline-variant: 221 228 238;
+  --md-scrim: 16 28 45;
+  /* status */
+  --md-success: 21 128 61;
+  --md-warning: 194 85 12;
+  --md-error: 243 64 64;
+  /* elevation — navy-tinted, dual-layer */
+  --elev-1: 0 1px 2px rgb(16 28 45 / .06), 0 1px 3px rgb(16 28 45 / .04);
+  --elev-2: 0 2px 6px rgb(16 28 45 / .08), 0 1px 2px rgb(16 28 45 / .05);
+  --elev-3: 0 6px 16px rgb(16 28 45 / .10), 0 2px 6px rgb(16 28 45 / .06);
+  /* radius */
+  --r-xs: 4px; --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-xl: 24px; --r-full: 9999px;
+  /* motion */
+  --dur-fast: 140ms; --dur-base: 220ms; --dur-slow: 420ms;
+  --ease-motion: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* ── LEGACY — migrating out, do not add consumers ─────────────────────
+     Old token names re-pointed at Livinit roles (or nearest ramp literal
+     where no role maps). NOTE: old --r-lg (8px) was renamed to --r-sm in
+     app.css; --r-lg now belongs to the new 16px radius scale above. */
+  --bg: rgb(var(--md-surface-dim));
+  --surface: rgb(var(--md-surface));
+  --panel: rgb(var(--md-surface));
+  --border: rgb(var(--md-outline-variant));
+  --border-strong: rgb(var(--md-outline));
+  --text: rgb(var(--md-on-surface));
+  --text-mid: rgb(var(--md-on-surface-variant));
+  --text-muted: #919FB6;            /* Livinit neutral-400 */
+  --accent: rgb(var(--md-primary));
+  --accent-hover: #4354B3;          /* periwinkle-700 */
+  --accent-light: #4354B3;          /* periwinkle-700 (was same as hover) */
+  --accent-pale: rgb(var(--md-primary-container));
+  --green: rgb(var(--md-success));
+  --yellow: rgb(var(--md-warning));
+  --warm: rgb(var(--md-primary));
+  --warm-light: #C7D0F4;            /* periwinkle-200 */
+  --accent-deep: #374491;           /* periwinkle-800 */
+  --accent-bright: var(--brand-periwinkle);
+  --purple-300: #97ABEF;            /* periwinkle-300 */
+  --purple-100: #EDF2FE;            /* periwinkle-100 */
+  --purple-50: #F7FAFF;             /* periwinkle-50 */
+  --ink-900: rgb(var(--md-on-surface));
+  --ink-600: rgb(var(--md-on-surface-variant));
+  --ink-400: #919FB6;               /* Livinit neutral-400 */
+  --surface-tint: rgb(var(--md-surface-container));
+  --border-soft: rgb(var(--md-surface-container));
+  --border-dot: rgb(var(--md-outline-variant));
+  /* info blue — no Livinit role in this pass; literals kept */
   --info:#1D4ED8; --info-bg:#EFF6FF; --info-border:#93C5FD;
-  --font-b:'DM Sans','Enrique',system-ui,sans-serif;
-  --font-d:'Plus Jakarta Sans','Agrandir Grand',system-ui,sans-serif;
+  --font-b: var(--font-sans);
+  --font-d: var(--font-sans);
   /* type scale — use these, not raw px (fractional legacy sizes pending normalization) */
   --fs-3xs:8px; --fs-2xs:9px; --fs-xs:10px; --fs-sm:11px;
   --fs-md:12px; --fs-base:13px; --fs-lg:15px; --fs-xl:18px;
   /* spacing scale */
   --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-6:24px;
-  --r:6px; --r-lg:8px; /* --r-lg was 10px but never referenced; 8px matches the 20 hard-coded uses it now replaces */
+  --r:6px;
   --sidebar-w:72px; --topbar-h:56px; --strip-h:60px;
   --fabric-h:126px; --config-w:292px;
 }
