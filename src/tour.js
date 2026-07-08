@@ -68,6 +68,7 @@
     if (_step > 1) { _step--; _render(); }
   };
   window._tourSkip = function() {
+    try { localStorage.setItem('livinit_tour_seen_v1', '1'); } catch (e) {}
     const ov = document.getElementById('tour-ov');
     if (!ov) return;
     ov.style.transition = 'opacity .3s';
@@ -166,5 +167,14 @@
   }
 
   window.addEventListener('resize', () => { if (_step > 0) _render(); });
-  _render();
+  // Auto-show the welcome tour only on the FIRST visit. Persisted in localStorage
+  // (set by _tourSkip / Get Started) so it no longer pops up on every open.
+  let _seen = false;
+  try { _seen = !!localStorage.getItem('livinit_tour_seen_v1'); } catch (e) {}
+  if (_seen) {
+    const ov = document.getElementById('tour-ov');
+    if (ov) { ov.classList.remove('on'); ov.style.display = 'none'; }
+  } else {
+    _render();
+  }
 })();
