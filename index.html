@@ -49,14 +49,6 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
           <span class="pill-label">Saved</span>
         </button>
-        <button class="pill-btn pill-btn--ghost" onclick="exportGLB()" title="Export GLB">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-          <span class="pill-label">Save GLB</span>
-        </button>
-        <button class="pill-btn pill-btn--ghost" onclick="renderScene()" title="AI Render">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-          <span class="pill-label">Render</span>
-        </button>
         <button class="pill-btn" id="btn-view-in-my-room" onclick="openViewInMyRoom()" title="View in My Room">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           <span class="pill-label">View in My Room</span>
@@ -149,6 +141,7 @@
 
       <!-- CONFIG PANEL (right) -->
       <aside class="config-panel" id="right-panel">
+       <div class="panel-scroll" id="panel-scroll">
 
         <!-- FABRIC LIBRARY -->
         <div class="lib-pane" id="lib-pane">
@@ -369,6 +362,19 @@
           </div>
 
         </div><!-- /panel-room -->
+       </div><!-- /panel-scroll -->
+
+        <!-- Persistent CTA footer tray -->
+        <div class="side-footer">
+          <button class="pill-btn pill-btn--primary side-footer-cta" onclick="renderScene()" title="AI Render">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            AI Render
+          </button>
+          <button class="pill-btn side-footer-cta" onclick="exportGLB()" title="Export GLB">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Export GLB
+          </button>
+        </div>
 
       </aside>
     </div><!-- /main-row -->

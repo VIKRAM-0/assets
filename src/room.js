@@ -15,8 +15,8 @@ function toggleRoomView() {
   const zoneOverlay = document.getElementById('zone-overlay');
   if(zoneOverlay) zoneOverlay.style.display = appStore.getState().roomMode ? 'none' : '';
 
-  document.getElementById('panel-product').style.display = appStore.getState().roomMode ? 'none' : 'block';
-  document.getElementById('panel-room').style.display    = appStore.getState().roomMode ? 'block' : 'none';
+  document.getElementById('panel-product').style.display = appStore.getState().roomMode ? 'none' : 'flex';
+  document.getElementById('panel-room').style.display    = appStore.getState().roomMode ? 'flex' : 'none';
 
   if(appStore.getState().roomMode) {
     // Save snapshot of current model's fabric state before entering room
