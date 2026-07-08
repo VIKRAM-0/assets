@@ -132,23 +132,16 @@
 
       <!-- CONFIG PANEL (right) -->
       <aside class="config-panel" id="right-panel">
-       <!-- TEMP holding spot for model picker + zone badge (Task 4 moves these into the Parts tab) -->
-       <div class="panel-hold">
-        <div class="seg seg--models">
-          <button class="seg-chip active" id="tab-chair" onclick="switchModel('chair')">Sierra Chair</button>
-          <button class="seg-chip" id="tab-sofa" onclick="switchModel('sofa')">Haven Sofa</button>
-          <button class="seg-chip" id="tab-bed_fabric" onclick="switchModel('bed_fabric')">Fabric Bed</button>
-        </div>
-        <span class="zone-chip" id="zone-count-badge">0 zones</span>
-       </div>
-
        <!-- Panel tabs -->
        <div class="panel-tabs seg" role="tablist">
          <button class="seg-chip active" id="ptab-fabrics" onclick="showPanelTab('fabrics')">Fabrics</button>
          <button class="seg-chip" id="ptab-room" onclick="showPanelTab('room')">Room</button>
          <button class="seg-chip" id="ptab-parts" onclick="showPanelTab('parts')">Parts</button>
        </div>
-       <div class="panel-context" id="panel-context">Sierra Chair</div>
+       <div class="panel-context" id="panel-context">
+         <span id="context-model">Sierra Chair</span>
+         <span class="zone-chip" id="zone-count-badge">0 zones</span>
+       </div>
 
        <!-- Pinned Applied card (panels.js renders into #cp-sliders + near #diffuse-upload-input) -->
        <div class="applied-card" id="applied-card">
@@ -177,6 +170,12 @@
         <!-- PARTS TAB -->
         <div class="panel-tab-body" data-tab="parts">
         <div id="panel-product">
+          <!-- Model picker -->
+          <div class="seg seg--models-panel" role="tablist">
+            <button class="seg-chip active" id="tab-chair" onclick="switchModel('chair')">Sierra Chair</button>
+            <button class="seg-chip" id="tab-sofa" onclick="switchModel('sofa')">Haven Sofa</button>
+            <button class="seg-chip" id="tab-bed_fabric" onclick="switchModel('bed_fabric')">Fabric Bed</button>
+          </div>
           <!-- Product info -->
           <div class="cp-section">
             <div class="cp-section-hdr">

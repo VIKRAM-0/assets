@@ -14,6 +14,8 @@ function updateProductInfo() {
   const dimsEl = document.getElementById('cp-product-dims');
   if(nameEl) nameEl.textContent = info.name;
   if(dimsEl) dimsEl.textContent = info.dims;
+  const ctxEl = document.getElementById('context-model');
+  if(ctxEl) ctxEl.textContent = info.name;
 }
 
 function _updateZoneCountBadge() {
