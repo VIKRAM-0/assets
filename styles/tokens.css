@@ -83,6 +83,4 @@
   /* spacing scale */
   --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-6:24px;
   --r:6px;
-  --sidebar-w:72px; --topbar-h:56px; --strip-h:60px;
-  --fabric-h:126px; --config-w:292px;
 }

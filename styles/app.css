@@ -557,3 +557,22 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;b
 .tw-load-bar.done::after{animation:none}
 @keyframes tw-sheen{from{transform:translateX(-100%)}to{transform:translateX(200%)}}
 .tw-load-label{font-size:var(--fs-2xs);color:var(--text-muted);text-align:center;font-family:var(--font-b);letter-spacing:.06em}
+
+/* --- Task 7 polish --- */
+/* inline-SVG icon sizing (replaced emoji) */
+.room-chip-ico{display:inline-flex;align-items:center;justify-content:center}
+.room-chip-ico svg{width:15px;height:15px}
+.cp-product-thumb svg{width:26px;height:26px}
+.tw-step-icon{display:inline-flex;align-items:center;justify-content:center}
+.tw-step-icon svg{width:24px;height:24px}
+.piece-hint-ico svg{width:11px;height:11px}
+.finder-preview-ph-ico{display:flex;align-items:center;justify-content:center}
+/* keyboard focus ring (additive; pointer focus unaffected) */
+:focus-visible{outline:2px solid rgb(var(--md-primary) / .6);outline-offset:2px}
+/* narrow-window: sidebar becomes a right slide-over drawer */
+.sidebar-toggle{display:none}
+@media (max-width:1024px){
+  .config-panel{position:fixed;top:0;right:0;bottom:0;width:340px;max-width:85vw;z-index:30;box-shadow:var(--elev-3);transform:translateX(100%);transition:transform var(--dur-base) var(--ease-motion)}
+  .config-panel.open{transform:none}
+  .sidebar-toggle{position:fixed;right:16px;bottom:16px;z-index:31;display:inline-flex;align-items:center;gap:7px;height:44px;padding:0 18px;border:none;cursor:pointer;font:600 14px/1 var(--font-sans);color:rgb(var(--md-on-surface))}
+}

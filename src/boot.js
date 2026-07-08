@@ -64,3 +64,6 @@ loadScripts([
     }, undefined, () => { /* silent fail — user can still load on demand */ });
   });
 }).catch(e=>{console.error('Script load failed',e);showToast('Failed to load Three.js loaders');});
+
+// Narrow-window sidebar drawer toggle (floating "Fabrics" pill; no-op >=1024px)
+function toggleSidebar(){ document.getElementById('right-panel')?.classList.toggle('open'); }
