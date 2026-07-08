@@ -144,9 +144,9 @@
        <div class="applied-card" id="applied-card">
          <div class="cp-section-hdr"><span class="cp-section-title">Applied Fabric</span></div>
          <input type="file" id="diffuse-upload-input" accept="image/*" style="display:none">
-         <div class="cp-section" id="cp-sliders">
-           <div class="cp-section-hdr"><span class="cp-section-title">Material Adjustments</span></div>
-         </div>
+         <details class="applied-adjust" id="cp-sliders">
+           <summary class="adjust-summary"><span class="cp-section-title">Material Adjustments</span><span class="adjust-caret" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span></summary>
+         </details>
        </div>
 
        <div class="panel-scroll" id="panel-scroll">
@@ -156,7 +156,6 @@
         <!-- FABRIC LIBRARY -->
         <div class="lib-pane" id="lib-pane">
           <div class="lib-head">
-            <div class="lib-head-row"><span class="lib-title">Fabrics</span></div>
             <input type="text" id="fab-search-input" class="lib-search" placeholder="Search fabrics…" oninput="filterFabricSearch(this.value)">
             <div class="lib-filter-chips" id="fabric-tabs"></div>
           </div>
