@@ -10,8 +10,25 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:
 /* ── Workspace ─────────────────────────────────────────────────────────── */
 .workspace{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
 
-/* ── Topbar (frosted Livinit studio chrome) ────────────────────────────── */
-.topbar{display:flex;align-items:center;gap:14px;padding:10px 20px;background:rgb(var(--md-surface) / .88);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid rgb(var(--md-outline-variant));flex-shrink:0;z-index:40}
+/* ── Left nav rail ─────────────────────────────────────────────────────── */
+.nav-rail{width:72px;flex:none;display:flex;flex-direction:column;align-items:stretch;gap:4px;padding:12px 8px;background:rgb(var(--md-surface));border-right:1px solid rgb(var(--md-outline-variant));z-index:40}
+.nav-rail-logo{display:flex;align-items:center;justify-content:center;height:44px;margin-bottom:8px}
+.nav-rail-item{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border:0;background:transparent;color:rgb(var(--md-on-surface-variant));font:500 10px/12px var(--font-sans);border-radius:var(--r-md);cursor:pointer;transition:all var(--dur-fast) var(--ease-motion)}
+.nav-rail-item:hover{color:rgb(var(--md-on-surface));background:rgb(var(--md-on-surface) / .05)}
+.nav-rail-item.active{color:rgb(var(--md-primary));background:rgb(var(--md-primary-container))}
+.nav-rail-item.active::before{content:"";position:absolute;left:-8px;top:8px;bottom:8px;width:3px;border-radius:var(--r-full);background:rgb(var(--md-primary))}
+.nav-rail-ico{display:flex;align-items:center;justify-content:center}
+.nav-rail-lbl{white-space:nowrap}
+.nav-rail-spacer{flex:1}
+.nav-rail-avatar{display:flex;align-items:center;justify-content:center;width:34px;height:34px;margin:6px auto 0;border-radius:var(--r-full);background:rgb(var(--md-primary-container));color:rgb(var(--md-on-primary-container));font:700 12px/1 var(--font-sans)}
+
+/* ── Floating canvas CTA cluster (was top-bar right) ───────────────────── */
+.canvas-cta{position:absolute;top:16px;right:16px;z-index:20;display:flex;gap:8px}
+
+/* ── Panel holding spot (temp: model picker + zone badge, until Parts tab) */
+.panel-hold{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid rgb(var(--md-outline-variant))}
+
+/* ── Topbar removed (left nav rail replaces it) ────────────────────────── */
 .brand{display:flex;align-items:center;gap:8px}
 .brand-dot{width:10px;height:10px;border-radius:var(--r-full);background:var(--brand-periwinkle);box-shadow:0 0 0 3px rgb(var(--md-primary) / .15)}
 .brand-name{font:800 16px/20px var(--font-sans);letter-spacing:.01em;color:rgb(var(--md-on-surface))}

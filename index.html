@@ -13,60 +13,41 @@
 <body>
 <div class="app">
 
+  <!-- ══ LEFT NAV RAIL ════════════════════════════════════════════════ -->
+  <nav class="nav-rail" aria-label="Primary">
+    <div class="nav-rail-logo" title="livinit"><span class="brand-dot"></span></div>
+    <button class="nav-rail-item nav-item active" id="nav-simulator" onclick="if(appStore.getState().roomMode)toggleRoomView()">
+      <span class="nav-rail-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>
+      <span class="nav-rail-lbl">Product</span>
+    </button>
+    <button class="nav-rail-item nav-item" id="nav-room" onclick="if(!appStore.getState().roomMode)toggleRoomView()">
+      <span class="nav-rail-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+      <span class="nav-rail-lbl">Room</span>
+    </button>
+    <button class="nav-rail-item nav-item" id="nav-saved" onclick="" title="Saved">
+      <span class="nav-rail-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span>
+      <span class="nav-rail-lbl">Saved</span>
+    </button>
+    <div class="nav-rail-spacer"></div>
+    <button class="nav-rail-item" onclick="document.getElementById('glb-input').click()" title="Upload GLB">
+      <span class="nav-rail-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span>
+      <span class="nav-rail-lbl">Upload</span>
+    </button>
+    <button class="nav-rail-item" onclick="" title="Settings">
+      <span class="nav-rail-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/></svg></span>
+      <span class="nav-rail-lbl">Settings</span>
+    </button>
+    <div class="nav-rail-avatar" title="Ave R.">AR</div>
+  </nav>
+
   <!-- ══ WORKSPACE ════════════════════════════════════════════════════ -->
   <div class="workspace">
 
-    <!-- ── TOP BAR (frosted, Livinit studio chrome) ─────────────────── -->
-    <header class="topbar">
-      <div class="brand"><span class="brand-dot"></span><span class="brand-name">livinit</span></div>
-      <span class="brand-sub">Product Configurator</span>
-
-      <!-- Product/Room view toggle (was the left icon rail; `nav-item` kept
-           class-only as a JS hook — room.js syncs .active across it) -->
-      <div class="seg seg--view">
-        <button class="seg-chip nav-item active" id="nav-simulator" onclick="if(appStore.getState().roomMode)toggleRoomView()">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-          Product
-        </button>
-        <button class="seg-chip nav-item" id="nav-room" onclick="if(!appStore.getState().roomMode)toggleRoomView()">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          Room
-        </button>
-      </div>
-
-      <!-- Model tabs (ids/onclicks unchanged: model.js toggles .active,
-           room.js toggles .prod-tab--locked, viewport.js appends .custom-model-tag) -->
-      <div class="seg seg--models">
-        <button class="seg-chip active" id="tab-chair" onclick="switchModel('chair')">Sierra Chair</button>
-        <button class="seg-chip" id="tab-sofa" onclick="switchModel('sofa')">Haven Sofa</button>
-        <button class="seg-chip" id="tab-bed_fabric" onclick="switchModel('bed_fabric')">Fabric Bed</button>
-      </div>
-
-      <span class="zone-chip" id="zone-count-badge">0 zones</span>
-
-      <div class="topbar-right">
-        <button class="pill-btn pill-btn--ghost nav-item" id="nav-saved" onclick="" title="Saved">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-          <span class="pill-label">Saved</span>
-        </button>
-        <button class="pill-btn" id="btn-view-in-my-room" onclick="openViewInMyRoom()" title="View in My Room">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          <span class="pill-label">View in My Room</span>
-        </button>
-        <button class="pill-btn pill-btn--ghost pill-btn--icon" onclick="document.getElementById('glb-input').click()" title="Upload GLB">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        </button>
-        <button class="pill-btn pill-btn--ghost pill-btn--icon" onclick="" title="Settings">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>
-        </button>
-        <button class="pill-btn pill-btn--primary" onclick="">Get A Quote →</button>
-        <div class="tb-avatar" title="Ave R."><span class="avatar-circle">AR</span></div>
-      </div>
-      <!-- Hidden legacy elements for JS compat -->
-      <span id="lib-title" style="display:none">Chair Fabrics</span>
-      <span id="lib-sub" style="display:none"></span>
-      <button id="btn-room-view" style="display:none" onclick="toggleRoomView()">Room View</button>
-    </header>
+    <!-- Top bar removed → controls live in the left nav rail, the tool panel,
+         and the floating canvas CTA cluster. Hidden legacy nodes kept for JS. -->
+    <span id="lib-title" style="display:none">Chair Fabrics</span>
+    <span id="lib-sub" style="display:none"></span>
+    <button id="btn-room-view" style="display:none" onclick="toggleRoomView()">Room View</button>
 
     <!-- ── MAIN ROW: viewport + config panel ────────────────────────── -->
     <div class="main-row">
@@ -74,6 +55,14 @@
       <!-- VIEWPORT -->
       <div class="viewport-area" id="viewport-wrap">
         <canvas id="viewer"></canvas>
+        <!-- Floating CTA cluster (was top-bar right) -->
+        <div class="canvas-cta">
+          <button class="pill-btn" id="btn-view-in-my-room" onclick="openViewInMyRoom()" title="View in My Room">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span class="pill-label">View in My Room</span>
+          </button>
+          <button class="pill-btn pill-btn--primary" onclick="">Get A Quote →</button>
+        </div>
         <div id="zone-overlay"></div>
         <div id="loading">
           <div class="spinner"></div>
@@ -196,6 +185,15 @@
 
       <!-- CONFIG PANEL (right) -->
       <aside class="config-panel" id="right-panel">
+       <!-- TEMP holding spot for model picker + zone badge (Task 4 moves these into the Parts tab) -->
+       <div class="panel-hold">
+        <div class="seg seg--models">
+          <button class="seg-chip active" id="tab-chair" onclick="switchModel('chair')">Sierra Chair</button>
+          <button class="seg-chip" id="tab-sofa" onclick="switchModel('sofa')">Haven Sofa</button>
+          <button class="seg-chip" id="tab-bed_fabric" onclick="switchModel('bed_fabric')">Fabric Bed</button>
+        </div>
+        <span class="zone-chip" id="zone-count-badge">0 zones</span>
+       </div>
        <div class="panel-scroll" id="panel-scroll">
 
         <!-- FABRIC LIBRARY -->
