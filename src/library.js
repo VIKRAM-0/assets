@@ -250,6 +250,20 @@ function _applyFabricFilters(typeKey, query) {
       '#fabric-grid .bar-sw[data-series="' + head.dataset.series + '"]:not(.hidden)');
     head.classList.toggle('hidden', !any);
   });
+  // Empty state: nothing matches → show a message instead of a blank grid.
+  const grid = document.getElementById('fabric-grid');
+  const anyVisible = grid && grid.querySelector('.bar-sw:not(.hidden)');
+  let empty = grid && grid.querySelector('.lib-empty');
+  if (grid && !anyVisible) {
+    if (!empty) {
+      empty = document.createElement('div');
+      empty.className = 'lib-empty';
+      grid.appendChild(empty);
+    }
+    empty.textContent = q ? 'No fabrics match “' + query.trim() + '”' : 'No fabrics in this filter';
+  } else if (empty) {
+    empty.remove();
+  }
 }
 
 function filterFabricSearch(value) {

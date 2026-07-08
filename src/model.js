@@ -67,7 +67,8 @@ function buildPieceList() {
     const row = document.createElement('div');
     row.className='piece-item curtain-piece'+(curtainEntry.pieceSelected?' sel-piece':'');
     row.style.cssText='border:1.5px dashed var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s';
-    const ico = document.createElement('span'); ico.textContent='🪟'; ico.style.fontSize='14px';
+    const ico = document.createElement('span'); ico.style.cssText='display:flex;color:var(--text-mid)';
+    ico.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M4 8h16M4 13h16"/></svg>';
     const lbl = document.createElement('span'); lbl.style.cssText='font-size:11px;font-weight:600;color:var(--text);flex:1'; lbl.textContent='Change Curtain Fabric';
     const hint = document.createElement('span'); hint.style.cssText='font-size:9px;color:var(--text-muted)'; hint.textContent='select → pick swatch';
     row.appendChild(ico); row.appendChild(lbl); row.appendChild(hint);
@@ -295,11 +296,16 @@ function loadModel(url) {
   document.getElementById('v-hint').style.display='none';
   meshEntries=[];
   setActiveFabric(null); renderActiveSwatch();
-  document.getElementById('app-name').textContent='— none —';
-  document.getElementById('app-vend').textContent='';
-  document.getElementById('app-sw').innerHTML='';
-  document.getElementById('app-sw').style.background='var(--border)';
-  const _rba=document.getElementById('app-replace-btn');if(_rba)_rba.style.display='none';
+  // Reset BOTH the product and room applied-preview variants — materials.js
+  // writes both via ['','room'], so reset must clear both or the room panel
+  // keeps a stale swatch after reset.
+  ['','room'].forEach(sfx=>{
+    const s=sfx?'-'+sfx:'';
+    const n=document.getElementById('app-name'+s);if(n)n.textContent='— none —';
+    const v=document.getElementById('app-vend'+s);if(v)v.textContent='';
+    const sw=document.getElementById('app-sw'+s);if(sw){sw.innerHTML='';sw.style.background='var(--border)';}
+    const rb=document.getElementById('app-replace-btn'+s);if(rb)rb.style.display='none';
+  });
 
   if (_gltfSceneCache[url]) {
     // Cache hit — clone so processGLTF gets a fresh unmodified hierarchy

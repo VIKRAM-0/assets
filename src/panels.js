@@ -33,7 +33,7 @@ function appliedPreviewHtml(sfx, swStyle) {
   return '<div class="app-prev">'
     + '<div class="app-sw" id="' + id('app-sw') + '"' + (swStyle ? ' style="' + swStyle + '"' : '') + '></div>'
     + '<div style="flex:1;min-width:0">'
-    +   '<div class="app-name" id="' + id('app-name') + '">— none selected —</div>'
+    +   '<div class="app-name" id="' + id('app-name') + '">— none —</div>'
     +   '<div class="app-vend" id="' + id('app-vend') + '"></div>'
     + '</div>'
     + '<button class="app-replace-btn" id="' + id('app-replace-btn') + '" title="Replace with your own image" onclick="openDiffuseUpload()" style="display:none">' + _REPLACE_SVG + '</button>'

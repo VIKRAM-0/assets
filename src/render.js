@@ -380,8 +380,8 @@ function openViewInMyRoom() {
   // Generate button
   const genBtn = document.createElement('button');
   genBtn.id = 'vimr-gen-btn';
-  genBtn.style.cssText = 'padding:12px;border-radius:8px;border:none;background:#7c3aed;color:#fff;font-size:13px;font-weight:700;cursor:pointer;opacity:.4;pointer-events:none;font-family:var(--font-b);transition:opacity .15s';
-  genBtn.textContent = '✨  Generate — View in My Room';
+  genBtn.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:7px;padding:12px;border-radius:var(--r-full);border:none;background:rgb(var(--md-primary));color:rgb(var(--md-on-primary));font-size:13px;font-weight:600;cursor:pointer;opacity:.4;pointer-events:none;font-family:var(--font-sans);transition:opacity .15s';
+  genBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/></svg>Generate — View in My Room';
   genBtn.onclick = () => _vimrGenerate(ov, body, genBtn);
 
   body.appendChild(tip);
