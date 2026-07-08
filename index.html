@@ -150,6 +150,16 @@
       <!-- CONFIG PANEL (right) -->
       <aside class="config-panel" id="right-panel">
 
+        <!-- FABRIC LIBRARY -->
+        <div class="lib-pane" id="lib-pane">
+          <div class="lib-head">
+            <div class="lib-head-row"><span class="lib-title">Fabrics</span></div>
+            <input type="text" id="fab-search-input" class="lib-search" placeholder="Search fabrics…" oninput="filterFabricSearch(this.value)">
+            <div class="lib-filter-chips" id="fabric-tabs"></div>
+          </div>
+          <div class="lib-grid" id="fabric-grid"></div>
+        </div>
+
         <!-- PRODUCT MODE -->
         <div id="panel-product">
           <!-- Product info -->
@@ -363,31 +373,8 @@
       </aside>
     </div><!-- /main-row -->
 
-    <!-- ── FABRIC BAR ────────────────────────────────────────────────── -->
-    <div class="fabric-bar">
-      <div class="fabric-tabs-strip" id="fabric-tabs">
-        <!-- tabs injected by buildLibrary() -->
-        <div class="fab-search-wrap">
-          <svg class="fab-search-ico" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="fab-search-input" class="fab-search-input" placeholder="Search fabrics…" oninput="filterFabricSearch(this.value)">
-        </div>
-      </div>
-      <div class="fabric-swatches-wrap">
-        <button class="fab-scroll-btn left" id="fab-scroll-left" onclick="scrollSwatches(-180)" title="Scroll left">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <div class="fabric-swatches-row" id="fabric-swatches-row"></div>
-        <button class="fab-scroll-btn right" id="fab-scroll-right" onclick="scrollSwatches(180)" title="Scroll right">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
-      </div>
-    </div>
-
   </div><!-- /workspace -->
 </div><!-- /app -->
-
-<!-- Hidden legacy fab-scroll for JS compat -->
-<div id="fab-scroll" style="display:none"></div>
 
 <!-- Drag ghost -->
 <div id="drag-ghost"><img id="drag-ghost-img" src="" alt=""></div>

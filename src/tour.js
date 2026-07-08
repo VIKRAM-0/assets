@@ -26,7 +26,7 @@
       ]
     },
     {
-      target:'.fabric-bar', pos:'top',
+      target:'.lib-pane', pos:'left',
       title:'Apply Real Fabric Collections',
       desc:'Browse hundreds of textiles sourced from MityLite, Douglass, and Ennis Fabrics. Select a vendor tab, then click any swatch — it applies instantly to your selected part.',
       feats:[

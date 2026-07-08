@@ -93,13 +93,15 @@ try {
   const uiOk = await page.evaluate(() => {
     const out = {};
     out.swatches = document.querySelectorAll('.bar-sw').length;
+    out.gridChildren = document.getElementById('fabric-grid')?.children.length || 0;
     window.openFabricFinder();
     out.finderOpen = getComputedStyle(document.getElementById('finder-overlay')).display !== 'none';
     window.closeFabricFinder();
     out.finderClosed = getComputedStyle(document.getElementById('finder-overlay')).display === 'none';
     return out;
   }).catch((e) => ({ error: e.message }));
-  check('fabric library builds (>=50 swatches)', (uiOk.swatches || 0) >= 50, `got ${uiOk.swatches}`);
+  check('fabric library builds (>=50 swatches)', (uiOk.swatches || 0) >= 50 && (uiOk.gridChildren || 0) > 0,
+    `got ${uiOk.swatches} in sidebar grid (${uiOk.gridChildren} nodes)`);
   check('fabric finder opens and closes', !!(uiOk.finderOpen && uiOk.finderClosed), uiOk.error || '');
 
   // Model load signal: loading overlay off AND mesh/zone list populated.

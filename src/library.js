@@ -13,10 +13,9 @@ function buildLibrary() {
   if(lt) lt.textContent = _ltMap[appStore.getState().currentModelKey] || 'Fabrics';
 
   const tabsEl = document.getElementById('fabric-tabs');
-  const swatchesEl = document.getElementById('fabric-swatches-row');
+  const swatchesEl = document.getElementById('fabric-grid');
   if(!tabsEl || !swatchesEl) return;
 
-  // Clear only tabs (not the search widget which is static in HTML)
   tabsEl.querySelectorAll('.fab-tab, .fab-tab-add').forEach(el => el.remove());
   swatchesEl.innerHTML = '';
 
@@ -69,23 +68,29 @@ function buildLibrary() {
     return btn;
   }
 
-  // Insert tabs before the search widget
-  const searchWrap = tabsEl.querySelector('.fab-search-wrap');
   TYPE_DEFS.forEach(({ key, label }) => {
     if (key === 'all' || presentTypes.has(key)) {
-      tabsEl.insertBefore(mkTab(label, key), searchWrap);
+      tabsEl.appendChild(mkTab(label, key));
     }
   });
 
-  // Add Fabric button (before search wrap)
   const addBtn = document.createElement('button');
   addBtn.className = 'fab-tab-add';
   addBtn.textContent = '+ Add Fabric';
   addBtn.onclick = openFabricFinder;
-  tabsEl.insertBefore(addBtn, searchWrap);
+  tabsEl.appendChild(addBtn);
 
-  // Build all swatches
+  // Build swatches with a sticky header per collection (series)
+  let _lastSeries = null;
   allSwatches.forEach(({ item, gi, ii, typeKey, seriesName }) => {
+    if (seriesName !== _lastSeries) {
+      _lastSeries = seriesName;
+      const head = document.createElement('div');
+      head.className = 'lib-group-head';
+      head.dataset.series = seriesName.toLowerCase();
+      head.textContent = seriesName;
+      swatchesEl.appendChild(head);
+    }
     const sw = document.createElement('div');
     sw.className = 'bar-sw';
     sw.dataset.type = typeKey;
@@ -96,15 +101,14 @@ function buildLibrary() {
 
     const imgWrap = document.createElement('div');
     imgWrap.className = 'bar-sw-img';
-    if (item.img) {
+    const src = item.img || (item.code ? MITY_IMG + item.code + '.jpg' : null);
+    if (src) {
+      // Shimmer skeleton until the thumbnail resolves (either way it clears)
+      sw.classList.add('loading');
       const img = document.createElement('img');
-      img.src = item.img; img.alt = item.name; img.loading = 'lazy'; img.crossOrigin = 'anonymous';
-      img.onerror = () => { img.remove(); imgWrap.style.background = item.hex || '#ccc'; };
-      imgWrap.appendChild(img);
-    } else if (item.code) {
-      const img = document.createElement('img');
-      img.src = MITY_IMG + item.code + '.jpg'; img.alt = item.name; img.loading = 'lazy'; img.crossOrigin = 'anonymous';
-      img.onerror = () => { img.remove(); imgWrap.style.background = item.hex || '#ccc'; };
+      img.src = src; img.alt = item.name; img.loading = 'lazy'; img.crossOrigin = 'anonymous';
+      img.onload = () => sw.classList.remove('loading');
+      img.onerror = () => { sw.classList.remove('loading'); img.remove(); imgWrap.style.background = item.hex || '#ccc'; };
       imgWrap.appendChild(img);
     } else {
       imgWrap.style.background = item.hex || '#ccc';
@@ -163,7 +167,7 @@ function buildCurtainLibrary() {
   if (lt) lt.textContent = 'Curtain Fabrics';
 
   const tabsEl     = document.getElementById('fabric-tabs');
-  const swatchesEl = document.getElementById('fabric-swatches-row');
+  const swatchesEl = document.getElementById('fabric-grid');
   if (!tabsEl || !swatchesEl) return;
 
   tabsEl.querySelectorAll('.fab-tab, .fab-tab-add').forEach(el => el.remove());
@@ -172,9 +176,9 @@ function buildCurtainLibrary() {
   const searchInput = document.getElementById('fab-search-input');
   if (searchInput) searchInput.value = '';
 
-  // Fabric type label
+  // Fabric type label (full grid row, same style as collection headers)
   const fabLabel = document.createElement('div');
-  fabLabel.style.cssText = 'font-size:9px;font-weight:700;letter-spacing:.08em;color:var(--text-muted);text-transform:uppercase;padding:0 6px;display:flex;align-items:center;align-self:center;white-space:nowrap;flex-shrink:0';
+  fabLabel.className = 'lib-group-head';
   fabLabel.textContent = 'Fabric Type';
   swatchesEl.appendChild(fabLabel);
 
@@ -208,38 +212,43 @@ function buildCurtainLibrary() {
     swatchesEl.appendChild(sw);
   });
 
-  // Divider
-  const divider = document.createElement('div');
-  divider.style.cssText = 'width:1px;height:60px;background:var(--border);margin:0 10px;flex-shrink:0;align-self:center';
-  swatchesEl.appendChild(divider);
-
-  // Color label
+  // Color label (full grid row)
   const colLabel = document.createElement('div');
-  colLabel.style.cssText = 'font-size:9px;font-weight:700;letter-spacing:.08em;color:var(--text-muted);text-transform:uppercase;padding:0 6px;display:flex;align-items:center;align-self:center;white-space:nowrap;flex-shrink:0';
+  colLabel.className = 'lib-group-head';
   colLabel.textContent = 'Color';
   swatchesEl.appendChild(colLabel);
 
+  // Round color chips keep their intrinsic size inside a full-row rail
+  const chipRow = document.createElement('div');
+  chipRow.className = 'curtain-chip-row';
   CURTAIN_COLORS.forEach(c => {
     const chip = document.createElement('button');
     chip.className = 'curtain-color-chip' + (c.hex === appStore.getState().curtainState.color ? ' active' : '');
     chip.dataset.cclr = c.hex;
-    chip.style.cssText = 'flex-shrink:0;align-self:center;background:' + c.hex;
+    chip.style.background = c.hex;
     chip.title = c.label;
     chip.addEventListener('click', () => {
       setCurtainColor(c.hex);
     });
-    swatchesEl.appendChild(chip);
+    chipRow.appendChild(chip);
   });
+  swatchesEl.appendChild(chipRow);
 
   _updateZoneCountBadge();
 }
 
 function _applyFabricFilters(typeKey, query) {
   const q = query.trim().toLowerCase();
-  document.querySelectorAll('#fabric-swatches-row .bar-sw').forEach(sw => {
+  document.querySelectorAll('#fabric-grid .bar-sw').forEach(sw => {
     const typeMatch = (typeKey === 'all' || sw.dataset.type === typeKey);
     const textMatch = !q || sw.dataset.name.includes(q) || sw.dataset.series.includes(q);
     sw.classList.toggle('hidden', !(typeMatch && textMatch));
+  });
+  // Hide a collection header when the filter leaves it with no visible swatches
+  document.querySelectorAll('#fabric-grid .lib-group-head[data-series]').forEach(head => {
+    const any = document.querySelector(
+      '#fabric-grid .bar-sw[data-series="' + head.dataset.series + '"]:not(.hidden)');
+    head.classList.toggle('hidden', !any);
   });
 }
 

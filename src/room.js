@@ -1150,12 +1150,6 @@ function rotateFurnitureY(deg) {
   markDirty();
 }
 
-// ── Fabric bar scroll ─────────────────────────────────────────────────────
-function scrollSwatches(amount) {
-  const row = document.getElementById('fabric-swatches-row');
-  if (row) row.scrollLeft += amount;
-}
-
 // ── Curtain mesh helpers ─────────────────────────────────────────────────
 function _removeCurtainEntries() {
   // Restore original materials on curtain meshes
