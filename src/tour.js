@@ -5,7 +5,7 @@
   const STEPS = [
     { target:null, pos:null, title:'', desc:'', feats:[] },
     {
-      target:'.product-strip', pos:'bottom',
+      target:'.seg--models', pos:'bottom',
       title:'Choose Your Furniture',
       desc:'Start by picking a piece from the tabs above — Sierra Chair, Haven Sofa, or Fabric Bed. Switch between them any time; your fabric choices are saved per product.',
       feats:[
@@ -37,7 +37,7 @@
       ]
     },
     {
-      target:'#nav-room', pos:'right',
+      target:'#nav-room', pos:'bottom',
       title:'Room View & AI Render',
       desc:'Click here to place your configured piece inside a photorealistic room. Adjust the space, reposition furniture, then hit Render in the top bar for a shareable AI image.',
       feats:[
