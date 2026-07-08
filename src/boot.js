@@ -67,3 +67,15 @@ loadScripts([
 
 // Narrow-window sidebar drawer toggle (floating "Fabrics" pill; no-op >=1024px)
 function toggleSidebar(){ document.getElementById('right-panel')?.classList.toggle('open'); }
+
+// Tool-panel tabs (Fabrics / Room / Parts). Single source of truth for which
+// panel body is visible; room-mode calls showPanelTab('room') via room.js.
+let activePanelTab = 'fabrics';
+function showPanelTab(name){
+  activePanelTab = name;
+  document.querySelectorAll('.panel-tab-body').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+  ['fabrics','room','parts'].forEach(n => document.getElementById('ptab-'+n)?.classList.toggle('active', n === name));
+  // The pinned Applied card is fabric-editing context — hide it on the Room tab.
+  document.getElementById('applied-card')?.classList.toggle('hidden', name === 'room');
+}
+window.showPanelTab = showPanelTab;

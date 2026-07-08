@@ -138,20 +138,17 @@ try {
     skip('swatch apply', 'requires loaded model');
   }
 
-  // Room view round-trip. Observable: config panel swaps product<->room pane.
-  const roomPaneVisible = () => {
-    const room = document.getElementById('panel-room');
-    return !!room && room.style.display !== 'none';
-  };
+  // Room view round-trip. Observable: the Room panel tab activates then deactivates.
+  const roomTabActive = () => document.getElementById('ptab-room')?.classList.contains('active');
   if (modelLoaded) {
     let roomOk = false;
     try {
       await page.evaluate(() => window.toggleRoomView());
-      await page.waitForFunction(roomPaneVisible, { timeout: 45000, polling: 500 });
+      await page.waitForFunction(roomTabActive, { timeout: 45000, polling: 500 });
       await sleep(2000);
       await page.evaluate(() => window.toggleRoomView());
       await page.waitForFunction(
-        () => document.getElementById('panel-room')?.style.display === 'none',
+        () => !document.getElementById('ptab-room')?.classList.contains('active'),
         { timeout: 30000, polling: 500 }
       );
       roomOk = true;

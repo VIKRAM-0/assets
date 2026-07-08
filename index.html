@@ -194,8 +194,28 @@
         </div>
         <span class="zone-chip" id="zone-count-badge">0 zones</span>
        </div>
+
+       <!-- Panel tabs -->
+       <div class="panel-tabs seg" role="tablist">
+         <button class="seg-chip active" id="ptab-fabrics" onclick="showPanelTab('fabrics')">Fabrics</button>
+         <button class="seg-chip" id="ptab-room" onclick="showPanelTab('room')">Room</button>
+         <button class="seg-chip" id="ptab-parts" onclick="showPanelTab('parts')">Parts</button>
+       </div>
+       <div class="panel-context" id="panel-context">Sierra Chair</div>
+
+       <!-- Pinned Applied card (panels.js renders into #cp-sliders + near #diffuse-upload-input) -->
+       <div class="applied-card" id="applied-card">
+         <div class="cp-section-hdr"><span class="cp-section-title">Applied Fabric</span></div>
+         <input type="file" id="diffuse-upload-input" accept="image/*" style="display:none">
+         <div class="cp-section" id="cp-sliders">
+           <div class="cp-section-hdr"><span class="cp-section-title">Material Adjustments</span></div>
+         </div>
+       </div>
+
        <div class="panel-scroll" id="panel-scroll">
 
+        <!-- FABRICS TAB -->
+        <div class="panel-tab-body on" data-tab="fabrics">
         <!-- FABRIC LIBRARY -->
         <div class="lib-pane" id="lib-pane">
           <div class="lib-head">
@@ -205,8 +225,10 @@
           </div>
           <div class="lib-grid" id="fabric-grid"></div>
         </div>
+        </div><!-- /fabrics tab -->
 
-        <!-- PRODUCT MODE -->
+        <!-- PARTS TAB -->
+        <div class="panel-tab-body" data-tab="parts">
         <div id="panel-product">
           <!-- Product info -->
           <div class="cp-section">
@@ -244,28 +266,12 @@
             <div id="mesh-list" style="display:flex;flex-direction:column;gap:3px"></div>
           </div>
 
-          <!-- Applied material -->
-          <div class="cp-section">
-            <div class="cp-section-hdr">
-              <span class="cp-section-title">Applied Fabric</span>
-            </div>
-            <!-- .app-prev rendered by src/panels.js -->
-            <input type="file" id="diffuse-upload-input" accept="image/*" style="display:none">
-          </div>
-
-          <!-- Material adjustments (.sl-row rows rendered by src/panels.js) -->
-          <div class="cp-section" id="cp-sliders">
-            <div class="cp-section-hdr"><span class="cp-section-title">Material Adjustments</span></div>
-          </div>
-
-          <!-- Footer CTA -->
-          <div class="cp-footer">
-            <button class="btn-get-quote" onclick="">Get A Quote →</button>
-          </div>
         </div>
+        </div><!-- /parts tab -->
 
-        <!-- ROOM MODE -->
-        <div id="panel-room" style="display:none">
+        <!-- ROOM TAB -->
+        <div class="panel-tab-body" data-tab="room">
+        <div id="panel-room">
 
           <!-- Curtain configurator — shared across living room + bedroom, shown whenever
                the active room has curtain meshes and they're toggled visible -->
@@ -360,6 +366,7 @@
           </div>
 
         </div><!-- /panel-room -->
+        </div><!-- /room tab -->
        </div><!-- /panel-scroll -->
 
         <!-- Persistent CTA footer tray -->
