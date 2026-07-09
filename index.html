@@ -6,6 +6,70 @@
 <title>LIVINIT · Product Configurator</title>
 <link rel="stylesheet" href="styles/tokens.css">
 <link rel="stylesheet" href="styles/app.css">
+<!-- Tailwind Play CDN — engine + token-mapped config; preflight OFF so it does
+     not reset the existing styled app. Redesign component looks live in the
+     tailwindcss @apply layer below (JS-emitted class hooks are preserved). -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  corePlugins: { preflight: false },
+  theme: { extend: {
+    colors: {
+      primary: 'rgb(var(--md-primary) / <alpha-value>)',
+      'on-primary': 'rgb(var(--md-on-primary) / <alpha-value>)',
+      'primary-container': 'rgb(var(--md-primary-container) / <alpha-value>)',
+      'on-primary-container': 'rgb(var(--md-on-primary-container) / <alpha-value>)',
+      surface: 'rgb(var(--md-surface) / <alpha-value>)',
+      'on-surface': 'rgb(var(--md-on-surface) / <alpha-value>)',
+      'on-surface-variant': 'rgb(var(--md-on-surface-variant) / <alpha-value>)',
+      'surface-low': 'rgb(var(--md-surface-container-low) / <alpha-value>)',
+      'surface-container': 'rgb(var(--md-surface-container) / <alpha-value>)',
+      'surface-high': 'rgb(var(--md-surface-container-high) / <alpha-value>)',
+      outline: 'rgb(var(--md-outline) / <alpha-value>)',
+      'outline-variant': 'rgb(var(--md-outline-variant) / <alpha-value>)',
+      periwinkle: '#7A91EE',
+    },
+    fontFamily: { sans: ['Eudoxus Sans','ui-sans-serif','system-ui','sans-serif'] },
+    borderRadius: { card: '16px', pill: '9999px', soft: '12px' },
+    boxShadow: { chip: '0 1px 2px rgb(16 28 45 / .10), 0 2px 6px rgb(16 28 45 / .06)' },
+  } },
+};
+</script>
+<style type="text/tailwindcss">
+  @layer components {
+    /* Flat gray track + WHITE-chip active (DS convention) — replaces the dated
+       filled-primary active across every segmented control in the app. */
+    .seg-chip.active,
+    .room-sec-btn.active,
+    .finder-tab.active {
+      @apply bg-surface text-on-surface shadow-chip font-medium;
+    }
+    /* De-boxed panel cards: soft fill, no border, no heavy shadow, more air —
+       grouping by fill+space, not boxes. Overrides app.css .cp-section rule. */
+    .cp-section,
+    .room-section-block {
+      @apply bg-surface-low border-0 shadow-none rounded-card p-5;
+    }
+    .applied-card {
+      @apply bg-surface-low border-0 shadow-none rounded-card p-5;
+    }
+    /* Room-element + curtain-shape chips: soft-fill, borderless (was heavy
+       periwinkle-outlined boxes). Active = tonal container with a hairline ring. */
+    .room-chip,
+    .curtain-shape-btn {
+      @apply bg-surface-container border-0 text-on-surface-variant;
+    }
+    .room-chip.on,
+    .curtain-shape-btn.active {
+      @apply bg-primary-container text-on-primary-container;
+      box-shadow: inset 0 0 0 1.5px rgb(var(--md-primary) / .45);
+    }
+    /* Library filter chips: unify to the same soft-fill grammar. */
+    .fab-tab { @apply bg-surface-container border-0; }
+    .finder-chip { @apply bg-surface-container border-0; }
+    .finder-chip.active { @apply bg-primary-container text-on-primary-container; }
+  }
+</style>
 </head>
 <body>
 <div class="app">

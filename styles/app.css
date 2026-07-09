@@ -597,3 +597,25 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;b
   .config-panel.open{transform:none}
   .sidebar-toggle{position:fixed;right:16px;bottom:16px;z-index:31;display:inline-flex;align-items:center;gap:7px;height:44px;padding:0 18px;border:none;cursor:pointer;font:600 14px/1 var(--font-sans);color:rgb(var(--md-on-surface))}
 }
+
+/* ── Mobile robustness (fixes clipped CTAs, cramped canvas, mouse-only hints) ─
+   Safe-area aware; the config panel already becomes a slide-over ≤1024px. */
+.canvas-cta{top:max(16px, env(safe-area-inset-top, 0px) + 8px)}
+@media (max-width:640px){
+  /* CTAs must never clip: tighten the cluster, collapse the secondary CTA to
+     an icon (label kept as its title/tooltip), keep the primary quote CTA. */
+  .canvas-cta{right:10px;gap:6px;top:max(10px, env(safe-area-inset-top, 0px) + 6px);max-width:calc(100vw - 74px);flex-wrap:nowrap}
+  .canvas-cta .pill-btn{height:34px;padding:0 12px;font-size:var(--fs-sm)}
+  .canvas-cta #btn-view-in-my-room .pill-label{display:none}
+  .canvas-cta #btn-view-in-my-room{width:34px;padding:0;justify-content:center}
+  /* Desktop mouse hints ("Drag to orbit · Scroll to zoom · Right-click to pan")
+     are useless on touch — reclaim the space. */
+  .vp-controls{display:none}
+  /* Slimmer rail so the canvas + drawer breathe on a phone. */
+  .nav-rail{width:60px;padding:10px 6px}
+  .nav-rail-item{padding:8px 2px}
+  .config-panel{left:60px}
+  /* Bottom-sheet feel for the slide-over: round the top, add a grab affordance. */
+  .config-panel{border-radius:0 var(--r-lg) var(--r-lg) 0}
+  .sidebar-toggle{right:14px;bottom:max(14px, env(safe-area-inset-bottom, 0px) + 10px)}
+}
