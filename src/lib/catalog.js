@@ -1,22 +1,23 @@
+import { tryLoadTex } from './engine.js';
 // Static data: GLB urls, PolyHaven ids, fabric catalogs, LIBRARY
 // Classic script (not a module): top-level let/const/function share the
 // global scope across all src/*.js files, preserving original semantics.
 // ── Constants ─────────────────────────────────────────────────────────────
-const CHAIR_GLB      = '/api/s3proxy?key=custom_assets/chair_split.glb';
-const SOFA_GLB       = '/api/s3proxy?key=custom_assets/sofa.glb';
-const BED_WOODEN_GLB      = '/api/s3proxy?key=custom_assets/bed_wooden_frame.glb';
-const BED_FABRIC_GLB      = '/api/s3proxy?key=custom_assets/bed_fabric_frame.glb';
-const ROOM_GLB            = '/api/s3proxy?key=glbs/room_new.glb';
-const BEDROOM_ROOM_GLB = '/api/s3proxy?key=glbs/bed_room_uni.glb';
-const BEDROOM_SLOTS = {
+export const CHAIR_GLB      = '/api/s3proxy?key=custom_assets/chair_split.glb';
+export const SOFA_GLB       = '/api/s3proxy?key=custom_assets/sofa.glb';
+export const BED_WOODEN_GLB      = '/api/s3proxy?key=custom_assets/bed_wooden_frame.glb';
+export const BED_FABRIC_GLB      = '/api/s3proxy?key=custom_assets/bed_fabric_frame.glb';
+export const ROOM_GLB            = '/api/s3proxy?key=glbs/room_new.glb';
+export const BEDROOM_ROOM_GLB = '/api/s3proxy?key=glbs/bed_room_uni.glb';
+export const BEDROOM_SLOTS = {
   bed_wooden: { x: -0.300, z: 1.250, rotY: Math.PI, scale: 1.8 },
   bed_fabric: { x: -0.300, z: 1.250, rotY: Math.PI, scale: 1.8 },
 };
-function getGLBUrl(key){return{chair:CHAIR_GLB,sofa:SOFA_GLB,bed_wooden:BED_WOODEN_GLB,bed_fabric:BED_FABRIC_GLB}[key]||null;}
-const MITY_IMG  = 'https://fabrics.mityinc.com/server/public/fabrics/';
-const POLY_API  = 'https://api.polyhaven.com/files/';
+export function getGLBUrl(key){return{chair:CHAIR_GLB,sofa:SOFA_GLB,bed_wooden:BED_WOODEN_GLB,bed_fabric:BED_FABRIC_GLB}[key]||null;}
+export const MITY_IMG  = 'https://fabrics.mityinc.com/server/public/fabrics/';
+export const POLY_API  = 'https://api.polyhaven.com/files/';
 
-const POLY_IDS = {
+export const POLY_IDS = {
   fabric:  'fabric_pattern_05',
   vinyl:   'leather_white',
   pu:      'leather_white',
@@ -27,8 +28,8 @@ const POLY_IDS = {
   kaleid:  'caban',
 };
 
-const SB = '/api/s3proxy?key=';
-const MATERIAL_MAPS = {
+export const SB = '/api/s3proxy?key=';
+export const MATERIAL_MAPS = {
   fabric:  { norm: [SB+'cotton_fabric/Normal.jpg',  SB+'cotton_fabric/Normal.webp'],
              rough:[SB+'cotton_fabric/Roughness.jpg',SB+'cotton_fabric/Roughness.webp'] },
   linen:   { norm: [SB+'cotton_fabric/Normal.jpg',  SB+'cotton_fabric/Normal.webp'],
@@ -43,7 +44,7 @@ const MATERIAL_MAPS = {
              rough:[SB+'wood_texture/Roughness.jpg', SB+'wood_texture/Roughness.webp'] },
 };
 
-async function loadTexFirstSuccess(urls, isSrgb) {
+export async function loadTexFirstSuccess(urls, isSrgb) {
   for(const url of urls) {
     try { const t = await tryLoadTex(url, isSrgb); if(t) return t; } catch(e){}
   }
@@ -51,9 +52,9 @@ async function loadTexFirstSuccess(urls, isSrgb) {
 }
 
 // ── Fabric data (Chair) ───────────────────────────────────────────────────
-const MF = MITY_IMG;
-const WF = SB + 'wood_texture/custom/';
-const CHAIR_WOOD = [
+export const MF = MITY_IMG;
+export const WF = SB + 'wood_texture/custom/';
+export const CHAIR_WOOD = [
   { code:'ASHWOOD',   name:'Ashwood',   hex:'#c8a882', type:'wood', img: WF+'Ashwood.jpg'   },
   { code:'CASHEW',    name:'Cashew',    hex:'#b08d6b', type:'wood', img: WF+'Cashew.jpg'    },
   { code:'CIDER',     name:'Cider',     hex:'#8b5e3c', type:'wood', img: WF+'Cider.jpg'     },
@@ -64,7 +65,7 @@ const CHAIR_WOOD = [
   { code:'SHORELINE', name:'Shoreline', hex:'#6e5840', type:'wood', img: WF+'Shoreline.jpg' },
 ].map(c=>({...c,vendor:'mity'}));
 
-const CHAIR_FABRICS = [
+export const CHAIR_FABRICS = [
   // ── Abilene (vinyl) ───────────────────────────────────────────────────
   {name:'Abilene Bark',    img:MF+'ABILE808V.jpg',    type:'vinyl', series:'Abilene'},
   {name:'Abilene Black',   img:MF+'ABILE9009V.jpg',   type:'vinyl', series:'Abilene'},
@@ -222,8 +223,8 @@ const CHAIR_FABRICS = [
   {name:'Bestie Pewter',     img:MF+'culp-bestie-pewter.jpg',     type:'fabric', series:'Bestie'},
 ];
 
-const D = '/api/s3proxy?key=fabric_images/douglass/';
-const SOFA_KALEID = [
+export const D = '/api/s3proxy?key=fabric_images/douglass/';
+export const SOFA_KALEID = [
   {name:'Bazaar',id:'712',hex:'#6b4e5e'},{name:'Bronze',id:'541',hex:'#8b6840'},{name:'Champagne',id:'120',hex:'#d4c4a0'},
   {name:'Chocolate',id:'420',hex:'#5a3820'},{name:'Citron',id:'609',hex:'#8f9a2c'},{name:'Foam',id:'648',hex:'#b8d4cc'},
   {name:'Haze',id:'220',hex:'#a0a8b8'},{name:'Iceberg',id:'942',hex:'#d8e8f0'},{name:'Marsh',id:'104',hex:'#8aa880'},
@@ -231,7 +232,7 @@ const SOFA_KALEID = [
   {name:'Taupe',id:'111',hex:'#b8a890'},{name:'Teal',id:'380',hex:'#2a6868'},
 ].map(c=>({...c,img:D+'5308-'+c.id+'.jpg',pattern:'Kaleidoscope Neo',patId:'5308',vendor:'douglass',type:'vinyl',patKey:'kaleid'}));
 
-const SOFA_TWIST = [
+export const SOFA_TWIST = [
   {name:'Bamboo',id:'119',hex:'#c4b87a'},{name:'Burlap',id:'123',hex:'#c8b890'},{name:'Cadmium',id:'226',hex:'#909898'},
   {name:'Chambray',id:'310',hex:'#6888a8'},{name:'Cotton',id:'993',hex:'#f0ece4'},{name:'Flannel',id:'228',hex:'#989098'},
   {name:'Gauze',id:'942',hex:'#dcd8c8'},{name:'Grasscloth',id:'630',hex:'#789060'},{name:'Hemp',id:'410',hex:'#b0a070'},
@@ -242,7 +243,7 @@ const SOFA_TWIST = [
   {name:'Tobacco',id:'440',hex:'#806040'},{name:'Worsted',id:'450',hex:'#a09888'},
 ].map(c=>({...c,img:D+'5881-'+c.id+'.jpg',pattern:'Twist',patId:'5881',vendor:'douglass',type:'linen',patKey:'twist'}));
 
-const SOFA_LINUM = [
+export const SOFA_LINUM = [
   {name:'805 Bark',hex:'#8b6b48'},{name:'902 Flax',hex:'#d4c090'},{name:'87 Chestnut',hex:'#7a4e30'},
   {name:'97 Gunmetal',hex:'#606870'},{name:'106 Denim',hex:'#4a6888'},{name:'14 Cherry',hex:'#882030'},
   {name:'303 Cerulean',hex:'#3a5888'},{name:'405 Russet',hex:'#8a4828'},{name:'603 Cotton',hex:'#e8e4dc'},
@@ -250,7 +251,7 @@ const SOFA_LINUM = [
   {name:'94 Pewter',hex:'#888880'},
 ].map(c=>({...c,img:null,pattern:'Linum',vendor:'ennis',type:'linen'}));
 
-const SOFA_CHALLENGER = [
+export const SOFA_CHALLENGER = [
   {name:'98 Charcoal',hex:'#484848'},{name:'909 Raven',hex:'#1a1818'},{name:'602 Mystic White',hex:'#f0ece4'},
   {name:'303 Denim Blue',hex:'#3a5888'},{name:'109 Plum',hex:'#5a2860'},{name:'54 Citron',hex:'#8a9828'},
   {name:'14 Cherry Red',hex:'#882030'},{name:'63 Vanilla',hex:'#e8d8b0'},{name:'605 Cream',hex:'#ece4cc'},
@@ -266,9 +267,9 @@ const SOFA_CHALLENGER = [
 ].map(c=>({...c,img:null,pattern:'Challenger',vendor:'ennis',type:'leather'}));
 
 // Mutable — items pushed here by analyzeAndAddFabric(); shared by both chair + sofa
-const CUSTOM_FABRIC_ITEMS = [];
+export const CUSTOM_FABRIC_ITEMS = [];
 
-const LIBRARY = {
+export const LIBRARY = {
   chair: [
     { group:'My Fabrics', vendor:'Uploaded', vclass:'custom', items: CUSTOM_FABRIC_ITEMS },
     { group:'Faux Wood Finishes',     vendor:'MityLite Sierra', vclass:'mity', items: CHAIR_WOOD },

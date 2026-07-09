@@ -1,8 +1,10 @@
+import { E, markDirty, showToast, roomFurnitureModels, raycaster, mouse } from '../../lib/engine.js';
+import { appStore } from '../../lib/store.js';
 // Product info, zone overlay, Three.js init, script loader, GLB upload
 // Classic script (not a module): top-level let/const/function share the
 // global scope across all src/*.js files, preserving original semantics.
 // ── Product info updater ────────────────────────────────────────────────────
-function updateProductInfo() {
+export function updateProductInfo() {
   const MODELS = {
     chair:      { name: 'Sierra Lounge Chair', dims: '32W × 34D × 35H in.' },
     sofa:       { name: 'Haven Sofa 84"',      dims: '84W × 38D × 32H in.' },
@@ -18,7 +20,7 @@ function updateProductInfo() {
   if(ctxEl) ctxEl.textContent = info.name;
 }
 
-function _updateZoneCountBadge() {
+export function _updateZoneCountBadge() {
   const el = document.getElementById('zone-count-badge');
   if(el) el.textContent = E.meshEntries.length + ' configurable zone' + (E.meshEntries.length !== 1 ? 's' : '');
 }
@@ -26,7 +28,7 @@ function _updateZoneCountBadge() {
 // ── Zone overlay (floating labels on viewport) ──────────────────────────────
 let _zoneLabelsReady = false;
 
-function rebuildZoneOverlay() {
+export function rebuildZoneOverlay() {
   const overlay = document.getElementById('zone-overlay');
   if(!overlay) return;
   overlay.innerHTML = '';
@@ -48,7 +50,7 @@ function rebuildZoneOverlay() {
   markDirty();
 }
 
-function _zoneClick(entryId) {
+export function _zoneClick(entryId) {
   const target = E.meshEntries.find(e => e.id === entryId);
   if(!target) return;
   const wasSoleSelected = target.checked && E.meshEntries.filter(e => e.checked).length === 1;
@@ -63,19 +65,19 @@ function _zoneClick(entryId) {
     target.greyMat.emissive=new THREE.Color(0x666600);target.greyMat.emissiveIntensity=0.3;target.greyMat.needsUpdate=true;
     setTimeout(()=>{target.greyMat.emissive=new THREE.Color(0);target.greyMat.emissiveIntensity=0;target.greyMat.needsUpdate=true;markDirty();},600);
   }
-  buildMeshList();
+  window.buildMeshList();
   markDirty();
   _refreshZoneLabelStates();
 }
 
-function _refreshZoneLabelStates() {
+export function _refreshZoneLabelStates() {
   document.querySelectorAll('#zone-overlay .zone-label').forEach(l => {
     const entry = E.meshEntries.find(e => e.id === l.dataset.eid);
     l.classList.toggle('active', !!(entry && entry.checked));
   });
 }
 
-function updateZoneLabelPositions() {
+export function updateZoneLabelPositions() {
   if(!_zoneLabelsReady || !E.camera || !E.renderer) return;
   const overlay = document.getElementById('zone-overlay');
   if(!overlay || overlay.style.display === 'none') return;
@@ -120,7 +122,7 @@ function updateZoneLabelPositions() {
 
 
 // ── Three.js Init ─────────────────────────────────────────────────────────
-function camUpdate() {
+export function camUpdate() {
   E.camera.position.set(
     E.tgt.x + E.sph.r*Math.sin(E.sph.phi)*Math.sin(E.sph.theta),
     E.tgt.y + E.sph.r*Math.cos(E.sph.phi),
@@ -130,7 +132,7 @@ function camUpdate() {
   markDirty();
 }
 
-function initThree() {
+export function initThree() {
   const canvas = document.getElementById('viewer');
   E.renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,preserveDrawingBuffer:true});
   E.renderer.setPixelRatio(window.devicePixelRatio);
@@ -169,7 +171,7 @@ function initThree() {
     if(E.furnitureMoveMode && e.button===0) {
       // Custom floor-drag: check if we hit the active furniture model
       const rect=canvas.getBoundingClientRect();
-      const ndc=screenToNDC(e,rect);
+      const ndc=window.screenToNDC(e,rect);
       mouse.set(ndc.x,ndc.y);
       raycaster.setFromCamera(mouse,E.camera);
       const model=roomFurnitureModels[appStore.getState().currentModelKey];
@@ -177,7 +179,7 @@ function initThree() {
         const hits=raycaster.intersectObject(model,true);
         if(hits.length){
           // Pin floor plane at detected floor Y
-          _floorPlane.constant=-roomFloorY;
+          _floorPlane.constant=-window.roomFloorY;
           raycaster.ray.intersectPlane(_floorPlane,_floorHit);
           _floorOffset.set(model.position.x-_floorHit.x,0,model.position.z-_floorHit.z);
           floorDragging=true;
@@ -193,7 +195,7 @@ function initThree() {
   window.addEventListener('mousemove',e=>{
     if(floorDragging){
       const rect=canvas.getBoundingClientRect();
-      const ndc=screenToNDC(e,rect);
+      const ndc=window.screenToNDC(e,rect);
       mouse.set(ndc.x,ndc.y);
       raycaster.setFromCamera(mouse,E.camera);
       if(raycaster.ray.intersectPlane(_floorPlane,_floorHit)){
@@ -203,7 +205,7 @@ function initThree() {
           model.position.z=_floorHit.z+_floorOffset.z;
           // Keep Y pinned
           const box=new THREE.Box3().setFromObject(model);
-          model.position.y+=roomFloorY-box.min.y;
+          model.position.y+=window.roomFloorY-box.min.y;
           model.updateMatrixWorld(true);
           markDirty();
         }
@@ -229,7 +231,7 @@ function initThree() {
   canvas.addEventListener('dblclick', e => {
     if (!appStore.getState().roomMode) return;
     const rect = canvas.getBoundingClientRect();
-    const ndc = screenToNDC(e, rect);
+    const ndc = window.screenToNDC(e, rect);
     mouse.set(ndc.x, ndc.y);
     raycaster.setFromCamera(mouse, E.camera);
 
@@ -265,7 +267,7 @@ function initThree() {
     if (!hitKey) return;
 
     // Switch to the hit furniture if it's not already active
-    if (hitKey !== appStore.getState().currentModelKey) switchModel(hitKey);
+    if (hitKey !== appStore.getState().currentModelKey) window.switchModel(hitKey);
 
     // Enter move mode — use custom HUD, no TC gizmo
     E.furnitureMoveMode = true;
@@ -301,7 +303,7 @@ function initThree() {
   E.gltfLoader.setDRACOLoader(dracoLoader);
 }
 
-function loadScripts(urls){
+export function loadScripts(urls){
   // All four extras (DRACOLoader, GLTFLoader, RoomEnvironment, TransformControls)
   // only need THREE which is already synchronously loaded — fetch them in parallel.
   return Promise.all(urls.map(url=>new Promise((res,rej)=>{
@@ -310,7 +312,7 @@ function loadScripts(urls){
 }
 
 // ── GLB Upload ────────────────────────────────────────────────────────────
-function handleGLBUpload(input) {
+export function handleGLBUpload(input) {
   const file = input.files[0];
   if (!file) return;
   const ext = file.name.toLowerCase().split('.').pop();
@@ -319,7 +321,7 @@ function handleGLBUpload(input) {
   window._customGLBUrl = URL.createObjectURL(file);
   const label = file.name.replace(/\.(glb|gltf)$/i, '');
   showToast('Loading ' + label + '…');
-  loadModel(window._customGLBUrl);
+  window.loadModel(window._customGLBUrl);
   // Tag active tab with "Custom"
   ['tab-chair','tab-sofa'].forEach(id => {
     const el = document.getElementById(id);

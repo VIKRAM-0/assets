@@ -1,17 +1,33 @@
 // Global key handlers + bootstrap: load three.js addons, init, preload
-// Classic script (not a module): top-level let/const/function share the
-// global scope across all src/*.js files, preserving original semantics.
+// ES-module entry: import side-effect + shim modules in dependency order,
+// assemble the window.* shim, THEN run the bootstrap below. Inline onclick=
+// handlers and cross-feature calls resolve off window.
+import '../components/ui/panels.js';   // side-effect: injects slider/applied markup
+import { E, markDirty, showToast, _gltfSceneCache, roomFurnitureModels } from '../lib/engine.js';
+import { appStore } from '../lib/store.js';
+import { CHAIR_GLB, SOFA_GLB, BED_WOODEN_GLB, BED_FABRIC_GLB } from '../lib/catalog.js';
+import * as configurator from '../features/configurator/index.js';
+import * as library from '../features/library/index.js';
+import * as room from '../features/room/index.js';
+import * as render from '../features/render/index.js';
+import * as finder from '../features/finder/index.js';
+import '../features/tour/tour.js';      // self-wires window._tour*
+
+// Inline onclick= handlers + cross-feature window.* calls resolve here.
+Object.assign(window, configurator, library, room, render, finder,
+  { showPanelTab, toggleSidebar });
+
 document.addEventListener('keydown', e => {
-  if (e.key==='Escape') closeFabricFinder();
+  if (e.key==='Escape') window.closeFabricFinder();
 });
 
-loadScripts([
+window.loadScripts([
   'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js',
   'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js',
   'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js',
   'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js',
 ]).then(()=>{
-  initThree();
+  window.initThree();
 
   // Init TransformControls for furniture move mode
   if (THREE.TransformControls) {
@@ -30,7 +46,7 @@ loadScripts([
           // Keep Y pinned to floor (furniture shouldn't float)
           const box = new THREE.Box3().setFromObject(model);
           const floorOffset = box.min.y;
-          model.position.y += (roomFloorY - floorOffset);
+          model.position.y += (window.roomFloorY - floorOffset);
           model.updateMatrixWorld(true);
         }
       }
@@ -40,10 +56,10 @@ loadScripts([
     E.transformControls.addEventListener('mouseUp', () => { markDirty(); });
   }
 
-  initDragDrop();
-  buildLibrary();
-  loadModel(CHAIR_GLB);
-  updateProductInfo();
+  window.initDragDrop();
+  window.buildLibrary();
+  window.loadModel(CHAIR_GLB);
+  window.updateProductInfo();
 
   // Background preload — furniture models cached so every tab switch is instant
   [

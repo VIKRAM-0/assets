@@ -1,8 +1,12 @@
+import { E, showToast, markDirty, setSliderVal, tryLoadTex, enhanceCache, BASE_TILE, saveMaterialSnapshot, getPolyMaps, raycaster, mouse } from '../../lib/engine.js';
+import { appStore } from '../../lib/store.js';
+import { setSlider, setBaseColor } from '../../lib/actions.js';
+import { MATERIAL_MAPS, POLY_IDS, loadTexFirstSuccess, LIBRARY } from '../../lib/catalog.js';
 // Fabric apply pipeline, diffuse upload, seamless blend, drag&drop, sliders
 // Classic script (not a module): top-level let/const/function share the
 // global scope across all src/*.js files, preserving original semantics.
 // ── Apply swatch logic (shared between click and drop) ────────────────────
-function texToDataUrl(tex) {
+export function texToDataUrl(tex) {
   const img = tex.image;
   if(!img) return null;
   const w = img.naturalWidth||img.width||(img instanceof ImageBitmap?img.width:0)||512;
@@ -16,7 +20,7 @@ function texToDataUrl(tex) {
   return c.toDataURL('image/jpeg',0.93);
 }
 
-async function enhanceTexture(dataUrl, cacheKey) {
+export async function enhanceTexture(dataUrl, cacheKey) {
   if(enhanceCache[cacheKey]) return enhanceCache[cacheKey];
   try {
     const resp = await fetch('/api/enhance-texture', {
@@ -35,11 +39,11 @@ async function enhanceTexture(dataUrl, cacheKey) {
 // (swatch click or diffuse upload) bumps it; any in-flight older apply bails
 // after its awaits so the LAST action wins, not the last network response.
 // Same pattern as E._roomLoadGen for room loads.
-let _applyGen = 0;
+export let _applyGen = 0;
 
 // Clone a loaded (shared, cached) texture with per-entry tiling — every mesh
 // entry needs its own repeat, so the cached texture is never mutated directly.
-function _tiledClone(tex, physRepeat) {
+export function _tiledClone(tex, physRepeat) {
   const t = tex.clone();
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.repeat.set(physRepeat, physRepeat);
@@ -49,7 +53,7 @@ function _tiledClone(tex, physRepeat) {
 
 // Swap the assembled material onto the entry's mesh (array-aware) and, when the
 // entry is the curtain representative, propagate it to every curtain panel.
-function _commitEntryMaterial(entry, mat) {
+export function _commitEntryMaterial(entry, mat) {
   if (Array.isArray(entry.mesh.material)) {
     const arr = [...entry.mesh.material];
     arr[entry.matIndex] = mat;
@@ -62,7 +66,7 @@ function _commitEntryMaterial(entry, mat) {
   }
 }
 
-async function applySwatchToEntries(item, targetEntries) {
+export async function applySwatchToEntries(item, targetEntries) {
   if(!targetEntries || !targetEntries.length) { showToast('Select a part →'); return; }
   const _gen = ++_applyGen;
   document.getElementById('loading').classList.add('on');
@@ -77,7 +81,7 @@ async function applySwatchToEntries(item, targetEntries) {
     fabric:  { roughness:0.72, sheen:0.10, metalness:0.0, scale:3.5,  norm:1.0 },
   };
   const defs = item._defaults || defaults[item.type] || defaults.fabric;
-  _currentAppliedDiffUrl = (item._defaults && item._defaults.diffUrl) || item.img || null;
+  window._currentAppliedDiffUrl = (item._defaults && item._defaults.diffUrl) || item.img || null;
   setSlider('roughness', defs.roughness); setSlider('metalness', defs.metalness);
   setSlider('sheen', defs.sheen); setSlider('scale', defs.scale); setSlider('norm', defs.norm);
   ['brightness','roughness','metalness','sheen','scale','norm',
@@ -245,7 +249,7 @@ async function applySwatchToEntries(item, targetEntries) {
 }
 
 // ── Custom diffuse image upload ─────────────────────────────────────────────
-function openDiffuseUpload() {
+export function openDiffuseUpload() {
   document.getElementById('diffuse-upload-input').click();
 }
 
@@ -264,7 +268,7 @@ function openDiffuseUpload() {
 })();
 
 // ── Seamless texture via canvas cross-fade blend ──────────────────────────
-async function makeSeamlessTexture(dataUrl) {
+export async function makeSeamlessTexture(dataUrl) {
   // Step 1: Remove directional lighting gradients (de-light)
   // Blur the image to get the local illumination field, then divide each pixel
   // by it so the result has uniform brightness throughout — eliminates the
@@ -347,7 +351,7 @@ async function makeSeamlessTexture(dataUrl) {
   return normC.toDataURL('image/jpeg', 0.93);
 }
 
-async function handleDiffuseUpload(file) {
+export async function handleDiffuseUpload(file) {
   // Use checked parts if any are selected, otherwise fall back to all parts.
   // E.meshEntries is rebuilt on room enter (_rebuildMeshEntries), so it is the
   // correct source in both modes.
@@ -379,7 +383,7 @@ async function handleDiffuseUpload(file) {
   } catch(_) {}
 
   if (replBtn) replBtn.classList.remove('processing');
-  _currentAppliedDiffUrl = dataUrl;
+  window._currentAppliedDiffUrl = dataUrl;
 
   const tex = await tryLoadTex(dataUrl, true).catch(() => null);
   if (!tex) { showToast('Could not load image'); return; }
@@ -417,7 +421,7 @@ async function handleDiffuseUpload(file) {
 }
 
 // ── Drag & Drop ────────────────────────────────────────────────────────────
-function initDragDrop() {
+export function initDragDrop() {
   const vwrap = document.getElementById('viewport-wrap');
 
   document.addEventListener('mousemove', e => {
@@ -454,13 +458,13 @@ function initDragDrop() {
 }
 
 let hoveredEntry = null;
-function screenToNDC(e, rect) {
+export function screenToNDC(e, rect) {
   return {
     x: ((e.clientX - rect.left) / rect.width)  * 2 - 1,
     y: -((e.clientY - rect.top)  / rect.height) * 2 + 1,
   };
 }
-function getHitEntry(e, rect) {
+export function getHitEntry(e, rect) {
   const ndc = screenToNDC(e, rect);
   mouse.set(ndc.x, ndc.y);
   raycaster.setFromCamera(mouse, E.camera);
@@ -489,7 +493,7 @@ function getHitEntry(e, rect) {
   }
   return null;
 }
-function highlightHoveredMesh(e, rect) {
+export function highlightHoveredMesh(e, rect) {
   const entry = getHitEntry(e, rect);
   if(entry === hoveredEntry) return;
   clearMeshHighlight();
@@ -501,7 +505,7 @@ function highlightHoveredMesh(e, rect) {
     markDirty();
   }
 }
-function clearMeshHighlight() {
+export function clearMeshHighlight() {
   if(hoveredEntry) {
     hoveredEntry.greyMat.emissive = new THREE.Color(0);
     hoveredEntry.greyMat.emissiveIntensity = 0;
@@ -510,7 +514,7 @@ function clearMeshHighlight() {
     hoveredEntry = null;
   }
 }
-async function dropFabricOnCanvas(e, rect) {
+export async function dropFabricOnCanvas(e, rect) {
   if(!E.dragItem) return;
 
   if(appStore.getState().roomMode) {
@@ -530,12 +534,12 @@ async function dropFabricOnCanvas(e, rect) {
   E.meshEntries.forEach(en => { en.checked = false; });
   entry.checked = true;
   if(Array.isArray(entry.mesh.material)){const matArr=[...entry.mesh.material];if(entry.matIndex>=0&&entry.matIndex<matArr.length){matArr[entry.matIndex]=entry.greyMat;entry.mesh.material=matArr;}}else{entry.mesh.material=entry.greyMat;}
-  buildMeshList();
-  _refreshZoneLabelStates();
+  window.buildMeshList();
+  window._refreshZoneLabelStates();
   await applySwatchToEntries(E.dragItem.item, [entry]);
 }
 
-function startDrag(e, gi, ii) {
+export function startDrag(e, gi, ii) {
   const item = LIBRARY[appStore.getState().currentModelKey][gi].items[ii];
   E.dragItem = {gi, ii, item};
   E.dragActive = true;
@@ -553,7 +557,7 @@ function startDrag(e, gi, ii) {
 }
 
 // ── Slider handlers ───────────────────────────────────────────────────────
-function updateBrightness(val) {
+export function updateBrightness(val) {
   setSlider('brightness', val);
   ['v-brightness','v-brightness-r'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=val.toFixed(2); });
   E.meshEntries.forEach(entry => {
@@ -566,7 +570,7 @@ function updateBrightness(val) {
   });
   markDirty();
 }
-function applyProp(prop, val) {
+export function applyProp(prop, val) {
   const valEl = document.getElementById('v-'+prop);
   if(valEl) valEl.textContent = val.toFixed(2);
   setSlider(prop, val); // prop is only ever roughness/metalness/sheen (see oninput handlers)
@@ -578,7 +582,7 @@ function applyProp(prop, val) {
   });
   markDirty();
 }
-function updateTexScale(val) {
+export function updateTexScale(val) {
   setSlider('scale', val);
   ['v-scale','v-scale-r'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=val.toFixed(1); });
   E.meshEntries.forEach(entry => {
@@ -593,7 +597,7 @@ function updateTexScale(val) {
   });
   markDirty();
 }
-function updateNormScale(val) {
+export function updateNormScale(val) {
   setSlider('norm', val);
   const el = document.getElementById('v-norm'); if(el) el.textContent=val.toFixed(1);
   E.meshEntries.forEach(entry => {

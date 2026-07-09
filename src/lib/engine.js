@@ -1,3 +1,5 @@
+import { SB, POLY_API } from './catalog.js';
+import { appStore } from './store.js';
 // Mutable app state, caches, Three.js refs, small utilities
 // Classic script (not a module): top-level let/const/function share the
 // global scope across all src/*.js files, preserving original semantics.
@@ -6,7 +8,7 @@
 // Shared mutable engine state. ES modules can't rebind imported bindings and
 // 23 of these are reassigned from other modules, so they live as properties of
 // one exported holder (Task 3 adds `export`). Reassign via E.x = …, read via E.x.
-const E = {
+export const E = {
   meshEntries: [], currentModel: null, _dirty: true, roomGroup: null,
   _roomLoadGen: 0, explodeVal: 0, explodeAnim: null, transformControls: null,
   furnitureMoveMode: false, tcMode: 'translate', curtainMeshEntries: [],
@@ -21,29 +23,29 @@ const E = {
   _curtainRoughTex: null,
 };
 // Pre-parsed GLB scenes keyed by URL — cloned on each use so processGLTF gets a fresh hierarchy
-const _gltfSceneCache = {};
+export const _gltfSceneCache = {};
 // Room mode holds both chair + sofa simultaneously
-let roomFurnitureModels = { chair: null, sofa: null, bed_wooden: null, bed_fabric: null };
+export let roomFurnitureModels = { chair: null, sofa: null, bed_wooden: null, bed_fabric: null };
 // Snapshot of mesh materials per model key — survives model switching (E.modelMaterialSnapshots)
 // activeBtnEl → appStore.activeFabricKey (see src/store.js); lastAppliedItem
 // was write-only (zero readers since the original upload) and was removed.
 
 // Slider state lives in appStore (sliders.*, baseColorHex) — see src/store.js.
-const BASE_TILE = 0.3;
-const polyCache = {};
-const texCache = {};
-const enhanceCache = {}; // diffSrc → AI-enhanced data URL (session cache)
-const texLoader = new THREE.TextureLoader();
+export const BASE_TILE = 0.3;
+export const polyCache = {};
+export const texCache = {};
+export const enhanceCache = {}; // diffSrc → AI-enhanced data URL (session cache)
+export const texLoader = new THREE.TextureLoader();
 texLoader.setCrossOrigin('anonymous');
 
-function markDirty(){ E._dirty = true; }
+export function markDirty(){ E._dirty = true; }
 
 // ── Room state ─────────────────────────────────────────────────────────────
-let roomElements = {walls:null, floor:null, windows:null, doors:null, rug:null, ceiling:null};
-let roomVisible = {walls:true, floor:true, windows:true, doors:true, rug:true, ceiling:false};
+export let roomElements = {walls:null, floor:null, windows:null, doors:null, rug:null, ceiling:null};
+export let roomVisible = {walls:true, floor:true, windows:true, doors:true, rug:true, ceiling:false};
 
 // ── Curtain configurator data ─────────────────────────────────────────────
-const CURTAIN_FABRICS = [
+export const CURTAIN_FABRICS = [
   { id:'linen',  label:'Linen',  roughness:0.90, opacity:1.00, normalScale:1.0, envMapIntensity:0.3, swatch:'linear-gradient(135deg,#efe9dc,#d9d2c2)',
     polyId:'rough_linen',
     normFallback: [SB+'cotton_fabric/Normal.jpg', SB+'cotton_fabric/Normal.webp'],
@@ -83,7 +85,7 @@ const CURTAIN_FABRICS = [
 ];
 // curtainState / savedCurtainState live in appStore — see src/store.js. (E._curtainRoughTex)
 
-const CURTAIN_COLORS = [
+export const CURTAIN_COLORS = [
   { hex:'#EDE6D8', label:'Cream'   },
   { hex:'#D9CFC0', label:'Greige'  },
   { hex:'#A89F90', label:'Taupe'   },
@@ -95,7 +97,7 @@ const CURTAIN_COLORS = [
 ];
 
 // Curated palettes for the side panel (the flat CURTAIN_COLORS above stays for the bottom bar).
-const CURTAIN_COLOR_GROUPS = [
+export const CURTAIN_COLOR_GROUPS = [
   { group:'Neutrals', colors:[
     {hex:'#F5F2EC',label:'Ivory'},{hex:'#EDE6D8',label:'Cream'},{hex:'#D9CFC0',label:'Greige'},
     {hex:'#C2B6A3',label:'Oatmeal'},{hex:'#A89F90',label:'Taupe'},{hex:'#8C8377',label:'Mushroom'},
@@ -130,30 +132,30 @@ E._curtainLinColor = function(hex, scalar) {
 // Piece system (room mode per-mesh fabric targeting)
 
 // Raycaster for drag-drop
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
+export const raycaster = new THREE.Raycaster();
+export const mouse = new THREE.Vector2();
 
 // ── Utilities ─────────────────────────────────────────────────────────────
 // Escape untrusted strings before interpolating into innerHTML. Required for
 // anything derived from API responses, error messages, or user input.
-function escapeHtml(s) {
+export function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => (
     { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]
   ));
 }
-function showToast(msg) {
+export function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 2400);
 }
-function setSliderVal(id, val, decimals=2) {
+export function setSliderVal(id, val, decimals=2) {
   const el = document.getElementById('s-'+id);
   if(el) el.value = val;
   const vEl = document.getElementById('v-'+id);
   if(vEl) vEl.textContent = (+val).toFixed(decimals);
 }
-function tryLoadTex(url, isSrgb) {
+export function tryLoadTex(url, isSrgb) {
   if(texCache[url]) return Promise.resolve(texCache[url]);
   return new Promise((resolve, reject) => {
     texLoader.load(url, t => {
@@ -166,7 +168,7 @@ function tryLoadTex(url, isSrgb) {
     }, undefined, ()=>reject(new Error('404')));
   });
 }
-function makeGreyscaleTex(origTex) {
+export function makeGreyscaleTex(origTex) {
   if(!origTex || !origTex.image) return null;
   try {
     const img = origTex.image;
@@ -192,9 +194,9 @@ function makeGreyscaleTex(origTex) {
     return t;
   } catch(e) { return null; }
 }
-const POLY_NORM_KEYS  = ['nor_gl','Normal','nor_dx','nor','Nor_GL','NormalGL'];
-const POLY_ROUGH_KEYS = ['Rough','rough','Roughness','roughness'];
-function pickPolyUrl(files, keys) {
+export const POLY_NORM_KEYS  = ['nor_gl','Normal','nor_dx','nor','Nor_GL','NormalGL'];
+export const POLY_ROUGH_KEYS = ['Rough','rough','Roughness','roughness'];
+export function pickPolyUrl(files, keys) {
   const norm = s => s.toLowerCase().replace(/[\s_-]/g,'');
   const fk = Object.keys(files);
   for(const key of keys) {
@@ -208,8 +210,8 @@ function pickPolyUrl(files, keys) {
 }
 // 'col_01'/'col_02'/'col_03' cover PolyHaven patterned fabrics that ship color
 // variants instead of a single 'Diffuse' map — used by the curtain diffuse lookup.
-const POLY_DIFF_KEYS = ['diff','Diffuse','diffuse','Diff','albedo','Albedo','col_01','col_02','col_03','col','Color'];
-async function getPolyMaps(polyId) {
+export const POLY_DIFF_KEYS = ['diff','Diffuse','diffuse','Diff','albedo','Albedo','col_01','col_02','col_03','col','Color'];
+export async function getPolyMaps(polyId) {
   if(polyCache[polyId]) return polyCache[polyId];
   try {
     const res = await fetch(POLY_API + polyId);
@@ -228,7 +230,7 @@ async function getPolyMaps(polyId) {
 
 // Save the current model's materials so room view / model switching restores them.
 // Single implementation — was copy-pasted at five call sites.
-function saveMaterialSnapshot() {
+export function saveMaterialSnapshot() {
   E.modelMaterialSnapshots[appStore.getState().currentModelKey] = E.meshEntries.map(e => ({
     id: e.id, name: e.name, matClone: e.greyMat.clone(),
   }));

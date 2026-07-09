@@ -7,7 +7,7 @@
 
 // One spec per material slider. The room panel has always shown only the
 // `room:true` subset, with ids suffixed `-r`.
-const SLIDER_ROWS = [
+export const SLIDER_ROWS = [
   { key:'brightness', label:'Brightness',    min:'0.01', max:'2',  step:'0.05', value:'1',    txt:'1.00', handler:'updateBrightness(+this.value)',      room:true },
   { key:'roughness',  label:'Roughness',     min:'0',    max:'1',  step:'0.01', value:'0.72', txt:'0.72', handler:"applyProp('roughness',+this.value)", room:true },
   { key:'metalness',  label:'Metalness',     min:'0',    max:'1',  step:'0.01', value:'0',    txt:'0.00', handler:"applyProp('metalness',+this.value)" },
@@ -16,7 +16,7 @@ const SLIDER_ROWS = [
   { key:'norm',       label:'Bump Strength', min:'0',    max:'3',  step:'0.1',  value:'1',    txt:'1.0',  handler:'updateNormScale(+this.value)' },
 ];
 
-function sliderRowsHtml(sfx, rows) {
+export function sliderRowsHtml(sfx, rows) {
   return rows.map((r, i) => {
     const id = r.key + (sfx ? '-' + sfx : '');
     return '<div class="sl-row"' + (i === rows.length - 1 ? ' style="margin-bottom:0"' : '') + '>'
@@ -26,9 +26,9 @@ function sliderRowsHtml(sfx, rows) {
   }).join('');
 }
 
-const _REPLACE_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>';
+export const _REPLACE_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>';
 
-function appliedPreviewHtml(sfx, swStyle) {
+export function appliedPreviewHtml(sfx, swStyle) {
   const id = (base) => base + (sfx ? '-' + sfx : '');
   return '<div class="app-prev">'
     + '<div class="app-sw" id="' + id('app-sw') + '"' + (swStyle ? ' style="' + swStyle + '"' : '') + '></div>'

@@ -1,3 +1,7 @@
+import { E, showToast, escapeHtml, getPolyMaps } from '../../lib/engine.js';
+import { appStore } from '../../lib/store.js';
+import { setFinder, addCustomFabric } from '../../lib/actions.js';
+import { POLY_API, CUSTOM_FABRIC_ITEMS } from '../../lib/catalog.js';
 // Fabric Finder modal: upload/analyze/search/add flows
 // Classic script (not a module): top-level let/const/function share the
 // global scope across all src/*.js files, preserving original semantics.
@@ -7,10 +11,10 @@ let _phCache = null; // PolyHaven assets API response (service cache, not UI sta
 // Currently applied diffuse URL (tracks custom uploads too). Written by
 // materials.js (applySwatchToEntries / handleDiffuseUpload) — apply-pipeline
 // state, not finder state, so it stays a plain global.
-let _currentAppliedDiffUrl = null;
+window._currentAppliedDiffUrl = null;
 
 // ── Tab switching ──────────────────────────────────────────────────────────
-function switchFinderTab(tab) {
+export function switchFinderTab(tab) {
   setFinder({ tab });
   const isUpload = tab === 'upload';
   document.getElementById('ftab-upload').classList.toggle('active', isUpload);
@@ -28,13 +32,13 @@ function switchFinderTab(tab) {
   if (!isUpload) setTimeout(() => document.getElementById('finder-search-q').focus(), 60);
 }
 
-function openFabricFinder() {
+export function openFabricFinder() {
   document.getElementById('finder-overlay').classList.add('open');
   switchFinderTab('upload');
   setTimeout(() => document.getElementById('finder-name').focus(), 80);
 }
 
-function closeFabricFinder() {
+export function closeFabricFinder() {
   document.getElementById('finder-overlay').classList.remove('open');
   clearFinderImage({ stopPropagation:()=>{} });
   document.getElementById('finder-name').value = '';
@@ -54,7 +58,7 @@ function closeFabricFinder() {
   switchFinderTab('upload');
 }
 
-function updateFinderMode() {
+export function updateFinderMode() {
   const hasImg = !!appStore.getState().finder.imgData;
   const t = document.getElementById('finder-btn-txt');
   if(t) t.textContent = hasImg ? 'Analyze Fabric' : 'Analyze & Add';
@@ -67,7 +71,7 @@ function updateFinderMode() {
   }
 }
 
-function handleFinderImage(input) {
+export function handleFinderImage(input) {
   const file = input.files[0];
   if (!file) return;
   const reader = new FileReader();
@@ -88,7 +92,7 @@ function handleFinderImage(input) {
   reader.readAsDataURL(file);
 }
 
-function clearFinderImage(e) {
+export function clearFinderImage(e) {
   e.stopPropagation();
   setFinder({ imgData: null });
   const dPreview = document.getElementById('finder-img-preview');
@@ -113,7 +117,7 @@ function clearFinderImage(e) {
 }
 
 // ── Search tab: custom image upload ───────────────────────────────────────
-function handleSearchCustomImage(input) {
+export function handleSearchCustomImage(input) {
   const file = input.files[0];
   if (!file) return;
   const reader = new FileReader();
@@ -135,7 +139,7 @@ function handleSearchCustomImage(input) {
   reader.readAsDataURL(file);
 }
 
-function clearSearchCustomImage(e) {
+export function clearSearchCustomImage(e) {
   if(e && e.stopPropagation) e.stopPropagation();
   setFinder({ searchCustomImg: null });
   const drop = document.getElementById('finder-custom-drop');
@@ -150,7 +154,7 @@ function clearSearchCustomImage(e) {
   if(fi) fi.value = '';
 }
 
-async function makeSearchImageSeamless() {
+export async function makeSearchImageSeamless() {
   const searchImg = appStore.getState().finder.searchCustomImg;
   if (!searchImg) return;
   const btn = document.getElementById('finder-seamless-btn');
@@ -158,7 +162,7 @@ async function makeSearchImageSeamless() {
   btn.disabled = true;
   overlay.style.display = 'flex';
   try {
-    const seamless = await makeSeamlessTexture(searchImg);
+    const seamless = await window.makeSeamlessTexture(searchImg);
     setFinder({ searchCustomImg: seamless });
     document.getElementById('finder-custom-preview-img').src = seamless;
     showToast('Seamless texture ready!');
@@ -170,7 +174,7 @@ async function makeSearchImageSeamless() {
   }
 }
 
-async function addSearchCustomToLibrary() {
+export async function addSearchCustomToLibrary() {
   // Read all inputs once at event time — DOM is the event source, not state.
   const searchImg = appStore.getState().finder.searchCustomImg;
   if (!searchImg) return;
@@ -183,13 +187,13 @@ async function addSearchCustomToLibrary() {
     vendor:'custom', series:'My Fabrics',
     _defaults: { roughness:0.72, sheen:0.1, metalness:0.0, scale:10, norm:1.0 },
   });
-  buildLibrary();
+  window.buildLibrary();
   showToast('✓ ' + name + ' added to My Fabrics');
   closeFabricFinder();
 }
 
 // Save without AI (image required)
-async function saveAsMaterial() {
+export async function saveAsMaterial() {
   // Read finder state + inputs once at event time.
   const F = appStore.getState().finder;
   if (!F.imgData) return;
@@ -207,12 +211,12 @@ async function saveAsMaterial() {
     hex: F.analyzed?.hex || '#c8c0b8', vendor:'custom', series:'My Fabrics',
     _defaults: { ...aiProps, scale, diffUrl },
   });
-  buildLibrary();
+  window.buildLibrary();
   showToast('✓ ' + name + ' saved to My Fabrics');
   closeFabricFinder();
 }
 
-async function previewAnalyzedOnModel() {
+export async function previewAnalyzedOnModel() {
   // Read finder state + inputs once at event time.
   const F = appStore.getState().finder;
   if (!F.imgData) return;
@@ -226,7 +230,7 @@ async function previewAnalyzedOnModel() {
   let dataUrl = 'data:image/jpeg;base64,' + F.imgData;
   try {
     showToast('Making seamless…');
-    dataUrl = await makeSeamlessTexture(dataUrl);
+    dataUrl = await window.makeSeamlessTexture(dataUrl);
   } catch(_) {}
 
   const previewItem = {
@@ -236,7 +240,7 @@ async function previewAnalyzedOnModel() {
   };
   const checked = E.meshEntries.filter(e => e.checked);
   const previewTargets = checked.length ? checked : E.meshEntries.filter(e => !e._isCurtain);
-  if (previewTargets.length) await applySwatchToEntries(previewItem, previewTargets);
+  if (previewTargets.length) await window.applySwatchToEntries(previewItem, previewTargets);
 
   setFinder({ pendingUploadPreview: { name, type, aiProps, diffUrl: dataUrl }, pendingResult: null });
   closeFabricFinder();
@@ -244,7 +248,7 @@ async function previewAnalyzedOnModel() {
 }
 
 // Entry point — branches on whether an image is loaded
-async function analyzeAndAddFabric() {
+export async function analyzeAndAddFabric() {
   if (appStore.getState().finder.imgData) {
     await _analyzeImageAndAdd();
   } else {
@@ -256,7 +260,7 @@ async function analyzeAndAddFabric() {
 }
 
 // ── Image path: AI analysis ────────────────────────────────────────────────
-async function _analyzeImageAndAdd() {
+export async function _analyzeImageAndAdd() {
   const btn = document.getElementById('finder-btn');
   btn.disabled = true;
   document.getElementById('finder-btn-txt').textContent = 'Analyzing…';
@@ -315,14 +319,14 @@ async function _analyzeImageAndAdd() {
 }
 
 // ── Search dispatch from footer button ────────────────────────────────────
-async function doFinderSearch() {
+export async function doFinderSearch() {
   const q = (document.getElementById('finder-search-q').value || '').trim();
   const t = document.getElementById('finder-search-type').value;
   await _searchAndShow(q, t);
 }
 
 // ── Text path: search PolyHaven + AmbientCG ───────────────────────────────
-async function _searchAndShow(query, matType, activeChip) {
+export async function _searchAndShow(query, matType, activeChip) {
   const trimmed = (query || '').trim();
   if (!trimmed && !matType) {
     showToast('Type a keyword to search — e.g. "dark linen"');
@@ -374,14 +378,14 @@ async function _searchAndShow(query, matType, activeChip) {
   }
 }
 
-function quickSearch(query, chipEl) {
+export function quickSearch(query, chipEl) {
   if (appStore.getState().finder.tab !== 'search') switchFinderTab('search');
   document.getElementById('finder-search-q').value = query;
   document.getElementById('finder-search-type').value = '';
   _searchAndShow(query, '', chipEl || null);
 }
 
-async function _searchPolyHaven(keywords, matType) {
+export async function _searchPolyHaven(keywords, matType) {
   if (!keywords.length) return [];
   if (!_phCache) {
     const r = await fetch('https://api.polyhaven.com/assets?type=textures', { signal: AbortSignal.timeout(9000) });
@@ -406,7 +410,7 @@ async function _searchPolyHaven(keywords, matType) {
     }));
 }
 
-async function _searchAmbientCG(query) {
+export async function _searchAmbientCG(query) {
   if (!query || !query.trim()) return [];   // never send empty q — returns all 159 assets
   const r = await fetch(`/api/acg-search?q=${encodeURIComponent(query.trim())}&limit=20`, {
     signal: AbortSignal.timeout(12000),
@@ -439,7 +443,7 @@ async function _searchAmbientCG(query) {
     });
 }
 
-function _renderFinderResults(results) {
+export function _renderFinderResults(results) {
   const grid = document.getElementById('finder-results-grid');
   if (!results.length) {
     grid.innerHTML = '<div class="finder-state">No results — try different terms like "linen" or "dark velvet".</div>';
@@ -475,7 +479,7 @@ function _renderFinderResults(results) {
 }
 
 // ── Preview drawer: show info + actions when a result card is clicked ─────
-function _showResultDrawer(result, cardEl) {
+export function _showResultDrawer(result, cardEl) {
   setFinder({ selectedResult: result });
   // Highlight selected card
   document.querySelectorAll('.tex-card').forEach(c => c.classList.remove('selected'));
@@ -507,7 +511,7 @@ function _showResultDrawer(result, cardEl) {
 }
 
 // "Try on Model" → close modal, apply texture, show floating confirm bar
-async function trySelectedOnModel() {
+export async function trySelectedOnModel() {
   // Read the selection once at event time.
   const result = appStore.getState().finder.selectedResult;
   if (!result) return;
@@ -551,7 +555,7 @@ async function trySelectedOnModel() {
   };
   const checked = E.meshEntries.filter(e => e.checked);
   if (checked.length) {
-    await applySwatchToEntries(previewItem, checked);
+    await window.applySwatchToEntries(previewItem, checked);
   }
 
   // Close modal, show confirm bar
@@ -561,7 +565,7 @@ async function trySelectedOnModel() {
 }
 
 // "Add to My Fabrics" from drawer → fetches maps and commits
-async function addSelectedResult() {
+export async function addSelectedResult() {
   // Read the selection once at event time.
   const selected = appStore.getState().finder.selectedResult;
   if (!selected) return;
@@ -571,21 +575,21 @@ async function addSelectedResult() {
 }
 
 // ── Floating confirm bar ──────────────────────────────────────────────────
-function showConfirmBar(name) {
+export function showConfirmBar(name) {
   document.getElementById('fcb-name').textContent = name;
   document.getElementById('finder-confirm-bar').classList.add('visible');
 }
-function hideConfirmBar() {
+export function hideConfirmBar() {
   document.getElementById('finder-confirm-bar').classList.remove('visible');
   setFinder({ pendingResult: null, pendingUploadPreview: null });
 }
-async function confirmAddFromBar() {
+export async function confirmAddFromBar() {
   // Capture all state before hideConfirmBar clears the pending keys
   const pr = appStore.getState().finder.pendingResult;
   const pu = appStore.getState().finder.pendingUploadPreview;
   if (!pr && !pu) { hideConfirmBar(); return; }
   // _currentAppliedDiffUrl tracks any custom image the user may have swapped in after previewing
-  const finalDiffUrl = _currentAppliedDiffUrl || pr?.diffUrl || pu?.diffUrl || null;
+  const finalDiffUrl = window._currentAppliedDiffUrl || pr?.diffUrl || pu?.diffUrl || null;
   const normUrl  = pr?.normUrl  || null;
   const roughUrl = pr?.roughUrl || null;
   const name = pr?.result?.name || pu?.name || ('Custom Fabric ' + (CUSTOM_FABRIC_ITEMS.length + 1));
@@ -603,11 +607,11 @@ async function confirmAddFromBar() {
       diffUrl: finalDiffUrl, normUrl, roughUrl,
     },
   });
-  buildLibrary();
+  window.buildLibrary();
   showToast('✓ ' + name + ' saved to My Fabrics');
 }
 
-async function _addFromSearchResult(result, cardEl) {
+export async function _addFromSearchResult(result, cardEl) {
   // Optional loading overlay on the card
   let overlay = null;
   if (cardEl) {
@@ -656,7 +660,7 @@ async function _addFromSearchResult(result, cardEl) {
       type: typeGuess, hex: '#c8c0b8', vendor:'custom', series:'My Fabrics',
       _defaults: { roughness:0.72, sheen:0.1, metalness:0.0, scale:10.0, norm:1.0, diffUrl, normUrl, roughUrl },
     });
-    buildLibrary();
+    window.buildLibrary();
     showToast('✓ ' + result.name + ' added to My Fabrics');
     closeFabricFinder();
   } catch(e) {
@@ -667,7 +671,7 @@ async function _addFromSearchResult(result, cardEl) {
   }
 }
 
-function _showFinderAnalysis(d) {
+export function _showFinderAnalysis(d) {
   const el = document.getElementById('finder-props-rows');
   if (!el) return;
   const typeLabel = escapeHtml((d.type || 'fabric').replace(/_/g, ' '));
@@ -707,7 +711,7 @@ function _showFinderAnalysis(d) {
   if(ht) ht.style.display = 'none';
 }
 
-async function _checkEndpoint(path) {
+export async function _checkEndpoint(path) {
   try {
     const r = await fetch(path, { method:'HEAD', signal: AbortSignal.timeout(3000) });
     return r.status !== 404;

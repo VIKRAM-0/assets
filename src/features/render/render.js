@@ -1,3 +1,6 @@
+import { E, showToast, escapeHtml, markDirty, roomFurnitureModels } from '../../lib/engine.js';
+import { appStore } from '../../lib/store.js';
+import { getGLBUrl } from '../../lib/catalog.js';
 // AI render + View in My Room + result modal
 // Classic script (not a module): top-level let/const/function share the
 // global scope across all src/*.js files, preserving original semantics.
@@ -5,20 +8,20 @@
 // Snapshot E.camera + background/clear-color state around an offscreen capture.
 // Returns split restorers because renderScene and the capture paths restore in
 // different orders (each preserved verbatim from the original inline blocks).
-function _saveCaptureState() {
+export function _saveCaptureState() {
   const savedSph = { ...E.sph };
   const savedTgt = E.tgt.clone();
   const savedBg = E.scene.background;
   const savedClear = E.renderer.getClearColor(new THREE.Color()).clone();
   const savedClearAlpha = E.renderer.getClearAlpha();
   return {
-    restoreCamera() { E.sph = savedSph; E.tgt.copy(savedTgt); camUpdate(); },
+    restoreCamera() { E.sph = savedSph; E.tgt.copy(savedTgt); window.camUpdate(); },
     restoreBackground() { E.scene.background = savedBg; E.renderer.setClearColor(savedClear, savedClearAlpha); },
   };
 }
 
 // Force two fresh frames (dirty-flag loop flushed) and grab the canvas.
-async function _captureFrame(waitA, waitB, quality) {
+export async function _captureFrame(waitA, waitB, quality) {
   E.renderer.render(E.scene, E.camera);
   await new Promise(r => setTimeout(r, waitA));
   E.renderer.render(E.scene, E.camera);
@@ -29,7 +32,7 @@ async function _captureFrame(waitA, waitB, quality) {
 // Shared skeleton for the two "clean E.scene" captures: hide room props (keeping
 // configured curtains), neutral warm-white background, position E.camera via
 // `frame()`, capture, then restore everything.
-async function _captureCleanScene(frame) {
+export async function _captureCleanScene(frame) {
   const saved = _saveCaptureState();
   const restoreRoom = _vimrHideRoomExceptCurtains();
 
@@ -38,7 +41,7 @@ async function _captureCleanScene(frame) {
   E.renderer.setClearColor(bg, 1);
 
   frame();
-  camUpdate();
+  window.camUpdate();
 
   const dataUrl = await _captureFrame(80, 40, 0.92);
 
@@ -50,7 +53,7 @@ async function _captureCleanScene(frame) {
   return dataUrl;
 }
 
-async function renderScene() {
+export async function renderScene() {
   if(!E.currentModel) { showToast('Load a model first!'); return; }
   document.getElementById('loading').classList.add('on');
   document.getElementById('load-txt').textContent = appStore.getState().roomMode ? 'Capturing Room…' : 'Capturing Scene…';
@@ -70,7 +73,7 @@ async function renderScene() {
     E.scene.background = new THREE.Color(0xf7f5f2);
     E.renderer.setClearColor(0xf7f5f2, 1);
   }
-  camUpdate();
+  window.camUpdate();
 
   try {
     const dataUrl = await _captureFrame(100, 60, 0.95);
@@ -124,7 +127,7 @@ async function renderScene() {
 // In living room mode, ensure the companion piece (chair ↔ sofa) is loaded and
 // in E.scene before we capture. Chair is not preloaded so it can still be loading
 // when the user clicks "View in My Room".
-function _ensureCompanionLoaded() {
+export function _ensureCompanionLoaded() {
   if (!appStore.getState().roomMode || appStore.getState().activeRoomSection === 'bedroom') return Promise.resolve();
   const otherKey = appStore.getState().currentModelKey === 'chair' ? 'sofa' : 'chair';
   const other = roomFurnitureModels[otherKey];
@@ -132,8 +135,8 @@ function _ensureCompanionLoaded() {
   if (other) {
     // Loaded but not in E.scene — add it now
     E.scene.add(other);
-    const os = FURNITURE_SLOTS[otherKey];
-    if (os) _seatOnFloor(other, os.x, os.z, os.rotY, os.scale || 1.0);
+    const os = window.FURNITURE_SLOTS[otherKey];
+    if (os) window._seatOnFloor(other, os.x, os.z, os.rotY, os.scale || 1.0);
     markDirty();
     return Promise.resolve();
   }
@@ -153,16 +156,16 @@ function _ensureCompanionLoaded() {
       m.updateMatrixWorld(true);
       roomFurnitureModels[otherKey] = m;
       E.scene.add(m);
-      const os = FURNITURE_SLOTS[otherKey];
-      if (os) _seatOnFloor(m, os.x, os.z, os.rotY, os.scale || 1.0);
-      _applySnapshotToModel(m, otherKey);
+      const os = window.FURNITURE_SLOTS[otherKey];
+      if (os) window._seatOnFloor(m, os.x, os.z, os.rotY, os.scale || 1.0);
+      window._applySnapshotToModel(m, otherKey);
       markDirty();
       resolve();
     }, undefined, () => { clearTimeout(fallback); resolve(); });
   });
 }
 
-function _vimrAssetLabel(key) {
+export function _vimrAssetLabel(key) {
   return {
     chair: 'accent chair',
     sofa: 'sofa',
@@ -174,13 +177,13 @@ function _vimrAssetLabel(key) {
 // Whether the current "View in My Room" request should touch only the single
 // active asset (product/simulator view, or bedroom room view — no companion
 // piece), vs. the full living-room duo (sofa + chair together).
-function _vimrIsSingleAsset() {
+export function _vimrIsSingleAsset() {
   return !appStore.getState().roomMode || appStore.getState().activeRoomSection === 'bedroom';
 }
 
 // Whether the currently configured curtains should be pulled into a "View in My
 // Room" capture alongside the furniture.
-function _vimrCurtainsIncluded() {
+export function _vimrCurtainsIncluded() {
   return E.curtainsVisible && E.curtainMeshEntries.length > 0 && appStore.getState().curtainState.shape !== 'none';
 }
 
@@ -188,7 +191,7 @@ function _vimrCurtainsIncluded() {
 // decor (walls, plants, bookcase) but keep the user's configured curtains visible.
 // E._blindsGroup lives directly on `E.scene` (not E.roomGroup) so it's untouched either way.
 // Returns a restore function.
-function _vimrHideRoomExceptCurtains() {
+export function _vimrHideRoomExceptCurtains() {
   if (!E.roomGroup) return () => {};
   if (!_vimrCurtainsIncluded()) {
     const wasVisible = E.roomGroup.visible;
@@ -212,7 +215,7 @@ function _vimrHideRoomExceptCurtains() {
 // Used for per-asset "View in My Room" from the simulator, and for bedroom
 // room-view where there is no companion piece. If curtains are configured and
 // visible (bedroom), they're included in both the visibility pass and the frame.
-async function captureSingleAssetScene() {
+export async function captureSingleAssetScene() {
   if (!E.currentModel) return null;
   return _captureCleanScene(() => {
     // Auto-fit E.camera to the model's (+ curtains', if included) bounding box, using
@@ -233,7 +236,7 @@ async function captureSingleAssetScene() {
 // Capture sofa + chair (+ configured curtains, if visible) on a clean neutral
 // background (no room GLB decorations) so Gemini sees only the configured pieces,
 // not the virtual room props.
-async function captureDesignedScene() {
+export async function captureDesignedScene() {
   await _ensureCompanionLoaded();
   return _captureCleanScene(() => {
     // Frame both sofa (x≈0.2, z≈1.0) and chair (x≈2.2, z≈0.89) together
@@ -243,7 +246,7 @@ async function captureDesignedScene() {
 }
 
 // Resize + compress an image dataUrl so payload stays within Vercel's 4.5 MB limit
-function _vimrCompressImage(dataUrl, maxPx, quality) {
+export function _vimrCompressImage(dataUrl, maxPx, quality) {
   return new Promise(resolve => {
     const img = new Image();
     img.onload = () => {
@@ -260,7 +263,7 @@ function _vimrCompressImage(dataUrl, maxPx, quality) {
   });
 }
 
-function openViewInMyRoom() {
+export function openViewInMyRoom() {
   if (!E.currentModel) { showToast('Load a furniture piece first'); return; }
 
   const isSingleAsset = _vimrIsSingleAsset();
@@ -402,7 +405,7 @@ function openViewInMyRoom() {
 let _vimrRoomPhotoDataUrl = null;
 let _vimrCurtainImageDataUrl = null;
 
-function _vimrHandleFile(file) {
+export function _vimrHandleFile(file) {
   const reader = new FileReader();
   reader.onload = e => {
     _vimrRoomPhotoDataUrl = e.target.result;
@@ -416,7 +419,7 @@ function _vimrHandleFile(file) {
   reader.readAsDataURL(file);
 }
 
-async function _vimrGenerate(ov, body, genBtn) {
+export async function _vimrGenerate(ov, body, genBtn) {
   if (!_vimrRoomPhotoDataUrl) return;
 
   // Read optional curtain inputs before wiping the body for the loading state
@@ -544,7 +547,7 @@ async function _vimrGenerate(ov, body, genBtn) {
   }
 }
 
-function showRenderedImage(imageUrl, isLocal) {
+export function showRenderedImage(imageUrl, isLocal) {
   const ov=document.createElement('div');
   ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(6px)';
   const md=document.createElement('div');
@@ -572,7 +575,7 @@ function showRenderedImage(imageUrl, isLocal) {
   document.body.appendChild(ov);
 }
 
-async function exportGLB() {
+export async function exportGLB() {
   if(!E.currentModel){showToast('No model loaded');return;}
   document.getElementById('loading').classList.add('on');
   document.getElementById('load-txt').textContent='Exporting…';

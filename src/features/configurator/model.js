@@ -1,9 +1,13 @@
+import { E, markDirty, showToast, saveMaterialSnapshot, setSliderVal, makeGreyscaleTex, _gltfSceneCache, roomFurnitureModels } from '../../lib/engine.js';
+import { appStore } from '../../lib/store.js';
+import { setActiveFabric, setModelKey } from '../../lib/actions.js';
+import { BEDROOM_SLOTS, getGLBUrl } from '../../lib/catalog.js';
 // Mesh/piece lists, GLB processing, load/switch/reset model
 // Classic script (not a module): top-level let/const/function share the
 // global scope across all src/*.js files, preserving original semantics.
 // ── Mesh list ─────────────────────────────────────────────────────────────
-const dotColors = ['#c84040','#c87840','#c8c840','#40c870','#4070c8','#8040c8','#c84080','#408080'];
-function buildMeshList() {
+export const dotColors = ['#c84040','#c87840','#c8c840','#40c870','#4070c8','#8040c8','#c84080','#408080'];
+export function buildMeshList() {
   const list = document.getElementById('mesh-list');
   list.innerHTML = '';
   if(!E.meshEntries.length) { list.innerHTML='<div style="font-size:11px;color:var(--text-muted)">No parts found</div>'; return; }
@@ -13,7 +17,7 @@ function buildMeshList() {
     row.className = 'mesh-item'+(entry.checked?' sel':'');
     const cb = document.createElement('input');
     cb.type='checkbox'; cb.checked=entry.checked;
-    cb.addEventListener('change',()=>{ toggleCheck(entry.id, cb.checked); _refreshZoneLabelStates(); });
+    cb.addEventListener('change',()=>{ toggleCheck(entry.id, cb.checked); window._refreshZoneLabelStates(); });
     const dotEl = document.createElement('div');
     dotEl.className='mesh-dot'; dotEl.style.backgroundColor=dot;
     const txt = document.createElement('span');
@@ -23,10 +27,10 @@ function buildMeshList() {
     row.appendChild(cb); row.appendChild(dotEl); row.appendChild(txt);
     list.appendChild(row);
   });
-  _refreshZoneLabelStates();
+  window._refreshZoneLabelStates();
 }
 
-function buildPieceList() {
+export function buildPieceList() {
   const list = document.getElementById('piece-list');
   list.innerHTML = '';
   if(!E.meshEntries.length) { list.innerHTML='<div style="font-size:11px;color:var(--text-muted)">No parts loaded</div>'; return; }
@@ -48,7 +52,7 @@ function buildPieceList() {
       E.meshEntries.forEach(e=>{ e.pieceSelected=false; });
       entry.pieceSelected = true;
       buildPieceList();
-      buildLibrary();
+      window.buildLibrary();
       entry.greyMat.emissive=new THREE.Color(0x2d4a3e);entry.greyMat.emissiveIntensity=0.4;entry.greyMat.needsUpdate=true;markDirty();
       setTimeout(()=>{ entry.greyMat.emissive=new THREE.Color(0);entry.greyMat.emissiveIntensity=0;entry.greyMat.needsUpdate=true;markDirty(); },700);
     });
@@ -76,14 +80,14 @@ function buildPieceList() {
       E.meshEntries.forEach(e => { e.pieceSelected = false; });
       curtainEntry.pieceSelected = true;
       buildPieceList();
-      buildLibrary();
+      window.buildLibrary();
       showToast('Curtains selected — now pick a fabric below');
     });
     list.appendChild(row);
   }
 }
 
-function toggleCheck(id, checked) {
+export function toggleCheck(id, checked) {
   E.meshEntries = E.meshEntries.map(entry => {
     if(entry.id!==id) return entry;
     const ne={...entry, checked};
@@ -94,13 +98,13 @@ function toggleCheck(id, checked) {
   });
   buildMeshList(); markDirty();
 }
-function selectAll() {
+export function selectAll() {
   E.meshEntries.forEach(entry=>{ entry.checked=true; if(Array.isArray(entry.mesh.material)){const a=[...entry.mesh.material];if(entry.matIndex>=0&&entry.matIndex<a.length){a[entry.matIndex]=entry.greyMat;entry.mesh.material=a;}}else{entry.mesh.material=entry.greyMat;} });
-  buildMeshList(); markDirty(); _refreshZoneLabelStates();
+  buildMeshList(); markDirty(); window._refreshZoneLabelStates();
 }
-function deselectAll() {
+export function deselectAll() {
   E.meshEntries.forEach(entry=>{ entry.checked=false; if(Array.isArray(entry.mesh.material)){const a=[...entry.mesh.material];if(entry.matIndex>=0&&entry.matIndex<a.length){a[entry.matIndex]=entry.origMat;entry.mesh.material=a;}}else{entry.mesh.material=entry.origMat;} });
-  buildMeshList(); markDirty(); _refreshZoneLabelStates();
+  buildMeshList(); markDirty(); window._refreshZoneLabelStates();
 }
 
 // ── GLB Processing ────────────────────────────────────────────────────────
@@ -108,7 +112,7 @@ function deselectAll() {
 // name walk up the node tree, then the bed pillow/mattress/frame heuristic.
 // Returns '' when unclassified (non-bed unnamed meshes) — each caller applies
 // its own mode-specific fallback (positional heuristic vs raw mesh name).
-function classifyMesh(mesh, modelKey, worldCenter, worldSize) {
+export function classifyMesh(mesh, modelKey, worldCenter, worldSize) {
   const KNOWN={
     'wooden frame':'Frame','fabric frame':'Frame','bed frame':'Frame','frame':'Frame',
     'headboard':'Frame','footboard':'Frame','bed base':'Frame','slat':'Frame','legs':'Frame',
@@ -133,7 +137,7 @@ function classifyMesh(mesh, modelKey, worldCenter, worldSize) {
   return 'Frame';
 }
 
-function processGLTF(gltf) {
+export function processGLTF(gltf) {
   try {
     // Guard: room mode caller manages E.scene membership
     if (!appStore.getState().roomMode && E.currentModel) E.scene.remove(E.currentModel);
@@ -243,11 +247,11 @@ function processGLTF(gltf) {
     E.meshEntries = newEntries;
     buildMeshList();
     buildPieceList();
-    rebuildZoneOverlay();
-    updateProductInfo();
+    window.rebuildZoneOverlay();
+    window.updateProductInfo();
 
     if(!appStore.getState().roomMode){
-      E.sph={theta:0.4,phi:1.15,r:2.2}; E.tgt.set(0,0,0); camUpdate();
+      E.sph={theta:0.4,phi:1.15,r:2.2}; E.tgt.set(0,0,0); window.camUpdate();
     }
     // Room mode: E.camera stays, _placeFurnitureInRoom sets positions
     // Restore previously saved material snapshot for this model key
@@ -290,12 +294,12 @@ function processGLTF(gltf) {
   }
 }
 
-function loadModel(url) {
+export function loadModel(url) {
   document.getElementById('loading').classList.add('on');
   document.getElementById('load-txt').textContent = 'Loading…';
   document.getElementById('v-hint').style.display='none';
   E.meshEntries=[];
-  setActiveFabric(null); renderActiveSwatch();
+  setActiveFabric(null); window.renderActiveSwatch();
   // Reset BOTH the product and room applied-preview variants — materials.js
   // writes both via ['','room'], so reset must clear both or the room panel
   // keeps a stale swatch after reset.
@@ -326,7 +330,7 @@ function loadModel(url) {
   });
 }
 
-function switchModel(key) {
+export function switchModel(key) {
   // ── 1. Save snapshot of current model before switching ─────────────────
   if (E.meshEntries.length > 0) {
     saveMaterialSnapshot();
@@ -345,9 +349,9 @@ function switchModel(key) {
     const c = document.getElementById('chip-bed-'+bk.replace('bed_',''));
     if (c) c.classList.toggle('on', bk === key);
   });
-  buildLibrary();
-  updateProductInfo();
-  if (appStore.getState().roomMode) _syncRoomSectionLock();
+  window.buildLibrary();
+  window.updateProductInfo();
+  if (appStore.getState().roomMode) window._syncRoomSectionLock();
 
   if (appStore.getState().roomMode) {
     // ── Room mode: both models stay in E.scene, just swap which is "active" ──
@@ -359,9 +363,9 @@ function switchModel(key) {
       // produce different object instances, causing the cached ref to be orphaned.
       if (!E.scene.getObjectById(E.currentModel.id)) {
         E.scene.add(E.currentModel);
-        const _ks = (appStore.getState().activeRoomSection === 'bedroom' && BEDROOM_SLOTS[key]) ? BEDROOM_SLOTS : FURNITURE_SLOTS;
+        const _ks = (appStore.getState().activeRoomSection === 'bedroom' && BEDROOM_SLOTS[key]) ? BEDROOM_SLOTS : window.FURNITURE_SLOTS;
         const s = _ks[key];
-        if (s) _seatOnFloor(E.currentModel, s.x, s.z, s.rotY, s.scale || 1.0);
+        if (s) window._seatOnFloor(E.currentModel, s.x, s.z, s.rotY, s.scale || 1.0);
       }
       // Companion behaviour: living room keeps both pieces visible; bedroom shows only the active bed
       if (prevKey && roomFurnitureModels[prevKey]) {
@@ -370,15 +374,15 @@ function switchModel(key) {
           E.scene.remove(prevModel);
         } else if (!E.scene.getObjectById(prevModel.id)) {
           E.scene.add(prevModel);
-          const ps = FURNITURE_SLOTS[prevKey];
-          if (ps) _seatOnFloor(prevModel, ps.x, ps.z, ps.rotY, ps.scale || 1.0);
+          const ps = window.FURNITURE_SLOTS[prevKey];
+          if (ps) window._seatOnFloor(prevModel, ps.x, ps.z, ps.rotY, ps.scale || 1.0);
         }
       }
       E.meshEntries = [];
       _rebuildMeshEntries(E.currentModel, key);
       buildMeshList();
       buildPieceList();
-      _applySnapshotToModel(E.currentModel, key);
+      window._applySnapshotToModel(E.currentModel, key);
       markDirty();
     } else {
       // Not cached yet — load fresh (avoid calling processGLTF in room mode;
@@ -406,13 +410,13 @@ function switchModel(key) {
         if (!E.scene.getObjectById(E.currentModel.id)) E.scene.add(E.currentModel);
         roomFurnitureModels[key] = E.currentModel;
         // Place in room BEFORE rebuilding entries so bbox is measured in final position
-        _placeFurnitureInRoom();
+        window._placeFurnitureInRoom();
         // Build entries the same way the cached branch does (applies greyMat, re-injects curtains)
         E.meshEntries = [];
         _rebuildMeshEntries(E.currentModel, key);
         buildMeshList();
         buildPieceList();
-        _applySnapshotToModel(E.currentModel, key);
+        window._applySnapshotToModel(E.currentModel, key);
         markDirty();
         document.getElementById('loading').classList.remove('on');
       }, undefined, () => {
@@ -427,7 +431,7 @@ function switchModel(key) {
 }
 
 // Rebuild E.meshEntries for a model already in E.scene (room mode tab switch)
-function _rebuildMeshEntries(model, modelKey) {
+export function _rebuildMeshEntries(model, modelKey) {
   const newEntries = [];
   let meshCounter = 0;
   const worldBox    = new THREE.Box3().setFromObject(model);
@@ -496,11 +500,11 @@ function _rebuildMeshEntries(model, modelKey) {
   }
 }
 
-function resetAll() {
+export function resetAll() {
   deselectAll();
   // Clear ALL snapshots on reset — every model key, not just chair/sofa
   E.modelMaterialSnapshots = { chair: null, sofa: null, bed_wooden: null, bed_fabric: null };
-  setActiveFabric(null); renderActiveSwatch();
+  setActiveFabric(null); window.renderActiveSwatch();
   document.getElementById('app-name').textContent='— none —';
   document.getElementById('app-vend').textContent='';
   document.getElementById('app-sw').innerHTML='';
@@ -521,7 +525,7 @@ function resetAll() {
       m.scale.setScalar(1.6/Math.max(sz.x,sz.y,sz.z));
       E.scene.add(m);
       roomFurnitureModels[otherKey] = m;
-      _placeFurnitureInRoom();
+      window._placeFurnitureInRoom();
     });
   }
   showToast('Reset');

@@ -1,8 +1,12 @@
+import { E, showToast, CURTAIN_FABRICS, CURTAIN_COLORS } from '../../lib/engine.js';
+import { appStore } from '../../lib/store.js';
+import { setActiveFabric } from '../../lib/actions.js';
+import { LIBRARY, MITY_IMG } from '../../lib/catalog.js';
 // Fabric library bar + curtain library + filters
 // Classic script (not a module): top-level let/const/function share the
 // global scope across all src/*.js files, preserving original semantics.
 // ── Build fabric library UI ───────────────────────────────────────────────
-function buildLibrary() {
+export function buildLibrary() {
   if (appStore.getState().roomMode && E.meshEntries.find(e => e._isCurtain && e.pieceSelected)) {
     buildCurtainLibrary();
     return;
@@ -77,7 +81,7 @@ function buildLibrary() {
   const addBtn = document.createElement('button');
   addBtn.className = 'fab-tab-add';
   addBtn.textContent = '+ Add Fabric';
-  addBtn.onclick = openFabricFinder;
+  addBtn.onclick = window.openFabricFinder;
   tabsEl.appendChild(addBtn);
 
   // Build swatches with a sticky header per collection (series)
@@ -135,34 +139,34 @@ function buildLibrary() {
         const selected = E.meshEntries.filter(e => e.pieceSelected);
         if (!selected.length) { showToast('Click a piece in the list →'); return; }
         setActiveFabric(gi + ':' + ii); renderActiveSwatch();
-        applySwatchToEntries(item, selected);
+        window.applySwatchToEntries(item, selected);
       } else {
         const checked = E.meshEntries.filter(e => e.checked);
         if (!checked.length) { showToast('Select a zone first →'); return; }
         setActiveFabric(gi + ':' + ii); renderActiveSwatch();
-        applySwatchToEntries(item, checked);
+        window.applySwatchToEntries(item, checked);
       }
     });
 
-    sw.addEventListener('mousedown', e => { e.preventDefault(); startDrag(e, gi, ii); });
+    sw.addEventListener('mousedown', e => { e.preventDefault(); window.startDrag(e, gi, ii); });
     swatchesEl.appendChild(sw);
   });
 
-  _updateZoneCountBadge();
+  window._updateZoneCountBadge();
 }
 
 // Sync the .active highlight from appStore.activeFabricKey — the single source
 // of truth (replaces the old captured-element `activeBtnEl` tracking). Called
 // from the sites that change the active fabric, NOT from buildLibrary: a
 // rebuild has always dropped the highlight, and that behavior is preserved.
-function renderActiveSwatch() {
+export function renderActiveSwatch() {
   const key = appStore.getState().activeFabricKey;
   document.querySelectorAll('.bar-sw').forEach(sw => {
     sw.classList.toggle('active', key !== null && sw.dataset.fabricKey === key);
   });
 }
 
-function buildCurtainLibrary() {
+export function buildCurtainLibrary() {
   const lt = document.getElementById('lib-title');
   if (lt) lt.textContent = 'Curtain Fabrics';
 
@@ -207,7 +211,7 @@ function buildCurtainLibrary() {
     sw.addEventListener('click', () => {
       swatchesEl.querySelectorAll('.bar-sw[data-cfab]').forEach(s => s.classList.remove('active'));
       sw.classList.add('active');
-      setCurtainFabric(f.id);
+      window.setCurtainFabric(f.id);
     });
     swatchesEl.appendChild(sw);
   });
@@ -228,16 +232,16 @@ function buildCurtainLibrary() {
     chip.style.background = c.hex;
     chip.title = c.label;
     chip.addEventListener('click', () => {
-      setCurtainColor(c.hex);
+      window.setCurtainColor(c.hex);
     });
     chipRow.appendChild(chip);
   });
   swatchesEl.appendChild(chipRow);
 
-  _updateZoneCountBadge();
+  window._updateZoneCountBadge();
 }
 
-function _applyFabricFilters(typeKey, query) {
+export function _applyFabricFilters(typeKey, query) {
   const q = query.trim().toLowerCase();
   document.querySelectorAll('#fabric-grid .bar-sw').forEach(sw => {
     const typeMatch = (typeKey === 'all' || sw.dataset.type === typeKey);
@@ -266,7 +270,7 @@ function _applyFabricFilters(typeKey, query) {
   }
 }
 
-function filterFabricSearch(value) {
+export function filterFabricSearch(value) {
   _applyFabricFilters(window._fabActiveType || 'all', value);
 }
 

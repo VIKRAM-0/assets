@@ -7,7 +7,7 @@
 //
 // Classic script: exposes `appStore` in the shared global scope.
 
-function createStore(initialState) {
+export function createStore(initialState) {
   let state = structuredClone(initialState);
   const listeners = new Set();
 
@@ -28,7 +28,7 @@ function createStore(initialState) {
   };
 }
 
-const appStore = createStore({
+export const appStore = createStore({
   // Populated domain-by-domain as state migrates out of src/state.js.
   sliders: { brightness: 1.0, roughness: 0.72, metalness: 0, sheen: 0, scale: 10.0, norm: 1.0 },
   baseColorHex: '#ffffff',
