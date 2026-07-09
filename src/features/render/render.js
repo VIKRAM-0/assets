@@ -6,7 +6,7 @@
 // Returns split restorers because renderScene and the capture paths restore in
 // different orders (each preserved verbatim from the original inline blocks).
 function _saveCaptureState() {
-  const savedSph = { ...sph };
+  const savedSph = { ...E.sph };
   const savedTgt = E.tgt.clone();
   const savedBg = E.scene.background;
   const savedClear = E.renderer.getClearColor(new THREE.Color()).clone();
@@ -83,7 +83,7 @@ async function renderScene() {
 
     if (!apiAvailable) {
       // No API — just show the captured screenshot as a high-quality preview
-      showToast(appStore.getState().roomMode ? 'Room E.scene captured!' : 'Deploy to Vercel for AI Rendering');
+      showToast(appStore.getState().roomMode ? 'Room scene captured!' : 'Deploy to Vercel for AI Rendering');
       showRenderedImage(dataUrl, true);
       return;
     }

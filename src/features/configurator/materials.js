@@ -467,7 +467,7 @@ function getHitEntry(e, rect) {
 
   // Build target mesh list: furniture + all curtain meshes in room mode
   const allEntries = appStore.getState().roomMode
-    ? [...meshEntries, ...curtainMeshEntries.filter(c => !E.meshEntries.includes(c))]
+    ? [...E.meshEntries, ...E.curtainMeshEntries.filter(c => !E.meshEntries.includes(c))]
     : E.meshEntries;
   const meshes = allEntries.map(en=>en.mesh).filter(Boolean);
   const hits = raycaster.intersectObjects(meshes, true);
