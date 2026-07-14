@@ -2,9 +2,36 @@ import { E, markDirty, showToast, saveMaterialSnapshot, setSliderVal, makeGreysc
 import { appStore } from '../../lib/store.js';
 import { setActiveFabric, setModelKey } from '../../lib/actions.js';
 import { BEDROOM_SLOTS, getGLBUrl } from '../../lib/catalog.js';
+import { spinModel360 } from './viewport.js';
 // Mesh/piece lists, GLB processing, load/switch/reset model
 // Classic script (not a module): top-level let/const/function share the
 // global scope across all src/*.js files, preserving original semantics.
+// ── Auto-spin-once ────────────────────────────────────────────────────────
+// Each product (chair/sofa/bed_wooden/bed_fabric) plays one 360° reveal spin
+// the first time it becomes the active model in PRODUCT view this session.
+// Product view only — Room View shows the whole staged room, not one focused
+// piece, so it never auto-spins there (see the sole call site in processGLTF,
+// which only runs outside room mode) and the Spin 360° button itself is
+// hidden while in room mode (toggleRoomView, room.js). After the one-time
+// auto-spin, spinning only happens via that button.
+// On a first-time visit the onboarding tour's welcome screen sits over the
+// canvas (z-index 700, 82%-opaque scrim) for as long as the user takes to
+// read it — if the spin plays underneath that, it finishes unseen and never
+// replays (it's one-time). Defer to _tourSkip (tour.js) via
+// window._pendingAutoSpins when the tour is still showing; fire immediately
+// otherwise (returning visitors, or the tour's already been dismissed).
+const _autoSpunModels = new Set();
+function _maybeAutoSpin(modelKey) {
+  if (_autoSpunModels.has(modelKey)) return;
+  _autoSpunModels.add(modelKey);
+  const tourOv = document.getElementById('tour-ov');
+  const tourActive = tourOv && tourOv.classList.contains('on') && tourOv.style.display !== 'none';
+  if (tourActive) {
+    (window._pendingAutoSpins = window._pendingAutoSpins || []).push(spinModel360);
+  } else {
+    spinModel360();
+  }
+}
 // ── Mesh list ─────────────────────────────────────────────────────────────
 export const dotColors = ['#c84040','#c87840','#c8c840','#40c870','#4070c8','#8040c8','#c84080','#408080'];
 export function buildMeshList() {
@@ -251,7 +278,11 @@ export function processGLTF(gltf) {
     window.updateProductInfo();
 
     if(!appStore.getState().roomMode){
-      E.sph={theta:0.4,phi:1.15,r:2.2}; E.tgt.set(0,0,0); window.camUpdate();
+      // Chair only: frame ~10% further back than the shared default — it reads
+      // tighter than the sofa/beds at the same radius, so it gets its own value.
+      const baseR = 2.2;
+      const r = appStore.getState().currentModelKey === 'chair' ? baseR * 1.1 : baseR;
+      E.sph={theta:0.4,phi:1.15,r}; E.tgt.set(0,0,0); window.camUpdate();
     }
     // Room mode: E.camera stays, _placeFurnitureInRoom sets positions
     // Restore previously saved material snapshot for this model key
@@ -270,6 +301,7 @@ export function processGLTF(gltf) {
           if(src.normalMap) { entry.greyMat.normalMap = src.normalMap; entry.greyMat.normalScale.copy(src.normalScale); }
           if(src.roughnessMap) { entry.greyMat.roughnessMap = src.roughnessMap; }
           entry.greyMat.needsUpdate = true;
+          if(s.fabricName) entry.mesh.userData._fabricName = s.fabricName;
           // Apply to mesh
           const matArr = Array.isArray(entry.mesh.material) ? [...entry.mesh.material] : [entry.mesh.material];
           if(entry.matIndex >= 0 && entry.matIndex < matArr.length) {
@@ -287,6 +319,7 @@ export function processGLTF(gltf) {
     if (typeof window._tourOnReady === 'function') { window._tourOnReady(); window._tourOnReady = null; }
     setSliderVal('brightness',1);setSliderVal('roughness',0.72);setSliderVal('metalness',0);
     setSliderVal('sheen',0,2);setSliderVal('scale',10,1);setSliderVal('norm',1,1);
+    _maybeAutoSpin(appStore.getState().currentModelKey);
   } catch(e) {
     console.error('processGLTF error:', e);
     document.getElementById('loading').classList.remove('on');

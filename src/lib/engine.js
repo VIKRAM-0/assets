@@ -10,7 +10,7 @@ import { appStore } from './store.js';
 // one exported holder (Task 3 adds `export`). Reassign via E.x = …, read via E.x.
 export const E = {
   meshEntries: [], currentModel: null, _dirty: true, roomGroup: null,
-  _roomLoadGen: 0, explodeVal: 0, explodeAnim: null, transformControls: null,
+  _roomLoadGen: 0, explodeVal: 0, explodeAnim: null, _spinAnim: null, transformControls: null,
   furnitureMoveMode: false, tcMode: 'translate', curtainMeshEntries: [],
   _curtainNodes: [], _blindsGroup: null, _curtainBaseBox: null, _curtainFace: null,
   curtainsVisible: true, _curtainNormTex: null, _curtainLinColor: null,
@@ -233,5 +233,6 @@ export async function getPolyMaps(polyId) {
 export function saveMaterialSnapshot() {
   E.modelMaterialSnapshots[appStore.getState().currentModelKey] = E.meshEntries.map(e => ({
     id: e.id, name: e.name, matClone: e.greyMat.clone(),
+    fabricName: e.mesh?.userData?._fabricName || null,
   }));
 }

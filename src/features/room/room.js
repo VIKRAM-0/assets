@@ -18,6 +18,10 @@ export function toggleRoomView() {
   // Zone overlay visibility
   const zoneOverlay = document.getElementById('zone-overlay');
   if(zoneOverlay) zoneOverlay.style.display = appStore.getState().roomMode ? 'none' : '';
+  // 360° spin is a product-view-only affordance — Room View shows the whole
+  // staged room, not one focused piece.
+  const spinBtn = document.getElementById('btn-spin-360');
+  if(spinBtn) spinBtn.style.display = appStore.getState().roomMode ? 'none' : '';
 
   // Tool-panel tabs own body visibility: room mode → Room tab, product → Fabrics.
   // (Room controls now live inside the Room tab — the floating canvas tray is gone.)

@@ -73,7 +73,15 @@
     if (!ov) return;
     ov.style.transition = 'opacity .3s';
     ov.style.opacity = '0';
-    setTimeout(() => { ov.style.display = 'none'; }, 310);
+    setTimeout(() => {
+      ov.style.display = 'none';
+      // Run any auto-spin(s) that were held back while the tour covered the
+      // canvas (see model.js _maybeAutoSpin) so the reveal is actually seen.
+      if (window._pendingAutoSpins && window._pendingAutoSpins.length) {
+        window._pendingAutoSpins.forEach(fn => fn());
+        window._pendingAutoSpins = [];
+      }
+    }, 310);
   };
 
   function _render() {

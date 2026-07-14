@@ -1,5 +1,6 @@
 import { E, markDirty, showToast, roomFurnitureModels, raycaster, mouse } from '../../lib/engine.js';
 import { appStore } from '../../lib/store.js';
+import { getHitEntry } from './materials.js';
 // Product info, zone overlay, Three.js init, script loader, GLB upload
 // Classic script (not a module): top-level let/const/function share the
 // global scope across all src/*.js files, preserving original semantics.
@@ -130,6 +131,37 @@ export function camUpdate() {
   );
   E.camera.lookAt(E.tgt);
   markDirty();
+}
+
+// ── 360° turntable spin ──────────────────────────────────────────────────
+// Rotates the model itself (not the camera) a full right-to-left turn at
+// constant speed over SPIN_DURATION ms. A full 2π turn lands exactly back on
+// the starting orientation, so there's nothing to restore afterward — safe
+// to call in room mode too (doesn't touch room-slot positioning).
+const SPIN_DURATION = 5000;
+export function spinModel360() {
+  if (!E.currentModel || E._spinAnim) return;
+  const btn = document.getElementById('btn-spin-360');
+  if (btn) { btn.disabled = true; btn.classList.add('spinning'); }
+  const startRotY = E.currentModel.rotation.y;
+  const startTime = performance.now();
+  const direction = -1; // right-to-left
+  function tick(now) {
+    const t = Math.min((now - startTime) / SPIN_DURATION, 1);
+    E.currentModel.rotation.y = startRotY + direction * Math.PI * 2 * t;
+    E.currentModel.updateMatrixWorld(true);
+    markDirty();
+    if (t < 1) {
+      E._spinAnim = requestAnimationFrame(tick);
+    } else {
+      E.currentModel.rotation.y = startRotY;
+      E.currentModel.updateMatrixWorld(true);
+      E._spinAnim = null;
+      markDirty();
+      if (btn) { btn.disabled = false; btn.classList.remove('spinning'); }
+    }
+  }
+  E._spinAnim = requestAnimationFrame(tick);
 }
 
 export function initThree() {
@@ -281,6 +313,98 @@ export function initThree() {
 
   canvas.addEventListener('contextmenu',e=>e.preventDefault());
   canvas.addEventListener('wheel',e=>{E.sph.r=Math.max(0.3,Math.min(30,E.sph.r+e.deltaY*0.004));camUpdate();e.preventDefault();},{passive:false});
+
+  // ── Hover-to-zoom fabric preview ─────────────────────────────────────────
+  // Dwell on a part for HOVER_ZOOM_DELAY ms → show a magnified lens of the
+  // fabric texture actually applied to that mesh, read live off the mesh's
+  // current material so it's always correct after model switches/room entry.
+  const HOVER_ZOOM_DELAY = 500;
+  let hoverEntry = null, hoverTimer = null, lensShownFor = null;
+
+  function hideHoverLens() {
+    clearTimeout(hoverTimer);
+    hoverTimer = null;
+    lensShownFor = null;
+    const lens = document.getElementById('hover-zoom-lens');
+    if (lens) lens.classList.remove('show');
+  }
+
+  function setHoverCursor(on) {
+    canvas.style.cursor = on ? 'zoom-in' : '';
+  }
+
+  function positionHoverLens(x, y) {
+    const lens = document.getElementById('hover-zoom-lens');
+    if (!lens) return;
+    const LW = 220, LH = 218, PAD = 20;
+    let lx = x + PAD, ly = y + PAD;
+    if (lx + LW > window.innerWidth)  lx = x - LW - PAD;
+    if (ly + LH > window.innerHeight) ly = y - LH - PAD;
+    lx = Math.max(8, lx); ly = Math.max(8, ly);
+    lens.style.left = lx + 'px';
+    lens.style.top  = ly + 'px';
+  }
+
+  function showHoverLens(entry) {
+    let lens = document.getElementById('hover-zoom-lens');
+    if (!lens) {
+      lens = document.createElement('div');
+      lens.id = 'hover-zoom-lens';
+      // Real <img> + object-fit:cover (not a background-size percentage trick) —
+      // that previous approach stretched non-square source images unevenly,
+      // which read as "messy"/warped once magnified. This preserves the
+      // source's aspect ratio; the zoom comes from a CSS transform on top.
+      lens.innerHTML = '<div class="hzl-viewport"><img class="hzl-img" alt=""></div><div class="hzl-label"></div>';
+      document.body.appendChild(lens);
+    }
+    const matArr = Array.isArray(entry.mesh.material) ? entry.mesh.material : [entry.mesh.material];
+    const mat = matArr[entry.matIndex >= 0 ? entry.matIndex : 0] || matArr[0];
+    const viewport = lens.querySelector('.hzl-viewport');
+    const img = lens.querySelector('.hzl-img');
+    const label = lens.querySelector('.hzl-label');
+    const texImg = mat && mat.map && mat.map.image;
+    const srcUrl = texImg && (texImg.currentSrc || texImg.src);
+    if (srcUrl) {
+      img.src = srcUrl;
+      img.style.display = 'block';
+      viewport.style.background = '';
+    } else {
+      img.removeAttribute('src');
+      img.style.display = 'none';
+      viewport.style.background = (mat && mat.color) ? '#' + mat.color.getHexString() : '#ccc';
+    }
+    const fabricName = entry.mesh.userData && entry.mesh.userData._fabricName;
+    label.textContent = fabricName ? (entry.name + ' — ' + fabricName) : entry.name;
+    lens.classList.add('show');
+  }
+
+  canvas.addEventListener('mousemove', e => {
+    if (isDrag || floorDragging || E.dragActive || E.furnitureMoveMode) { hideHoverLens(); setHoverCursor(false); hoverEntry = null; return; }
+    const rect = canvas.getBoundingClientRect();
+    const entry = getHitEntry(e, rect);
+
+    if (!entry) {
+      if (hoverEntry) { hoverEntry = null; hideHoverLens(); setHoverCursor(false); }
+      return;
+    }
+    setHoverCursor(true);
+    if (entry !== hoverEntry) {
+      hoverEntry = entry;
+      hideHoverLens();
+      hoverTimer = setTimeout(() => {
+        if (hoverEntry === entry) {
+          showHoverLens(entry);
+          lensShownFor = entry;
+          positionHoverLens(e.clientX, e.clientY);
+        }
+      }, HOVER_ZOOM_DELAY);
+    } else if (lensShownFor === entry) {
+      positionHoverLens(e.clientX, e.clientY);
+    }
+  });
+  canvas.addEventListener('mouseleave', () => { hoverEntry = null; hideHoverLens(); setHoverCursor(false); });
+  canvas.addEventListener('mousedown', () => { hideHoverLens(); setHoverCursor(false); });
+  canvas.addEventListener('wheel', hideHoverLens, {passive:true});
 
   const ro=new ResizeObserver(()=>{
     const w=canvas.clientWidth,h=canvas.clientHeight;

@@ -142,6 +142,7 @@ export async function applySwatchToEntries(item, targetEntries) {
         if(roughTex){mat.roughnessMap=_tiledClone(roughTex,physRepeat);}else{mat.roughnessMap=null;}
         mat.roughness=S.roughness;mat.metalness=S.metalness;mat.sheen=S.sheen;mat.needsUpdate=true;
         _commitEntryMaterial(entry, mat);
+        entry.mesh.userData._fabricName = item.name;
       });
       markDirty(); showToast(item.name+' applied!');
       // Auto-save material snapshot so room view retains changes
@@ -236,6 +237,7 @@ export async function applySwatchToEntries(item, targetEntries) {
       if(aoTex){mat.aoMap=_tiledClone(aoTex,physRepeat);mat.aoMapIntensity=1.0;}else{mat.aoMap=null;}
       mat.roughness=S.roughness;mat.metalness=S.metalness;mat.sheen=S.sheen;mat.needsUpdate=true;
       _commitEntryMaterial(entry, mat);
+      entry.mesh.userData._fabricName = item.name;
     });
     markDirty(); showToast(item.name+' applied!');
     // Auto-save material snapshot so room view retains changes
@@ -402,6 +404,7 @@ export async function handleDiffuseUpload(file) {
       arr[entry.matIndex] = mat;
       entry.mesh.material = arr;
     }
+    entry.mesh.userData._fabricName = 'Custom Image';
   });
 
   // Update app-sw preview in both panels
